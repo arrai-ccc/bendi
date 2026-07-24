@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gain Staging · Manual Bendi</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#09090f;--card:#111118;--border:#1e1e2e;--accent:#7c3aed;--green:#16a34a;--gold:#d97706;--red:#dc2626;--blue:#0ea5e9;--text:#e2e8f0;--muted:#64748b;--mono:'IBM Plex Mono',monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;line-height:1.65;padding-bottom:80px;font-size:15px}
+a{color:var(--accent);text-decoration:none}
+header{background:linear-gradient(135deg,#0f0a1e,#1a0a2e);border-bottom:2px solid var(--accent);padding:32px 20px 24px}
+.eyebrow{font-family:var(--mono);font-size:.68rem;letter-spacing:.22em;color:var(--accent);text-transform:uppercase;margin-bottom:10px}
+header h1{font-size:1.6rem;font-weight:700;margin-bottom:6px}
+header .sub{color:var(--muted);font-size:.88rem}
+nav{background:#0d0d14;border-bottom:1px solid var(--border);padding:10px 20px;display:flex;gap:6px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+nav a{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:5px 10px;border-radius:5px;border:1px solid var(--border)}
+nav a:hover{color:var(--text);border-color:var(--accent)}
+.wrap{max-width:800px;margin:0 auto;padding:28px 18px}
+.section{margin-bottom:36px;scroll-margin-top:52px}
+h2{font-family:var(--mono);font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+h3{font-size:.95rem;font-weight:600;color:var(--text);margin:16px 0 8px}
+p{color:#cbd5e1;margin-bottom:10px;font-size:.9rem}
+ul,ol{padding-left:20px;color:#cbd5e1;font-size:.9rem;line-height:1.75}
+li{margin-bottom:4px}
+li b{color:var(--text)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:12px}
+.card.green{border-left:3px solid var(--green)}
+.card.gold{border-left:3px solid var(--gold)}
+.card.red{border-left:3px solid var(--red)}
+.card.blue{border-left:3px solid var(--blue)}
+.quote{background:#0f0a1e;border-left:3px solid var(--accent);padding:12px 16px;border-radius:0 8px 8px 0;font-style:italic;color:#c4b5fd;margin:14px 0;font-size:.92rem}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:.85rem}
+th{background:#0d0d14;color:var(--accent);font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:8px 12px;border:1px solid var(--border);text-align:left}
+td{padding:8px 12px;border:1px solid var(--border);color:#cbd5e1;vertical-align:top}
+td:first-child{font-family:var(--mono);font-size:.8rem;color:var(--text);font-weight:500;white-space:nowrap}
+tr:nth-child(even) td{background:#0d0d14}
+code{font-family:var(--mono);background:#1e1e2e;padding:2px 6px;border-radius:4px;font-size:.82rem;color:#a5b4fc}
+.chain{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:10px 0}
+.node{background:#1e293b;border:1px solid var(--border);border-radius:6px;padding:5px 11px;font-size:.78rem;font-family:var(--mono);color:#94a3b8}
+.arrow{color:var(--muted)}
+.targets{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0}
+.target{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center}
+.target .val{font-family:var(--mono);font-size:1.1rem;font-weight:700;margin-bottom:4px}
+.target .lbl{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.ritual{counter-reset:r}
+.ritual-item{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);align-items:flex-start}
+.ritual-item:last-child{border:none}
+.ritual-item::before{counter-increment:r;content:counter(r);font-family:var(--mono);font-size:.8rem;font-weight:700;background:var(--accent);color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.ritual-txt{font-size:.88rem;color:#cbd5e1}
+.ritual-txt b{color:var(--text)}
+
+/* GLOSSARY */
+.gloss-grid{display:grid;gap:8px}
+.term{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.term-head{display:flex;align-items:baseline;gap:10px;padding:11px 14px;cursor:pointer;user-select:none}
+.term-head:hover{background:#14141f}
+.term-name{font-family:var(--mono);font-size:.85rem;font-weight:700;color:var(--text)}
+.term-short{font-size:.8rem;color:var(--muted);flex:1}
+.term-body{padding:0 14px 12px;font-size:.85rem;color:#cbd5e1;display:none;border-top:1px solid var(--border);padding-top:10px;margin-top:0;line-height:1.7}
+.term-body b{color:var(--text)}
+.term-body .eg{font-family:var(--mono);font-size:.78rem;color:#a5b4fc;margin-top:6px;display:block}
+.term.open .term-body{display:block}
+.tag-cat{font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:4px;margin-left:auto}
+.tc-format{background:#1e1b4b;color:#a5b4fc}
+.tc-level{background:#14532d;color:#86efac}
+.tc-gear{background:#431407;color:#fdba74}
+.tc-flow{background:#1c1917;color:#a8a29e;border:1px solid #292524}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Bendi · Clase 4 · Manual de referencia</div>
+  <h1>Gain Staging & Glosario de Audio</h1>
+  <div class="sub">Ableton Live · Electrónica · Felipe → Bendi · Jul 2026</div>
+</header>
+
+<nav>
+  <a href="#why">Por qué</a>
+  <a href="#float">32-bit float</a>
+  <a href="#units">Unidades</a>
+  <a href="#targets">Targets</a>
+  <a href="#utility">Utility</a>
+  <a href="#flow">Signal flow</a>
+  <a href="#bus">Bus tree</a>
+  <a href="#ritual">Ritual</a>
+  <a href="#sauce">Sauce</a>
+  <a href="#glossary">Glosario</a>
+</nav>
+
+<div class="wrap">
+
+  <div class="quote">"Gain staging = mantener el nivel correcto en cada punto de la cadena para que nada clipee, todo tenga espacio, y cada procesador reciba el nivel para el que fue diseñado."</div>
+
+  <!-- POR QUÉ -->
+  <div class="section" id="why">
+    <h2>Por qué importa</h2>
+    <ul>
+      <li><b>Los dispositivos no lineales necesitan el nivel correcto.</b> Un saturador / compresor / plugin analógico se comporta como fue diseñado solo si lo alimentas bien (≈ −18 dBFS = 0 VU en gear analógico).</li>
+      <li><b>Headroom para el master.</b> El master debería peakear ≤ −6 dBFS sin limiter mientras produces.</li>
+      <li><b>Punto de partida consistente.</b> Mismo nivel de referencia en cada proyecto → tus oídos se calibran.</li>
+      <li><b>El fader en su zona dulce.</b> Los faders tienen más resolución cerca de 0 dB (unity). Si necesitas −28 para que un track siente, el input llega demasiado caliente.</li>
+      <li><b>Matar el bias de volumen.</b> Más fuerte suena "mejor" los primeros 3 segundos. El gain staging elimina esa mentira.</li>
+    </ul>
+  </div>
+
+  <!-- 32-BIT FLOAT -->
+  <div class="section" id="float">
+    <h2>El dato que lo cambia todo — 32-bit float</h2>
+    <div class="card green">
+      <h3>Ableton mezcla internamente en 32-bit floating point</h3>
+      <p>Consecuencia práctica: los canales internos <b>no pueden clipear de verdad</b>. Puedes empujar un canal +12 dB por encima de 0 dBFS y bajarlo con un Utility sin perder calidad. El rojo en un canal individual no es el desastre que parece.</p>
+    </div>
+    <div class="card red">
+      <h3>Dos lugares donde SÍ clipea / SÍ importa</h3>
+      <ul>
+        <li><b>El master output</b> — cuando la señal sale de Live y llega al conversor D/A de la interfaz (fixed-point). Por encima de 0 dBFS ahí = clipping digital real, feo, irreversible.</li>
+        <li><b>Cualquier dispositivo no-lineal</b> — saturadores, compresores, emulaciones de tape/tubo, EQs con drive. Estos <i>reaccionan</i> al nivel de entrada. Demasiado caliente = distorsión / pumping no intencional.</li>
+      </ul>
+    </div>
+    <p>El mito de internet — <i>"gain-stagea todo a −18 dBFS o arruinas el mix"</i> — es <b>verdad a medias</b>. Los dispositivos digitales limpios (EQ stock, delay, reverb) no se preocupan del nivel absoluto en 32-bit float. Los dispositivos no-lineales y el master, sí. Gain stagea para <i>esos</i>.</p>
+  </div>
+
+  <!-- UNIDADES -->
+  <div class="section" id="units">
+    <h2>Las unidades — qué muestran los metros</h2>
+    <table>
+      <tr><th>Término</th><th>Qué es</th><th>Para qué sirve</th></tr>
+      <tr><td>dBFS</td><td>dB Full Scale. 0 = techo digital, todo lo demás es negativo</td><td>Lo que muestra Ableton en sus metros (peak)</td></tr>
+      <tr><td>Peak</td><td>La muestra más fuerte, instantánea</td><td>Controla el clipping</td></tr>
+      <tr><td>RMS</td><td>Nivel promedio en una ventana de tiempo</td><td>Correlaciona con loudness percibida, mucho mejor que peak</td></tr>
+      <tr><td>LUFS</td><td>Estándar moderno de loudness integrada. Spotify/Apple normalize a ≈ −14 LUFS</td><td>La realidad del mundo real. Live no tiene metro LUFS nativo — usa Youlean (gratis)</td></tr>
+      <tr><td>Crest factor</td><td>Peak − RMS = cuánto punch/dinámica tiene</td><td>Alto = percusivo (drums). Bajo = denso/limitado (master)</td></tr>
+      <tr><td>0 VU / nominal</td><td>El nivel de referencia del gear analógico ≈ −18 dBFS en digital</td><td>Por qué los presets de synths analógicos "esperan" esa entrada</td></tr>
+    </table>
+  </div>
+
+  <!-- TARGETS -->
+  <div class="section" id="targets">
+    <h2>Targets para electrónica (anclas, no leyes)</h2>
+    <div class="targets">
+      <div class="target"><div class="val" style="color:var(--green)">−12 RMS</div><div class="lbl">Kick (el ancla)</div></div>
+      <div class="target"><div class="val" style="color:var(--blue)">−18 a −20</div><div class="lbl">Synths / pads</div></div>
+      <div class="target"><div class="val" style="color:var(--gold)">≤ −6 peak</div><div class="lbl">Master (sin limiter)</div></div>
+      <div class="target"><div class="val" style="color:var(--muted)">≈ 0 dB</div><div class="lbl">Faders (unity)</div></div>
+    </div>
+    <p>El kick es el ancla. Todo lo demás se construye encima de él.</p>
+  </div>
+
+  <!-- UTILITY -->
+  <div class="section" id="utility">
+    <h2>El Utility — la herramienta central</h2>
+    <ul>
+      <li><b>Gain ±</b> al inicio de la cadena = input trim (nivel que llega al saturador/comp)</li>
+      <li><b>Gain ±</b> al final de la cadena = output trim — el hábito de C3 "cierra toda cadena con un Utility"</li>
+      <li><b>Width / Bass Mono</b> — colapsa los graves a mono, amplía los agudos</li>
+    </ul>
+    <div class="card gold">
+      <h3>El Utility sandwich — el hábito profesional más importante</h3>
+      <div class="chain">
+        <div class="node">Utility (trim UP)</div><div class="arrow">→</div>
+        <div class="node">Saturador / Glue / Roar</div><div class="arrow">→</div>
+        <div class="node">Utility (trim DOWN)</div>
+      </div>
+      <p style="margin-top:8px">Gain-match input y output y puedes A/B el <b>carácter</b> del dispositivo sin que te engañe el <b>volumen</b>. Muchos tienen esto integrado (Saturator In/Out, Glue Makeup) — mismo principio.</p>
+    </div>
+  </div>
+
+  <!-- SIGNAL FLOW -->
+  <div class="section" id="flow">
+    <h2>Signal flow en un canal de Ableton</h2>
+    <div class="chain" style="flex-direction:column;align-items:flex-start;gap:4px">
+      <div style="display:flex;align-items:center;gap:6px"><div class="node">Clip Gain</div><span style="font-size:.75rem;color:var(--muted)">trim más temprano, por clip</span></div>
+      <div class="arrow" style="padding-left:12px">↓</div>
+      <div style="display:flex;align-items:center;gap:6px"><div class="node">Cadena de efectos (izq→der)</div><span style="font-size:.75rem;color:var(--muted)">cada dispositivo ve el output del anterior</span></div>
+      <div class="arrow" style="padding-left:12px">↓</div>
+      <div style="display:flex;align-items:center;gap:6px"><div class="node">Fader de track</div><span style="font-size:.75rem;color:var(--muted)">post-insertos, pre-sends (por defecto post-fader)</span></div>
+      <div class="arrow" style="padding-left:12px">↓</div>
+      <div style="display:flex;align-items:center;gap:6px"><div class="node">Sends → Returns → master</div></div>
+    </div>
+    <p style="margin-top:12px">Los sends son post-fader por defecto → bajar el fader también baja las colas de reverb/delay. Para recortar el output puro sin tocar los sends, hazlo en el grupo o en el master.</p>
+  </div>
+
+  <!-- BUS TREE -->
+  <div class="section" id="bus">
+    <h2>Bus tree (⌘G) — gain stage en capas</h2>
+    <ul>
+      <li>Agrupa tracks en submixes: <b>Drums · Bass · Synths/Music · FX</b></li>
+      <li>Cada grupo tiene su propia cadena + fader → gain stage a nivel de grupo</li>
+      <li>El master = la suma de los grupos. Trim en el grupo para mantener el master en la ventana −12/−6</li>
+      <li>Los returns también suman al master — cuida su nivel</li>
+    </ul>
+  </div>
+
+  <!-- RITUAL -->
+  <div class="section" id="ritual">
+    <h2>El ritual — 7 pasos</h2>
+    <div class="card" style="padding:4px 18px">
+      <div class="ritual">
+        <div class="ritual-item"><div class="ritual-txt"><b>Kick primero.</b> Utility → ~ −12 dBFS RMS, fader a 0. El ancla.</div></div>
+        <div class="ritual-item"><div class="ritual-txt"><b>Bass contra el kick.</b> Por oído, relativo al kick. Sub monoed + HPF en todo lo demás.</div></div>
+        <div class="ritual-item"><div class="ritual-txt"><b>Capas encima.</b> Drums/perc → chords/pads → leads. Cada uno con Utility al input, faders cerca de unity.</div></div>
+        <div class="ritual-item"><div class="ritual-txt"><b>Agrupar en buses.</b> Trim los buses para mantener master ≤ −6 peak.</div></div>
+        <div class="ritual-item"><div class="ritual-txt"><b>Dispositivo no-lineal.</b> Utility sandwich. Gain-match.</div></div>
+        <div class="ritual-item"><div class="ritual-txt"><b>Sin limiter en el master.</b> Deja ~6 dB de headroom para después.</div></div>
+        <div class="ritual-item"><div class="ritual-txt"><b>Referencia contra una track que ames.</b> A volumen igualado, siempre.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SAUCE -->
+  <div class="section" id="sauce">
+    <h2>Sauce — las líneas no obvias</h2>
+    <ul>
+      <li><b>32-bit float significa que el canal no te va a castigar — pero el master y tus saturadores sí.</b> Gain stagea para esos.</li>
+      <li><b>El kick es el ruler.</b></li>
+      <li><b>Trim al input, mezcla en el fader.</b> Los faders viven cerca de unity.</li>
+      <li><b>Utility en ambos extremos de cualquier dispositivo de carácter</b> = oyes el carácter, no el volumen.</li>
+      <li><b>Deja 6 dB de headroom y nunca produzcas con un limiter encendido.</b> Loudness es una decisión, se toma una vez, al final.</li>
+      <li><b>Más fuerte no es mejor — solo es más fuerte.</b> Iguala loudness antes de juzgar.</li>
+    </ul>
+  </div>
+
+  <!-- GLOSSARY -->
+  <div class="section" id="glossary">
+    <h2>Glosario de conceptos</h2>
+    <p style="margin-bottom:16px;font-size:.82rem;color:var(--muted)">Toca cualquier término para expandirlo.</p>
+    <div class="gloss-grid">
+
+      <div class="term">
+        <div class="term-head" onclick="toggle(this)">
+          <span class="term-name">32-bit float</span>
+          <span class="term-short">formato interno de Ableton</span>
+          <span class="tag-cat tc-format">Formato</span>
+        </div>
+        <div class="term-body">El <b>bit depth</b> (profundidad de bits) determina el rango dinámico disponible. El formato flotante (float) es especial: en vez de números fijos, usa notación científica interna. Ableton usa 32-bit float en su motor de mezcla. Resultado: el rango dinámico es tan amplio que un canal individual no puede clipear — los números simplemente se hacen muy grandes, pero el audio no se destruye. Solo clipea cuando la señal sale del ordenador (fixed-point). <span class="eg">Analogía: es como calcular en papel de infinito ancho. Solo cuando imprimes (el master, la interfaz) vuelves al límite real.</span>
+        </div>
+      </div>
+
+      <div class="term">
+        <div class="term-head" onclick="toggle(this)">
+          <span class="term-name">Bit depth</span>
+          <span class="term-short">resolución del audio digital</span>
+          <span class="tag-cat tc-format">Formato</span>
+        </div>
+        <div class="term-body">Cuántos bits se usan para representar cada muestra de audio. <b>16-bit</b> = 65.536 niveles posibles (~96 dB de rango dinámico). <b>24-bit</b> = 16 millones de niveles (~144 dB). <b>32-bit float</b> = rango efectivamente ilimitado internamente. Para exportar: siempre <b>24-bit WAV</b> para máxima calidad sin el overhead del float. 16-bit solo para CD o cuando te lo pidan explícitamente.<span class="eg">Regla: graba y exporta en 24-bit. El 32-bit float es cosa del motor interno de Ableton, no de tus archivos.</span></div>
+      </div>
+
+      <div class="term">
+        <div class="term-head" onclick="toggle(this)">
+          <span class="term-name">Sample rate</span>
+          <span class="term-short">cuántas veces por segundo se muestrea el audio</span>
+          <span class="tag-cat tc-format">Formato</span>
+        </div>
+        <div class="term-body">Cuántas "fotografías" por segundo hace el sistema del sonido analógico. <b>44.100 Hz</b> (44.1 kHz) = CD, estándar histórico de música. <b>48.000 Hz</b> = vídeo/broadcast. <b>96 kHz</b> = algunos workflows de mastering. El oído humano llega hasta ~20 kHz. Por el teorema de Nyquist, necesitas el doble de sample rate para reproducir una frecuencia → 44.1 kHz reproduce hasta 22.05 kHz, más que suficiente. Mezclar samples de diferente sample rate en el mismo proyecto = problemas de pitch. En Ableton: Preferences → Audio → Sample Rate.<span class="eg">Para música electrónica: 44.1 kHz es perfectamente válido. 48 kHz si el destino es vídeo.</span></div>
+      </div>
+
+      <div class="term">
+        <div class="term-head" onclick="toggle(this)">
+          <span class="term-name">dBFS</span>
+          <span class="term-short">dB Full Scale — la escala del digital</span>
+          <span class="tag-cat tc-level">Nivel</span>
+        </div>
+        <div class="term-body"><b>0 dBFS</b> = el techo absoluto del sistema digital. Todo lo que puedes medir es 0 o negativo. A diferencia del mundo analógico (donde puedes ir un poco por encima del nominal sin destruir la señal), en digital 0 dBFS es el límite real. Ir por encima = clipping. Los metros de Ableton muestran dBFS.<span class="eg">−6 dBFS = 6 dB por debajo del techo. −12 dBFS = 12 dB de headroom. Más negativo = más espacio.</span></div>
+      </div>
+
+      <div class="term">
+        <div class="term-head" onclick="toggle(this)">
+          <span class="term-name">Peak vs RMS vs LUFS</span>
+          <span class="term-short">tres formas de medir el volumen</span>
+          <span class="tag-cat tc-level">Nivel</span>
+        </div>
+        <div class="term-body"><b>Peak</b>: la muestra más alta instantánea. Controla el clipping. El metro por defecto de Ableton.<br><b>RMS</b> (Root Mean Square): promedio de energía en una ventana de tiempo (~300ms). Correlaciona mucho mejor con lo que el oído percibe como "fuerte". Necesitas un plugin externo para verlo (Youlean, gratis).<br><b>LUFS</b> (Loudness Units Full Scale): el estándar moderno. Integra el nivel en toda la duración de la canción. Spotify normaliza a −14 LUFS, YouTube a −14, Apple Music a −16. Si tu track está a −8 LUFS integrado, las plataformas lo bajarán automáticamente — no ganas nada siendo más fuerte.<span class="eg">Un kick muy percusivo puede tener peak de −6 dBFS pero RMS de −20 dBFS. La diferencia es el crest factor.</span></div>
+      </div>
+
+      <div class="term">
+        <div class="term-head" onclick="toggle(this)">
+          <span class="term-name">Headroom</span>
+          <span class="term-short">espacio por encima del nivel de trabajo</span>
+          <span class="tag-cat tc-level">Nivel</span>
+        </div>
+        <div class="term-body">La diferencia entre tu nivel de trabajo y 0 dBFS. Si el master peakea a −6 dBFS, tienes 6 dB de headroom. Por qué importa: los transientes del kick, las notas de sintetizador más fuertes, y la suma de capas cuando tocas todo junto pueden ser varios dB más altos que el nivel promedio. Sin headroom, cualquier pico clipea el master. La regla durante producción: mantener ≥6 dB de headroom en el master, sin limiter.<span class="eg">El limiter al final del master "regala" headroom falso — aplana los picos pero oculta problemas de balance. Por eso se pone al masterizar, no al producir.</span></div>
+      </div>
+
+      <div class="term">
+        <div class="term-head" onclick="toggle(this)">
+          <span class="term-name">Clipping</span>
+          <span class="term-short">cuando la señal supera el techo</span>
+          <span class="tag-cat tc-level">Nivel</span>
+        </div>
+        <div class="term-body"><b>Digital clipping</b>: la señal supera 0 dBFS en un punto fijo (la interfaz, el master final). Las muestras que sobrepasan el techo se "cortan" a 0 — literalmente se aplanan. El resultado es distorsión dura, desagradable, fea. Irreversible una vez grabada.<br><b>Soft clipping</b>: algunos saturadores y plugins emulan el clipping analógico, que tiene una saturación progresiva y agradable (no un corte brusco). Eso es intencional y puede sonar bien.<br><b>En 32-bit float internamente</b>: el rojo en un canal de Ableton no es clipping real — es un aviso de que ese canal está "por encima de lo normal", pero puedes recuperarlo sin daño.<span class="eg">Preocúpate del clipping en: el master de Ableton, y cuando grabas audio externo (el A/D converter de tu interfaz sí tiene un techo real).</span></div>
+      </div>
+
+      <div class="term">
+        <div class="term-head" onclick="toggle(this)">
+          <span class="term-name">Unity gain (0 dB)</span>
+          <span class="term-short">sin amplificación ni atenuación</span>
+          <span class="tag-cat tc-level">Nivel</span>
+        </div>
+        <div class="term-body">Cuando un dispositivo o fader está en 0 dB, la señal pasa sin cambiar de nivel. Es el punto de referencia neutral. Los faders de Ableton tienen más resolución cerca de 0 dB (unity) — pequeños movimientos tienen el efecto esperado. Lejos de unity (especialmente muy abajo), los pasos son más grandes y pierdes control fino. El objetivo del gain staging es que todos tus faders puedan vivir cerca de unity.<span class="eg">Si necesitas el fader del kick a −22 para que siente, el clip o el input del canal llegan demasiado calientes. Trim en el origen.</span></div>
+      </div>
+
+      <div class="term">
+        <div class="term-head" onclick="toggle(this)">
+          <span class="term-name">Signal flow / cadena de señal</span>
+          <span class="term-short">el camino del audio de izquierda a derecha</span>
+          <span class="tag-cat tc-flow">Flow</span>
+        </div>
+        <div class="term-body">El orden en que los dispositivos procesan el audio. En un canal de Ableton: Clip Gain → efectos de inserción (izq a der) → fader → sends → returns → master. El orden importa: un compresor antes de un EQ hace algo diferente que un EQ antes de un compresor. La regla: piensa en la cadena como un tobogán — la señal pasa por cada dispositivo en orden y sale transformada por todos ellos. Si cortas frecuencias con EQ primero, el compresor reacciona a la señal ya filtrada.<span class="eg">Orden clásico para un canal: EQ (cortar lo que no sirve) → Compresor (controlar dinámica) → Saturación (carácter) → Utility (output trim)</span></div>
+      </div>
+
+      <div class="term">
+        <div class="term-head" onclick="toggle(this)">
+          <span class="term-name">Pre-fader vs Post-fader (sends)</span>
+          <span class="term-short">cuándo se bifurca la señal hacia el return</span>
+          <span class="tag-cat tc-flow">Flow</span>
+        </div>
+        <div class="term-body"><b>Post-fader</b> (por defecto en Ableton): la señal que va al send se toma DESPUÉS del fader. Si bajas el fader del track, también baja el nivel que llega al reverb/delay. Comportamiento natural: baja el track → baja también su cola de reverb.<br><b>Pre-fader</b>: la señal del send se toma ANTES del fader. Puedes bajar el fader a cero y la reverb sigue sonando a plena potencia. Útil para efectos creativos (silenciar el dry pero mantener el wet).<span class="eg">Para cambiar: clic derecho sobre el send knob → "Pre Fader". Cuidado: post-fader es casi siempre lo que quieres.</span></div>
+      </div>
+
+      <div class="term">
+        <div class="term-head" onclick="toggle(this)">
+          <span class="term-name">Bus / Grupo / Subgrupo</span>
+          <span class="term-short">agrupar tracks para procesarlas juntas</span>
+          <span class="tag-cat tc-flow">Flow</span>
+        </div>
+        <div class="term-body">Un bus (o grupo en Ableton, ⌘G) es un canal que recibe el audio de varios tracks y los suma antes de llegar al master. Sirve para: procesar todos los drums juntos con un Glue Compressor, hacer gain staging en capas (trim el bus, no cada track individual), y para organización. El master = el bus de todos los buses.<span class="eg">Estructura típica: Drums bus → Bass bus → Synths bus → Voz bus → sumando en el master. Cada bus tiene un Utility + quizás un compresor de glue.</span></div>
+      </div>
+
+      <div class="term">
+        <div class="term-head" onclick="toggle(this)">
+          <span class="term-name">Dynamic range</span>
+          <span class="term-short">diferencia entre lo más suave y lo más fuerte</span>
+          <span class="tag-cat tc-level">Nivel</span>
+        </div>
+        <div class="term-body">La diferencia en dB entre el elemento más silencioso y el más fuerte de una grabación o del sistema. Un kit de batería acústico puede tener 90+ dB de rango dinámico. Un master de electrónica muy limitado puede tener solo 6-8 dB. El rango dinámico del formato: 16-bit ≈ 96 dB, 24-bit ≈ 144 dB. El crest factor es el dynamic range de un momento específico (peak vs RMS). La "loudness war" de los 2000s fue una carrera por comprimir y limitar hasta destruir el dynamic range. Hoy las plataformas normalizan — tener más dynamic range vuelve a ser ventaja.<span class="eg">Un kick que suena "gordo" tiene un crest factor alto: pico alto, RMS relativamente bajo. Mucho punch, mucho espacio para el resto del mix.</span></div>
+      </div>
+
+      <div class="term">
+        <div class="term-head" onclick="toggle(this)">
+          <span class="term-name">Noise floor</span>
+          <span class="term-short">el nivel de ruido de fondo del sistema</span>
+          <span class="tag-cat tc-level">Nivel</span>
+        </div>
+        <div class="term-body">El nivel mínimo de ruido que genera el sistema (electrónica de la interfaz, cables, EMI del entorno). Por encima del noise floor es donde vive el audio útil. En digital el noise floor teórico es mucho más bajo que en analógico (≈ −144 dBFS en 24-bit vs ≈ −60 dBFS en analógico básico). Relevante en la práctica cuando grabas con ganancia muy baja: si el nivel es demasiado bajo, al amplificar después subes también el ruido de fondo.<span class="eg">No es un problema en producción electrónica pura (todo sintético). Sí importa cuando grabas voces, guitarra, o cualquier fuente real.</span></div>
+      </div>
+
+      <div class="term">
+        <div class="term-head" onclick="toggle(this)">
+          <span class="term-name">Latencia / Buffer size</span>
+          <span class="term-short">el retraso entre tocar y escuchar</span>
+          <span class="tag-cat tc-gear">Sistema</span>
+        </div>
+        <div class="term-body">El <b>buffer size</b> es cuántas muestras procesa la interfaz de audio a la vez antes de enviarlo al output. Buffer pequeño (64, 128 samples) = latencia baja (bueno para tocar en tiempo real) pero más carga de CPU. Buffer grande (512, 1024) = más latencia pero el CPU respira más. La latencia en ms = buffer size / sample rate. Con 256 samples a 44.1 kHz = ~5.8ms. Con 512 = ~11.6ms. Para tocar un pad o un teclado en tiempo real: buffer de 128-256. Para mezclar sin tocar en tiempo real: puedes subir a 512-1024.<span class="eg">En Ableton: Preferences → Audio → Buffer Size. Si hay clicks/pops al producir: sube el buffer. Si hay retraso al tocar: bájalo.</span></div>
+      </div>
+
+      <div class="term">
+        <div class="term-head" onclick="toggle(this)">
+          <span class="term-name">Saturación / Distorsión</span>
+          <span class="term-short">añadir armónicos para carácter y peso</span>
+          <span class="tag-cat tc-gear">Procesado</span>
+        </div>
+        <div class="term-body">La saturación añade <b>armónicos</b> (frecuencias que son múltiplos de la original) que no estaban en la señal. Proviene de la manera en que los circuitos analógicos (tape, tubos, transistores) se comportan cuando se les empuja. El resultado: el sonido parece más "gordo", "caliente", presente. <b>Distorsión suave (soft clipping)</b>: compresión gradual + armónicos pares (2ª, 4ª) → cálida, musical. <b>Distorsión dura (hard clipping)</b>: corte abrupto + armónicos impares (3ª, 5ª, 7ª) → agresiva, metálica. La saturación es sensible al nivel de entrada — por eso el Utility sandwich importa.<span class="eg">Saturator en Ableton tiene modos: Soft Clip, Hard Clip, Analog (mezcla), Sine (limpio), Fold (experimental). Warm/Analog = armónicos pares. Hard/Fold = impares.</span></div>
+      </div>
+
+      <div class="term">
+        <div class="term-head" onclick="toggle(this)">
+          <span class="term-name">Sidechain</span>
+          <span class="term-short">controlar un dispositivo con la señal de otro track</span>
+          <span class="tag-cat tc-gear">Procesado</span>
+        </div>
+        <div class="term-body">Cuando un procesador (compresor, gate, filtro, Envelope Follower) reacciona no a la señal que está procesando sino a una señal externa — el "sidechain input". El ejemplo clásico: el kick comprime el bass (sidechain compressor). El kick entra al compresor como sidechain → cuando suena el kick, el compresor baja el bass → "bomba" del house. El Gate sidechain de C2 funciona igual: la señal de 808 abre/cierra el gate del pad. El Envelope Follower de hoy es el sidechain más versátil — puede modular cualquier parámetro mapeado.<span class="eg">Ableton: en cualquier Compressor o Gate, hay una pestaña lateral (triángulo) para activar el sidechain input y elegir el track fuente.</span></div>
+      </div>
+
+      <div class="term">
+        <div class="term-head" onclick="toggle(this)">
+          <span class="term-name">Mono vs Stereo — Bass Mono</span>
+          <span class="term-short">por qué los graves deben ser mono</span>
+          <span class="tag-cat tc-gear">Procesado</span>
+        </div>
+        <div class="term-body">Las frecuencias bajas (por debajo de ~150-200 Hz) son <b>omnidireccionales</b> — el oído no puede ubicarlas en el espacio estéreo. Tener los graves en estéreo: desperdicia headroom (dos canales haciendo lo mismo), puede causar cancelación de fase (las dos señales se restan en mono), y llena el centro sin añadir información percibida. La solución: <b>Bass Mono</b> en el Utility o un plugin de stereo imaging — colapsa todo por debajo de cierta frecuencia a mono, mantiene el estéreo en los agudos. Resultado: más headroom, más punch, mezcla compatible en mono.<span class="eg">Utility → Bass Mono: actívalo. Por defecto a 120 Hz. Kickdrum, bass, sub: todos en mono.</span></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+function toggle(head) {
+  const term = head.closest('.term');
+  term.classList.toggle('open');
+}
+</script>
+</body>
+</html>

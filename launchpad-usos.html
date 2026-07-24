@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bendi · Launchpad Mini — Usos</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0c0b0a; --bg-card:#141319; --bg-elev:#1a1820;
+    --ink:#ece6d6; --ink-soft:#b8b0a3; --ink-mute:#6e6a60;
+    --gold:#c79a5f; --gold-glow:#e3a86b; --red:#b85c4a;
+    --green:#7ab87a; --blue:#6f8aa8; --purple:#9b72cf;
+    --line:rgba(199,154,95,0.18);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--ink); font-family:'Inter',sans-serif; font-size:15px; line-height:1.65; -webkit-font-smoothing:antialiased; padding-bottom:80px; }
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:0.045;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+
+  .topbar { position:sticky; top:0; z-index:500; background:rgba(12,11,10,0.94); backdrop-filter:blur(14px); border-bottom:1px solid var(--line); padding:16px 28px; display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  .topbar-title { font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:500; letter-spacing:-0.02em; }
+  .topbar-title em { font-style:normal; color:var(--gold); }
+  .tag { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.16em; text-transform:uppercase; padding:4px 9px; border-radius:3px; border:1px solid rgba(184,92,74,0.4); color:var(--red); }
+  .topbar-sub { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-mute); letter-spacing:0.12em; text-transform:uppercase; margin-top:6px; }
+
+  .wrap { max-width:900px; margin:0 auto; padding:40px 28px 0; }
+
+  h2 { font-family:'Space Grotesk',sans-serif; font-size:12px; font-weight:500; text-transform:uppercase; letter-spacing:0.18em; color:var(--ink-mute); margin-bottom:16px; padding-bottom:8px; border-bottom:1px solid var(--line); }
+
+  .section { margin-bottom:44px; }
+
+  .intro { background:var(--bg-card); border:1px solid var(--gold); border-left:3px solid var(--gold); padding:18px 22px; border-radius:4px; margin-bottom:36px; font-size:14px; color:var(--ink-soft); line-height:1.7; }
+  .intro strong { color:var(--ink); }
+
+  /* Grid of use cards */
+  .use-grid { display:grid; gap:12px; }
+  .use-card { background:var(--bg-card); border:1px solid var(--line); border-radius:4px; overflow:hidden; display:grid; grid-template-columns:4px 1fr; }
+  .use-card-accent { }
+  .use-card-body { padding:18px 20px; }
+  .use-card-header { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+  .use-num { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--ink-mute); }
+  .use-title { font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:500; }
+  .use-tag { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.12em; text-transform:uppercase; padding:2px 8px; border-radius:100px; margin-left:auto; }
+  .tag-now { background:rgba(122,184,122,0.12); color:var(--green); border:1px solid rgba(122,184,122,0.25); }
+  .tag-next { background:rgba(111,138,168,0.12); color:var(--blue); border:1px solid rgba(111,138,168,0.25); }
+  .tag-later { background:rgba(155,114,207,0.12); color:var(--purple); border:1px solid rgba(155,114,207,0.25); }
+  .use-desc { font-size:13.5px; color:var(--ink-soft); margin-bottom:10px; }
+  .use-how { font-size:12.5px; color:var(--ink-mute); font-style:italic; border-left:2px solid var(--line); padding-left:10px; margin-top:8px; }
+  .use-how strong { color:var(--gold); font-style:normal; }
+
+  /* Mode grid */
+  .mode-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+  .mode-card { background:var(--bg-card); border:1px solid var(--line); border-radius:4px; padding:14px 16px; }
+  .mode-card h4 { font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.14em; color:var(--gold); margin-bottom:6px; }
+  .mode-card p { font-size:13px; color:var(--ink-soft); }
+
+  /* LP visual */
+  .lp-grid { display:grid; grid-template-columns:repeat(8,1fr); gap:4px; max-width:320px; margin:0 auto 24px; }
+  .pad { aspect-ratio:1; border-radius:3px; background:var(--bg-card); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:8px; color:var(--ink-mute); }
+  .pad.kick { background:#3a1a1a; border-color:#b85c4a88; }
+  .pad.snare { background:#1a2a1a; border-color:#7ab87a88; }
+  .pad.hat { background:#1a1a3a; border-color:#6f8aa888; }
+  .pad.chord { background:#2a1f1a; border-color:#c79a5f88; }
+  .pad.empty { background:var(--bg); border-color:#1a1a1a; }
+  .lp-legend { display:flex; gap:16px; justify-content:center; flex-wrap:wrap; font-size:11px; color:var(--ink-mute); font-family:'JetBrains Mono',monospace; }
+  .lp-legend span { display:flex; align-items:center; gap:6px; }
+  .dot { width:8px; height:8px; border-radius:2px; }
+
+  @media(max-width:600px){ .mode-grid{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="topbar-title">Bendi · <em>Launchpad Mini</em></div>
+    <div class="topbar-sub">Usos creativos · Más allá de los drum pads</div>
+  </div>
+  <span class="tag">Interno</span>
+</div>
+
+<div class="wrap">
+
+  <div class="intro">
+    El Launchpad Mini tiene <strong>64 pads RGB, 3 modos nativos (Session, Note, Custom) y M4L disponible</strong>. La mayoría lo usa como launcher de clips o drum machine. Aquí exploramos lo que no es obvio — cómo convierte el grid en un instrumento real, un controlador de expresión, o una interfaz de performance.
+  </div>
+
+  <!-- MODOS NATIVOS -->
+  <div class="section">
+    <h2>Los 4 modos nativos</h2>
+    <div class="mode-grid">
+      <div class="mode-card">
+        <h4>Session</h4>
+        <p>Cada pad = un clip de Session View. Filas = tracks, columnas = escenas. Lanzar, parar, ver qué está sonando. El más conocido.</p>
+      </div>
+      <div class="mode-card">
+        <h4>Note</h4>
+        <p>El grid se convierte en teclado cromático o en Drum Rack. En cromático: 8 filas = escala isomórfica. No hay notas "malas" — el layout es coherente en cualquier dirección.</p>
+      </div>
+      <div class="mode-card">
+        <h4>Custom (×3)</h4>
+        <p>3 bancos de mapping libre vía Novation Components. Cada pad puede enviar Note, CC o Program Change. Filas y columnas pueden ser faders.</p>
+      </div>
+      <div class="mode-card">
+        <h4>Programmer</h4>
+        <p>Control total por MIDI. Cualquier app/DAW puede tomar el control del LED y recibir mensajes. La base para scripts de M4L y setups custom avanzados.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- USOS CREATIVOS -->
+  <div class="section">
+    <h2>Usos creativos — de inmediato a avanzado</h2>
+    <div class="use-grid">
+
+      <div class="use-card">
+        <div class="use-card-accent" style="background:var(--green);"></div>
+        <div class="use-card-body">
+          <div class="use-card-header">
+            <span class="use-num">01</span>
+            <span class="use-title">Teclado isomórfico en escala</span>
+            <span class="use-tag tag-now">Hoy</span>
+          </div>
+          <p class="use-desc">En Note Mode, el Launchpad pone el grid en layout cromático. Con el device <strong>Scale (MIDI)</strong> antes del instrumento, todas las notas se transponen a la escala elegida. Resultado: imposible tocar una nota "falsa." Puedes moverte en cualquier dirección — diagonal, horizontal — y siempre suenas dentro del key.</p>
+          <p class="use-how"><strong>Setup:</strong> MIDI track → Scale (MIDI FX) → cualquier synth. Launchpad en Note Mode. Elegir escala en el device. Tocar libremente.</p>
+        </div>
+      </div>
+
+      <div class="use-card">
+        <div class="use-card-accent" style="background:var(--green);"></div>
+        <div class="use-card-body">
+          <div class="use-card-header">
+            <span class="use-num">02</span>
+            <span class="use-title">Drum machine con feedback visual</span>
+            <span class="use-tag tag-now">Hoy</span>
+          </div>
+          <p class="use-desc">En Note Mode > Drums: cada pad triggerea un slot del Drum Rack. Los LEDs muestran qué pad está sonando en tiempo real. Más intuitivo que el piano roll para construcción rítmica — ves la percusión mientras la tocas.</p>
+          <p class="use-how"><strong>Setup:</strong> Drum Rack en un track MIDI. Launchpad en Note Mode, submode Drums. Los 16 pads inferiores mapean al Rack.</p>
+        </div>
+      </div>
+
+      <div class="use-card">
+        <div class="use-card-accent" style="background:var(--green);"></div>
+        <div class="use-card-body">
+          <div class="use-card-header">
+            <span class="use-num">03</span>
+            <span class="use-title">Chord launcher — acordes de un toque</span>
+            <span class="use-tag tag-now">Hoy</span>
+          </div>
+          <p class="use-desc">Cada pad en Custom Mode envía una nota MIDI. Con el device <strong>Chord (MIDI FX)</strong>, cada nota se expande a un acorde completo. Un pad = un acorde. Ocho pads = tu progresión entera. Puedes tocar armonías complejas sin saber posiciones de teclado.</p>
+          <p class="use-how"><strong>Setup:</strong> MIDI track → Chord (MIDI FX, elige los intervals) → synth pad. Custom Mode, cada pad = nota raíz de cada acorde.</p>
+        </div>
+      </div>
+
+      <div class="use-card">
+        <div class="use-card-accent" style="background:var(--blue);"></div>
+        <div class="use-card-body">
+          <div class="use-card-header">
+            <span class="use-num">04</span>
+            <span class="use-title">Panel de macros en vivo</span>
+            <span class="use-tag tag-next">Pronto</span>
+          </div>
+          <p class="use-desc">Cada pad mapeado a una macro de un Audio Effect Rack (o Instrument Rack). Un toque = cambio de carácter. Por ejemplo: 8 pads = 8 "estados" del pad (seco, reverberado, filtrado, distorsionado, pitch-shifted, etc.). Performance sin tocar el ratón.</p>
+          <p class="use-how"><strong>Setup:</strong> Audio Effect Rack con macros. Custom Mode. MIDI Map cada pad a una macro. Valores pre-programados.</p>
+        </div>
+      </div>
+
+      <div class="use-card">
+        <div class="use-card-accent" style="background:var(--blue);"></div>
+        <div class="use-card-body">
+          <div class="use-card-header">
+            <span class="use-num">05</span>
+            <span class="use-title">Step sequencer visual (M4L)</span>
+            <span class="use-tag tag-next">Pronto</span>
+          </div>
+          <p class="use-desc">Con el M4L device <strong>Step Seq</strong> (o el Novation Sequencer incluido en Components), el grid se convierte en un secuenciador de 64 pasos con feedback LED. Cada pad activo = una nota en esa posición. Editas el patrón en tiempo real mientras suena.</p>
+          <p class="use-how"><strong>Setup:</strong> M4L Step Seq en un MIDI track. El Launchpad en Programmer Mode — el script toma control total del LED.</p>
+        </div>
+      </div>
+
+      <div class="use-card">
+        <div class="use-card-accent" style="background:var(--blue);"></div>
+        <div class="use-card-body">
+          <div class="use-card-header">
+            <span class="use-num">06</span>
+            <span class="use-title">Faders de volumen / send con el grid</span>
+            <span class="use-tag tag-next">Pronto</span>
+          </div>
+          <p class="use-desc">En Custom Mode, una columna entera puede comportarse como un fader (enviando CCs de 0 a 127 según qué pad pulsas). Mapear al volumen de un track o al send de un reverb — control físico sin hardware de faders.</p>
+          <p class="use-how"><strong>Setup:</strong> Novation Components → Custom Mode → configurar columna como fader CC. MIDI Map el CC al parámetro en Live.</p>
+        </div>
+      </div>
+
+      <div class="use-card">
+        <div class="use-card-accent" style="background:var(--purple);"></div>
+        <div class="use-card-body">
+          <div class="use-card-header">
+            <span class="use-num">07</span>
+            <span class="use-title">Envelope Follower visual — kick mueve el grid</span>
+            <span class="use-tag tag-later">Avanzado</span>
+          </div>
+          <p class="use-desc">Con <strong>Envelope Follower (M4L)</strong> y un script de Programmer Mode, la amplitud del kick puede encender filas de LEDs en el Launchpad en tiempo real. El grid respira con la música. Performance art + función.</p>
+          <p class="use-how"><strong>Setup:</strong> M4L Envelope Follower mapeado a un CC. Script en Programmer Mode que interpreta ese CC como intensidad de LED. Experimental.</p>
+        </div>
+      </div>
+
+      <div class="use-card">
+        <div class="use-card-accent" style="background:var(--purple);"></div>
+        <div class="use-card-body">
+          <div class="use-card-header">
+            <span class="use-num">08</span>
+            <span class="use-title">Looper / clip launcher en performance</span>
+            <span class="use-tag tag-later">Avanzado</span>
+          </div>
+          <p class="use-desc">Session Mode en performance real: grabar loops en vivo con el Launchpad. Cada fila = un instrumento (bass, pad, melodía, percusión). Construyes la canción en capas delante del público. El LED muestra qué está grabando y qué está sonando.</p>
+          <p class="use-how"><strong>Setup:</strong> Session View preparada, Follow Actions configuradas, quantización de lanzamiento. El Launchpad es el único controlador visible.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- LAYOUT VISUAL -->
+  <div class="section">
+    <h2>Ejemplo de layout — build de hoy</h2>
+    <div class="lp-grid">
+      <!-- Row 1: chords -->
+      <div class="pad chord">I</div><div class="pad chord">IV</div><div class="pad chord">V</div><div class="pad chord">vi</div><div class="pad empty"></div><div class="pad empty"></div><div class="pad empty"></div><div class="pad empty"></div>
+      <!-- Row 2 empty -->
+      <div class="pad empty"></div><div class="pad empty"></div><div class="pad empty"></div><div class="pad empty"></div><div class="pad empty"></div><div class="pad empty"></div><div class="pad empty"></div><div class="pad empty"></div>
+      <!-- Row 3: melody pads (note mode) -->
+      <div class="pad hat">♩</div><div class="pad hat">♩</div><div class="pad hat">♩</div><div class="pad hat">♩</div><div class="pad hat">♩</div><div class="pad hat">♩</div><div class="pad hat">♩</div><div class="pad hat">♩</div>
+      <!-- Row 4 empty -->
+      <div class="pad empty"></div><div class="pad empty"></div><div class="pad empty"></div><div class="pad empty"></div><div class="pad empty"></div><div class="pad empty"></div><div class="pad empty"></div><div class="pad empty"></div>
+      <!-- Row 5 empty -->
+      <div class="pad empty"></div><div class="pad empty"></div><div class="pad empty"></div><div class="pad empty"></div><div class="pad empty"></div><div class="pad empty"></div><div class="pad empty"></div><div class="pad empty"></div>
+      <!-- Row 6: drum rack -->
+      <div class="pad kick">BD</div><div class="pad snare">SD</div><div class="pad hat">HH</div><div class="pad hat">OH</div><div class="pad snare">CL</div><div class="pad kick">P1</div><div class="pad kick">P2</div><div class="pad snare">P3</div>
+      <!-- Row 7: macros -->
+      <div class="pad chord">M1</div><div class="pad chord">M2</div><div class="pad chord">M3</div><div class="pad chord">M4</div><div class="pad chord">M5</div><div class="pad chord">M6</div><div class="pad chord">M7</div><div class="pad chord">M8</div>
+      <!-- Row 8: scenes -->
+      <div class="pad empty">▶</div><div class="pad empty">▶</div><div class="pad empty">▶</div><div class="pad empty">▶</div><div class="pad empty"></div><div class="pad empty"></div><div class="pad empty"></div><div class="pad empty">■</div>
+    </div>
+    <div class="lp-legend" style="margin-top:12px;">
+      <span><div class="dot" style="background:#3a1a1a;border:1px solid #b85c4a88;"></div>Drum (kick/perc)</span>
+      <span><div class="dot" style="background:#1a2a1a;border:1px solid #7ab87a88;"></div>Snare/clap</span>
+      <span><div class="dot" style="background:#1a1a3a;border:1px solid #6f8aa888;"></div>Hi-hat / notas</span>
+      <span><div class="dot" style="background:#2a1f1a;border:1px solid #c79a5f88;"></div>Acordes / macros</span>
+    </div>
+  </div>
+
+  <!-- PARA HOY -->
+  <div class="section">
+    <h2>Plan para la clase 3 — con el Launchpad integrado</h2>
+    <div style="display:grid;gap:10px;">
+      <div style="background:var(--bg-card);border:1px solid var(--line);border-left:3px solid var(--green);border-radius:4px;padding:14px 18px;font-size:13.5px;color:var(--ink-soft);">
+        <strong style="color:var(--ink);display:block;margin-bottom:4px;">Primera mitad — Build con todo lo aprendido</strong>
+        Drum Rack en el Launchpad (Note Mode > Drums). Añadir gate trigger sobre un pad (clase 2). MIDI rack encima para la melodía. Resonators en el drum bus — primeros 5 min de "woah."
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:4px;padding:14px 18px;font-size:13.5px;color:var(--ink-soft);">
+        <strong style="color:var(--ink);display:block;margin-bottom:4px;">Device discovery — Grain Delay + LFO</strong>
+        Grain Delay en el hi-hat (shimmer inmediato). LFO mapeado al filtro del pad (movimiento sin tocar nada). Envelope Follower si hay tiempo — kick mueve el pad automáticamente.
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:4px;padding:14px 18px;font-size:13.5px;color:var(--ink-soft);">
+        <strong style="color:var(--ink);display:block;margin-bottom:4px;">Segunda mitad — Chord launcher en el Launchpad</strong>
+        Custom Mode: 4-8 pads = acordes (Chord MIDI FX). Bendi toca una progresión sobre el groove que construyó. El Launchpad deja de ser drum machine y se convierte en instrumento armónico. Cierre: export del loop.
+      </div>
+    </div>
+  </div>
+
+  <!-- DEVICE CONFIGS -->
+  <div class="section">
+    <h2>Device configs — setup exacto + trucos ocultos</h2>
+    <div class="use-grid">
+
+      <!-- RESONATORS -->
+      <div class="use-card">
+        <div class="use-card-accent" style="background:var(--gold);"></div>
+        <div class="use-card-body">
+          <div class="use-card-header">
+            <span class="use-num">RES</span>
+            <span class="use-title">Resonators</span>
+            <span class="use-tag tag-now">Hoy</span>
+          </div>
+          <p class="use-desc">Convierte cualquier sonido percusivo en contenido armónico. Cinco resonadores en paralelo afinados a las notas del track. El bombo pasa a tener overtones melódicos. El hi-hat se vuelve brillante y musical.</p>
+          <div style="background:var(--bg-elev);border-radius:3px;padding:14px 16px;margin:10px 0;font-size:13px;color:var(--ink-soft);">
+            <div style="color:var(--gold);font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:8px;">Setup recomendado</div>
+            <div style="display:grid;gap:5px;">
+              <div>· <strong style="color:var(--ink);">I (Note):</strong> la tónica del track (ej. A3 si estás en Am)</div>
+              <div>· <strong style="color:var(--ink);">II:</strong> +7 semitones (quinta)</div>
+              <div>· <strong style="color:var(--ink);">III:</strong> +12 semitones (octava)</div>
+              <div>· <strong style="color:var(--ink);">IV:</strong> +15 semitones (quinta alta)</div>
+              <div>· <strong style="color:var(--ink);">V:</strong> +19 semitones (tercera alta)</div>
+              <div>· <strong style="color:var(--ink);">Decay:</strong> 200–400ms para percusión, 1–2s para pads</div>
+              <div>· <strong style="color:var(--ink);">Dry/Wet:</strong> empieza en 20%, sube hasta que lo escuches</div>
+              <div>· <strong style="color:var(--ink);">Modo:</strong> Up+Down para más riqueza armónica</div>
+            </div>
+          </div>
+          <p class="use-how"><strong>Truco oculto:</strong> Pon Resonators en el return del reverb, no en el canal directo. El bombo tiene resonancia solo en la cola del reverb — más sutil, más profesional. El ataque queda limpio y los overtones flotan en el espacio. También: automatiza el knob "I" (la nota raíz) a lo largo del arrangement — el drum loop cambia de "key" sin cambiar ningún sample.</p>
+        </div>
+      </div>
+
+      <!-- GRAIN DELAY -->
+      <div class="use-card">
+        <div class="use-card-accent" style="background:var(--blue);"></div>
+        <div class="use-card-body">
+          <div class="use-card-header">
+            <span class="use-num">GD</span>
+            <span class="use-title">Grain Delay</span>
+            <span class="use-tag tag-now">Hoy</span>
+          </div>
+          <p class="use-desc">Delay granular — el audio se congela en fragmentos microscópicos (granos) que se repiten, transponen y dispersan. Resultado: shimmer etéreo sobre hats, textura ambiental sobre samples, freeze-glitch en percusiones.</p>
+          <div style="background:var(--bg-elev);border-radius:3px;padding:14px 16px;margin:10px 0;font-size:13px;color:var(--ink-soft);">
+            <div style="color:var(--blue);font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:8px;">Setup A — shimmer en hat</div>
+            <div style="display:grid;gap:5px;">
+              <div>· <strong style="color:var(--ink);">Spray:</strong> 30–60ms (dispersión de grano)</div>
+              <div>· <strong style="color:var(--ink);">Frequency:</strong> 80–120ms</div>
+              <div>· <strong style="color:var(--ink);">Pitch:</strong> +12 st (octava arriba) o 0</div>
+              <div>· <strong style="color:var(--ink);">Rand Pitch:</strong> 10–20 (aleatoriza afinación = shimmer)</div>
+              <div>· <strong style="color:var(--ink);">Feedback:</strong> 30–50%</div>
+              <div>· <strong style="color:var(--ink);">Dry/Wet:</strong> 20–35% (textura, no efecto evidente)</div>
+            </div>
+            <div style="color:var(--blue);font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.14em;margin:10px 0 8px;">Setup B — freeze glitch</div>
+            <div style="display:grid;gap:5px;">
+              <div>· <strong style="color:var(--ink);">Spray:</strong> 0</div>
+              <div>· <strong style="color:var(--ink);">Frequency:</strong> muy corto (10–20ms)</div>
+              <div>· <strong style="color:var(--ink);">Feedback:</strong> 80%+</div>
+              <div>· <strong style="color:var(--ink);">Dry/Wet:</strong> 100% — automatiza on/off para glitch momentáneo</div>
+            </div>
+          </div>
+          <p class="use-how"><strong>Truco oculto:</strong> Mapea <strong>Spray</strong> y <strong>Rand Pitch</strong> a dos macros del Rack. En el build del track: empiezas con Spray=0 (grano limpio, casi delay normal) y lo automatizas subiendo hacia el drop — la textura se vuelve cada vez más caótica. Al drop: reset a 0, todo limpio. Crea tensión sin añadir ningún elemento nuevo. Segunda truco: poner Grain Delay con Pitch +7st (quinta) en un send — los hats tienen un shimmer afinado que refuerza la armonía del track.</p>
+        </div>
+      </div>
+
+      <!-- ENVELOPE FOLLOWER -->
+      <div class="use-card">
+        <div class="use-card-accent" style="background:var(--green);"></div>
+        <div class="use-card-body">
+          <div class="use-card-header">
+            <span class="use-num">EF</span>
+            <span class="use-title">Envelope Follower (M4L)</span>
+            <span class="use-tag tag-now">Hoy</span>
+          </div>
+          <p class="use-desc">Lee la amplitud de un audio y convierte esa energía en un valor de modulación. El kick "empuja" el filtro del pad. La voz "abre" el reverb. Es sidechain inteligente — pero en lugar de bajar el volumen, controla cualquier parámetro.</p>
+          <div style="background:var(--bg-elev);border-radius:3px;padding:14px 16px;margin:10px 0;font-size:13px;color:var(--ink-soft);">
+            <div style="color:var(--green);font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:8px;">Setup — kick mueve el filtro del pad</div>
+            <div style="display:grid;gap:5px;">
+              <div>· <strong style="color:var(--ink);">Track origen:</strong> el kick (o el drum bus)</div>
+              <div>· <strong style="color:var(--ink);">Envelope Follower</strong> en ese track</div>
+              <div>· <strong style="color:var(--ink);">Gain:</strong> sube hasta que el meter se mueve bien (50–80%)</div>
+              <div>· <strong style="color:var(--ink);">Attack:</strong> 1–5ms (respuesta rápida al transiente)</div>
+              <div>· <strong style="color:var(--ink);">Release:</strong> 100–300ms (cuánto dura el "empuje")</div>
+              <div>· <strong style="color:var(--ink);">Map To:</strong> selecciona el parámetro destino (filtro cutoff del pad, send reverb, etc.) directamente desde el device</div>
+              <div>· <strong style="color:var(--ink);">Min/Max:</strong> define el rango del parámetro — ej. filtro entre 200Hz y 8kHz</div>
+            </div>
+          </div>
+          <p class="use-how"><strong>Truco oculto #1:</strong> Invierte Min y Max — cuando el kick golpea, el filtro se <em>cierra</em> en lugar de abrirse. El pad "huye" del kick. Más oscuro, más tenso, sonido contraintuitivo que funciona muy bien en breakdowns. <strong>Truco #2:</strong> Usa Envelope Follower desde un pad de acordes → mapeado al Grain Delay Spray de los hats. Cuando el pad tiene más notas activas, los hats se vuelven más caóticos. La complejidad armónica genera complejidad rítmica automáticamente. <strong>Truco #3:</strong> Release muy largo (1–2s) + mapeado al reverb send del pad — cada kick deja un halo de reverb que decae lentamente. Sidechain reverb, no sidechain volumen.</p>
+        </div>
+      </div>
+
+      <!-- LFO -->
+      <div class="use-card">
+        <div class="use-card-accent" style="background:var(--purple);"></div>
+        <div class="use-card-body">
+          <div class="use-card-header">
+            <span class="use-num">LFO</span>
+            <span class="use-title">LFO (M4L)</span>
+            <span class="use-tag tag-now">Hoy</span>
+          </div>
+          <p class="use-desc">Oscilador de baja frecuencia — mueve cualquier parámetro de forma cíclica y sincronizada al tempo. Un filtro que sube y baja. Un reverb que pulsa. Un pitch que ondula. Movimiento automático, sin tocar nada.</p>
+          <div style="background:var(--bg-elev);border-radius:3px;padding:14px 16px;margin:10px 0;font-size:13px;color:var(--ink-soft);">
+            <div style="color:var(--purple);font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:8px;">Setup — filtro pulsante sobre pad</div>
+            <div style="display:grid;gap:5px;">
+              <div>· <strong style="color:var(--ink);">Shape:</strong> Sine para suavidad, Sawtooth para barrido, Square para on/off</div>
+              <div>· <strong style="color:var(--ink);">Rate:</strong> 1 Bar (sube/baja cada compás) o 1/2 para más intensidad</div>
+              <div>· <strong style="color:var(--ink);">Sync:</strong> ON siempre — que esté en el grid</div>
+              <div>· <strong style="color:var(--ink);">Depth:</strong> empieza en 30%, sube a gusto</div>
+              <div>· <strong style="color:var(--ink);">Map To:</strong> Auto Filter Cutoff, o cualquier macro del rack</div>
+              <div>· <strong style="color:var(--ink);">Offset:</strong> desplaza la fase — útil para que no todos los LFOs empiecen igual</div>
+            </div>
+          </div>
+          <p class="use-how"><strong>Truco oculto:</strong> Pon dos LFOs en el mismo pad, mapeados a parámetros distintos (uno al filtro, uno al reverb send), con rates distintos (1 bar y 3 bars). Los dos ciclos nunca coinciden exactamente — el pad evoluciona de forma que nunca se repite igual. Es el mismo truco que los Clip Envelopes Unlinked de clase 1, pero con M4L y sin piano roll. <strong>Segundo truco:</strong> Shape en Random (Sample & Hold) + Rate 1/16 → filtro que salta aleatoriamente cada semicorchea. Sobre un pad sostenido suena a síntesis modular. Añade Depth bajo (15%) para que sea sutil.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

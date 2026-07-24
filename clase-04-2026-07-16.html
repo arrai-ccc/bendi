@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bendi · Clase 4 · 16 Jul</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0c0b0a; --bg-card:#141319; --bg-elev:#1a1820;
+    --ink:#ece6d6; --ink-soft:#b8b0a3; --ink-mute:#6e6a60;
+    --gold:#c79a5f; --gold-glow:#e3a86b; --red:#b85c4a;
+    --green:#7ab87a; --blue:#6f8aa8;
+    --line:rgba(199,154,95,0.18);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--ink); font-family:'Inter',sans-serif; font-size:15px; line-height:1.65; -webkit-font-smoothing:antialiased; padding-bottom:80px; }
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:0.045;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+
+  .topbar { position:sticky; top:0; z-index:500; background:rgba(12,11,10,0.94); backdrop-filter:blur(14px); border-bottom:1px solid var(--line); padding:16px 28px; display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  .topbar-title { font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:500; letter-spacing:-0.02em; }
+  .topbar-title em { font-style:normal; color:var(--gold); }
+  .tag { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.16em; text-transform:uppercase; padding:4px 9px; border-radius:3px; border:1px solid rgba(184,92,74,0.4); color:var(--red); }
+  .topbar-sub { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-mute); letter-spacing:0.12em; text-transform:uppercase; margin-top:6px; }
+
+  .wrap { max-width:860px; margin:0 auto; padding:40px 28px 0; }
+
+  h2 { font-family:'Space Grotesk',sans-serif; font-size:12px; font-weight:500; text-transform:uppercase; letter-spacing:0.18em; color:var(--ink-mute); margin-bottom:16px; padding-bottom:8px; border-bottom:1px solid var(--line); }
+
+  .section { margin-bottom:40px; }
+
+  .focus-box { background:var(--bg-card); border:1px solid var(--gold); border-left:3px solid var(--gold); padding:18px 22px; border-radius:4px; margin-bottom:32px; }
+  .focus-box p { font-size:16px; line-height:1.55; }
+  .focus-box p em { font-style:normal; color:var(--gold); font-weight:500; }
+  .focus-box small { display:block; margin-top:8px; font-size:13px; color:var(--ink-soft); }
+
+  .tl { display:grid; gap:8px; }
+  .tl-row { display:grid; grid-template-columns:90px 1fr; gap:12px; background:var(--bg-card); border:1px solid var(--line); border-radius:4px; padding:14px 18px; }
+  .tl-row.highlight { border-color:rgba(199,154,95,0.35); background:var(--bg-elev); }
+  .tl-time { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--gold); padding-top:2px; }
+  .tl-body strong { font-family:'Space Grotesk',sans-serif; font-size:14.5px; font-weight:500; color:var(--ink); display:block; margin-bottom:3px; }
+  .tl-body p { font-size:13.5px; color:var(--ink-soft); }
+
+  .concept-box { background:var(--bg-card); border:1px solid var(--line); border-radius:4px; padding:20px 22px; }
+  .concept-box h3 { font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:500; margin-bottom:10px; color:var(--ink); }
+  .concept-box ul { list-style:none; display:grid; gap:8px; }
+  .concept-box ul li { font-size:13.5px; color:var(--ink-soft); padding-left:16px; position:relative; }
+  .concept-box ul li::before { content:'·'; position:absolute; left:0; color:var(--gold); }
+  .concept-box ul li strong { color:var(--ink); font-weight:500; }
+  .concept-box ul li em { font-style:normal; color:var(--gold); }
+
+  .machine-box { background:var(--bg-elev); border:1px solid rgba(122,184,122,0.3); border-left:3px solid var(--green); border-radius:4px; padding:20px 22px; }
+  .machine-box h3 { font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:500; color:var(--green); margin-bottom:12px; }
+  .machine-box p { font-size:13.5px; color:var(--ink-soft); margin-bottom:10px; }
+  .machine-box .step { background:var(--bg-card); border:1px solid var(--line); border-radius:3px; padding:12px 16px; margin-bottom:8px; font-size:13.5px; display:grid; grid-template-columns:24px 1fr; gap:8px; }
+  .machine-box .step-num { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--green); padding-top:1px; }
+  .machine-box .step p { margin:0; }
+  .machine-box .step strong { color:var(--ink); }
+  .machine-box .step em { font-style:normal; color:var(--green); }
+  .machine-box .rule { background:rgba(122,184,122,0.07); border:1px solid rgba(122,184,122,0.2); border-radius:3px; padding:10px 14px; font-size:13px; color:var(--green); font-style:italic; margin-top:12px; }
+
+  .num-strip { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:20px; }
+  .num-card { background:var(--bg-card); border:1px solid var(--line); border-radius:4px; padding:14px 16px; text-align:center; }
+  .num-card .n { font-family:'JetBrains Mono',monospace; font-size:20px; color:var(--gold); font-weight:500; }
+  .num-card .l { font-family:'JetBrains Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.14em; color:var(--ink-mute); margin-top:6px; }
+
+  .ref-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .ref-card { background:var(--bg-card); border:1px solid var(--line); border-radius:4px; padding:14px 16px; }
+  .ref-card .ref-label { font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.14em; color:var(--ink-mute); margin-bottom:6px; }
+  .ref-card p { font-size:13px; color:var(--ink-soft); }
+  .ref-card strong { color:var(--ink); }
+  .ref-card em { font-style:normal; color:var(--gold); }
+
+  .hw-box { background:var(--bg-card); border:1px solid rgba(111,138,168,0.3); border-left:3px solid var(--blue); border-radius:4px; padding:16px 20px; }
+  .hw-box h3 { font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:500; color:var(--blue); margin-bottom:10px; }
+  .hw-box ul { list-style:none; display:grid; gap:8px; }
+  .hw-box ul li { font-size:13.5px; color:var(--ink-soft); padding-left:16px; position:relative; }
+  .hw-box ul li::before { content:'→'; position:absolute; left:0; color:var(--blue); font-size:11px; top:2px; }
+  .hw-box ul li strong { color:var(--ink); }
+
+  .teacher-note { background:rgba(184,92,74,0.06); border:1px solid rgba(184,92,74,0.2); border-radius:4px; padding:14px 18px; font-size:13px; color:var(--ink-soft); font-style:italic; }
+  .teacher-note strong { color:var(--red); font-style:normal; }
+
+  @media(max-width:600px){ .ref-grid{grid-template-columns:1fr;} .tl-row{grid-template-columns:70px 1fr;} .num-strip{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="topbar-title">Bendi · <em>Clase 4</em></div>
+    <div class="topbar-sub">Jueves 16 Jul 2026 · Estudio · Gain staging + track disco</div>
+  </div>
+  <span class="tag">Interno</span>
+</div>
+
+<div class="wrap">
+
+  <div class="focus-box">
+    <p><em>Tema: el nivel base al que volver siempre.</em> Primera mitad = gain staging (el kick como regla, el árbol a −12/−6, sin limitadores). Segunda mitad = entrarle de lleno al track <em>disco / psicodélico</em> con las herramientas de la clase 3.<br></p>
+    <small>Anexo para Bendi: la chuleta de gain staging vive en el hub (pestaña Clase 04). Referencia completa de profesor: <strong>gain-staging-guide.md</strong> en esta carpeta.</small>
+  </div>
+
+  <!-- AGENDA -->
+  <div class="section">
+    <h2>Estructura — 90 min</h2>
+    <div class="tl">
+      <div class="tl-row">
+        <div class="tl-time">0:00 – 0:10</div>
+        <div class="tl-body">
+          <strong>Escucha + check-in</strong>
+          <p>¿Marcó los Locators en 1-3 temas que le gustan (leer la forma)? ¿Mandó las 2-3 referencias disco? Si las mandó, tenerlas abiertas — son el material de la segunda mitad. One Beat Per Day: ¿algún rack nuevo? Escuchar primero, comentar después.</p>
+        </div>
+      </div>
+      <div class="tl-row highlight">
+        <div class="tl-time">0:10 – 0:45</div>
+        <div class="tl-body">
+          <strong>🎚 Gain staging — el kick como regla</strong>
+          <p>Concepto (32-bit float, dónde SÍ importa) → método del árbol de referencia → el Utility como herramienta → construir el árbol de SU track a −12/−6 sin limitador. Ver la sección abajo. Sobre su propio proyecto, no un demo.</p>
+        </div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-time">0:45 – 1:20</div>
+        <div class="tl-body">
+          <strong>El track disco — aplicación directa</strong>
+          <p>Con la base ya nivelada y con headroom: encontrar la capa melódica/acordes (Rhodes + arps), y cargarle el toolbox de la C3 sin que el máster se ponga rojo — Resonator/color en <em>retornos</em>, polirritmia, Freeze→pad. Demo de <strong>Envelope Follower</strong> (venía pendiente). Opcional: mini-clase de armonía house.</p>
+        </div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-time">1:20 – 1:30</div>
+        <div class="tl-body">
+          <strong>Cierre + tarea</strong>
+          <p>¿Qué se lleva? El ritual de 7 pasos en una frase. Tarea concreta para la clase 5 (de loop a arrangement). Confirmar por fin su edición de Live en casa (Standard vs Suite).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONCEPTO -->
+  <div class="section">
+    <h2>El concepto central — gain staging sin mitos</h2>
+    <div class="concept-box">
+      <h3>Lo que hay que transmitir</h3>
+      <ul>
+        <li>Gain staging = mantener el <strong>nivel correcto en cada punto</strong> para que nada clipee, todo respire, y cada procesador reciba el nivel para el que fue hecho.</li>
+        <li>Ableton mezcla en <strong>32-bit float</strong> → un canal individual <em>casi no puede clipear</em>. Un canal en rojo no es el desastre que la gente cree. Puedes pasarte y bajarlo con un Utility sin perder calidad.</li>
+        <li>Dos sitios SÍ importan: <em>el máster</em> (al salir a la interfaz — ahí el rojo sí distorsiona feo) y <em>los devices no lineales</em> (saturadores, compresores, emulaciones analógicas — reaccionan al nivel de entrada).</li>
+        <li>Por eso gain-staging para <strong>esos dos</strong> y para tu propio control — no por superstición. El mito de "todo a −18 o se arruina" es medio verdad.</li>
+        <li>La regla es el <strong>kick</strong>. En electrónica es lo más fuerte y constante → tu vara de medir. Todo lo demás se mide contra él.</li>
+        <li><strong>Trim al entrar, mezcla con el fader.</strong> Los faders viven cerca del 0 (unity) — ahí tienen la mejor resolución.</li>
+        <li><strong>Nada de limitadores todavía.</strong> Un limitador en el máster mientras produces te miente: aplana todo al mismo volumen y esconde los problemas de balance. El volumen es el último paso.</li>
+      </ul>
+    </div>
+    <div class="teacher-note" style="margin-top:12px;">
+      <strong>Nota de profesor:</strong> Enseñarlo como <em>ritual con una regla</em>, no como norma que obedecer. Que lo haga sobre SU track — la teoría aterriza sola cuando ve el máster dejar de ponerse rojo. Si se engancha demasiado con los números, recordarle: "loud isn't better, it's just louder" — el objetivo es control, no medir por medir.
+    </div>
+  </div>
+
+  <!-- NÚMEROS DE REFERENCIA -->
+  <div class="section">
+    <h2>Números ancla (no son leyes — son puntos de partida)</h2>
+    <div class="num-strip">
+      <div class="num-card"><div class="n">−12 dB</div><div class="l">Kick · RMS</div></div>
+      <div class="num-card"><div class="n">−6 dB</div><div class="l">Máster · peak máx</div></div>
+      <div class="num-card"><div class="n">0 dB</div><div class="l">Faders · unity</div></div>
+    </div>
+    <div class="teacher-note">
+      <strong>Recordatorio:</strong> dBFS = 0 es el techo digital. <strong>RMS</strong> = nivel medio (lo que se <em>percibe</em> como volumen), <strong>peak</strong> = el pico instantáneo (lo que clipea). Ableton mide peak; para RMS/LUFS meter un plugin (Youlean, gratis). Streaming normaliza a ≈ −14 LUFS.
+    </div>
+  </div>
+
+  <!-- LA MÁQUINA / EJERCICIO -->
+  <div class="section">
+    <h2>El ritual — construir el árbol (hands-on sobre su track)</h2>
+    <div class="machine-box">
+      <h3>🎚 El kick es la regla — 7 pasos</h3>
+      <p>No es teoría de pizarra. Se hace sobre su propio proyecto. Al final tiene una base limpia y con headroom sobre la que cargar todo lo demás sin que el máster reviente.</p>
+
+      <div class="step">
+        <div class="step-num">01</div>
+        <p><strong>El kick primero.</strong> Un <em>Utility</em> al principio del canal del kick. Ajusta su Gain hasta ~<em>−12 dBFS RMS</em> (picos ~−6). <strong>Fader en 0.</strong> Ya tienes tu vara de medir.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <p><strong>El bajo contra el kick.</strong> Nivélalo de oído, relativo al kick — normalmente un pelín por debajo, ocupando el espacio que el kick no usa. Base lista.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <p><strong>El resto se mide contra la base.</strong> Percusión → acordes/pads → leads → voces. Cada uno con un <em>Utility a la entrada</em> para que llegue a un nivel sano, y luego balanceas con los faders cerca del 0.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <p><strong>Vigila la suma en el máster.</strong> Al apilar, el máster sube. Mantenlo en <em>−12 a −6, con el limitador APAGADO</em>. Si ya clipea antes de masterizar, todo el árbol está muy alto → bájalo entero de golpe (grupo + Utility), no pista por pista.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">05</div>
+        <p><strong>El sándwich de Utility</strong> para cualquier device de carácter: <em>Utility (sube) → Saturator/Roar/Glue → Utility (baja para igualar)</em>. Igualas volumen de entrada y salida → oyes el <em>carácter</em>, no el volumen.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">06</div>
+        <p><strong>Agrupa en buses</strong> (⌘G): Drums · Bass · Synths · FX. Nivela en el grupo, no en 30 pistas. Y limpia el sub: <em>HPF a todo lo que no sea kick/bass</em> + graves en mono (Utility Bass Mono) → vuelve el headroom.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">07</div>
+        <p><strong>Referencia a volumen igualado.</strong> Compara con un tema que te encante — pero <em>igualando el volumen primero</em>, si no, el más fuerte siempre gana. Sin limitador. Deja ~6 dB de headroom para el final.</p>
+      </div>
+
+      <div class="rule">"El kick es la regla. Todo lo demás se mide contra él. Y el máster nunca se pone rojo."</div>
+    </div>
+  </div>
+
+  <!-- REFERENCIAS -->
+  <div class="section">
+    <h2>Referencias para la sesión</h2>
+    <div class="ref-grid">
+      <div class="ref-card">
+        <div class="ref-label">El puente con la clase 3</div>
+        <p>Esto <strong>es</strong> la salsa "cierra toda cadena con un Utility" — pero hecha sistema. El Utility que ya conoce es la herramienta central. <em>Enlaza, no empieza de cero.</em></p>
+      </div>
+      <div class="ref-card">
+        <div class="ref-label">Metering</div>
+        <p>Live mide solo peak. Para ver RMS/LUFS mete <strong>Youlean Loudness Meter</strong> (gratis) en el máster un momento. Sin medidor, el número −12 RMS es de oído. <em>Que lo descargue.</em></p>
+      </div>
+      <div class="ref-card">
+        <div class="ref-label">Para el track disco</div>
+        <p>Sus referencias disco/psicodélicas (si las mandó). Base luminosa + capa melódica más oscura: <strong>Rhodes + arps curraos</strong>. Cargar Resonator/color en <em>retornos</em> ya con headroom.</p>
+      </div>
+      <div class="ref-card">
+        <div class="ref-label">Envelope Follower (pendiente C3)</div>
+        <p>Demo corta: usar el <strong>nivel/dinámica de una señal para modular otra cosa</strong>. Secuela natural de "el nivel como señal" — el gate del 808 de la C2, pero continuo. <em>Que lo baje.</em></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAREA -->
+  <div class="section">
+    <h2>Tarea para la clase 5</h2>
+    <div class="hw-box">
+      <h3>Para clase 5 — de loop a arrangement</h3>
+      <ul>
+        <li>Aplicar el <strong>ritual de gain staging</strong> a un beat propio desde cero: kick a −12 RMS, árbol contra el kick, máster ≤ −6, sin limitador.</li>
+        <li>Seguir con el <strong>track disco</strong>: dejar la base + la capa melódica encontradas hoy, listas para arreglar.</li>
+        <li>Mantener <strong>One Beat Per Day</strong> — nunca más de 2 días sin sentarse. En al menos uno, guardar un rack.</li>
+        <li>Bajar <strong>Youlean</strong> (metering) y confirmar su <strong>edición de Live en casa</strong> (Standard vs Suite).</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- CLASE 5 SEED -->
+  <div class="section">
+    <h2>Semilla — Clase 5 (de loop a arrangement)</h2>
+    <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:4px;padding:18px 20px;font-size:13.5px;color:var(--ink-soft);">
+      <p>La sesión más importante de la primera mitad — y su herida: el guardador profesional que nunca termina. <strong style="color:var(--ink);">Estructura como tensión y resolución:</strong> llevar el track disco (ya nivelado y con dirección) a un arrangement de 5-6 min. Arreglar por <em style="color:var(--gold);font-style:normal;">sustracción</em>: extender el loop entero primero, luego quitar para crear intro/breakdown. Traer la tarea de Locators (leer la forma) al fin aplicada a su propio material.</p>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

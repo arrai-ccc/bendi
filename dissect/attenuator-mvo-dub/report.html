@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dissect — Carl Craig & Moritz von Oswald - Attenuator (Moritz von Oswald Dub)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Azeret+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060606;
+    --bg-2: #0d0d0d;
+    --bg-3: #161616;
+    --ink: #efe9e0;
+    --ink-dim: #8a847b;
+    --ink-faint: #4a463f;
+    --red: #8b2020;
+    --red-glow: #c43838;
+    --warm: #e8b87a;
+    --line: #211f1c;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: 'Azeret Mono', monospace; font-size: 13px; line-height: 1.5; }
+  body {
+    background-image:
+      radial-gradient(circle at 20% 0%, rgba(139,32,32,0.06) 0%, transparent 50%),
+      radial-gradient(circle at 80% 100%, rgba(232,184,122,0.03) 0%, transparent 50%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+  /* Grain */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.35'/></svg>");
+    opacity: 0.08; pointer-events: none; z-index: 1000; mix-blend-mode: overlay;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 56px 32px 96px; position: relative; z-index: 1; }
+
+  /* Header */
+  header { border-bottom: 1px solid var(--line); padding-bottom: 28px; margin-bottom: 32px; }
+  .label { font-family: 'Azeret Mono'; font-size: 10px; letter-spacing: 0.2em; color: var(--ink-faint); text-transform: uppercase; }
+  h1 { font-family: 'Bebas Neue', sans-serif; font-size: 64px; line-height: 1; margin: 8px 0 6px; letter-spacing: 0.02em; }
+  .subhead { color: var(--ink-dim); font-size: 13px; }
+  .quick-stats { display: flex; gap: 32px; margin-top: 24px; flex-wrap: wrap; }
+  .stat { display: flex; flex-direction: column; gap: 4px; }
+  .stat .v { font-family: 'Bebas Neue'; font-size: 32px; line-height: 1; color: var(--ink); }
+  .stat .v.red { color: var(--red-glow); }
+  .stat .l { font-size: 10px; letter-spacing: 0.18em; color: var(--ink-faint); text-transform: uppercase; }
+
+  /* Sections */
+  section { margin: 40px 0; }
+  h2 { font-family: 'Bebas Neue'; font-size: 24px; letter-spacing: 0.08em; margin: 0 0 16px; color: var(--ink); }
+  h2::before { content: '◢ '; color: var(--red); font-size: 16px; }
+
+  /* Cards */
+  .card { background: var(--bg-2); border: 1px solid var(--line); padding: 22px; border-radius: 2px; }
+  .card.red-edge { border-left: 2px solid var(--red); }
+  .card.warm-edge { border-left: 2px solid var(--warm); }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+  .headline { font-family: 'Bebas Neue'; font-size: 28px; line-height: 1.2; color: var(--warm); padding: 24px; background: linear-gradient(135deg, var(--bg-2), var(--bg-3)); border-left: 3px solid var(--warm); }
+  .diagnosis { color: var(--ink); font-size: 14px; line-height: 1.7; }
+
+  /* Section timeline */
+  .timeline { display: flex; height: 56px; gap: 1px; background: var(--line); margin: 12px 0 8px; border: 1px solid var(--line); }
+  .seg { display: flex; align-items: flex-end; justify-content: center; padding: 4px; font-size: 9px; color: var(--ink-dim); position: relative; cursor: default; transition: transform 0.15s; }
+  .seg:hover { transform: scaleY(1.08); z-index: 5; }
+  .seg.low { background: #1a1a1a; }
+  .seg.mid { background: #2a2118; }
+  .seg.high { background: #5a2818; }
+  .seg.peak { background: #8b2020; color: #fff; }
+  .seg .secLabel { position: absolute; bottom: 4px; opacity: 0.7; }
+  .timeline-axis { display: flex; justify-content: space-between; color: var(--ink-faint); font-size: 9px; padding: 0 2px; }
+
+  /* Energy curve */
+  .energy-svg { width: 100%; height: 100px; display: block; }
+
+  /* Chord progression */
+  .chord-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin-top: 12px; }
+  .chord-cell { background: var(--bg-3); border: 1px solid var(--line); padding: 10px 8px; text-align: center; border-radius: 2px; }
+  .chord-cell .c { font-family: 'Bebas Neue'; font-size: 18px; color: var(--ink); letter-spacing: 0.04em; }
+  .chord-cell .c.min { color: var(--warm); }
+  .chord-cell .t { font-size: 9px; color: var(--ink-faint); margin-top: 4px; }
+
+  .histogram-row { display: flex; align-items: center; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .histogram-row:last-child { border-bottom: none; }
+  .histogram-bar { flex: 1; height: 12px; background: var(--bg-3); border-radius: 1px; overflow: hidden; }
+  .histogram-bar-fill { height: 100%; background: linear-gradient(90deg, var(--red), var(--warm)); }
+  .histogram-chord { font-family: 'Bebas Neue'; font-size: 16px; width: 48px; }
+  .histogram-time { font-size: 10px; color: var(--ink-dim); width: 60px; text-align: right; }
+
+  /* Sound design table */
+  .sd-row { display: grid; grid-template-columns: 110px 1fr 1fr; gap: 18px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .sd-row:last-child { border-bottom: none; }
+  .sd-element { font-family: 'Bebas Neue'; font-size: 18px; color: var(--red-glow); letter-spacing: 0.06em; }
+  .sd-obs { color: var(--ink-dim); }
+  .sd-recreate { color: var(--ink); border-left: 1px solid var(--line); padding-left: 16px; }
+
+  /* Bullet lists */
+  ul.tight { margin: 0; padding-left: 20px; }
+  ul.tight li { margin: 6px 0; }
+  ul.tight li::marker { color: var(--red); }
+
+  /* Remake starter card */
+  .starter { display: grid; grid-template-columns: 1fr 2fr; gap: 18px; }
+  .starter .left .row { padding: 8px 0; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; }
+  .starter .left .row:last-child { border: none; }
+  .starter .left .k { font-size: 10px; letter-spacing: 0.15em; color: var(--ink-faint); text-transform: uppercase; }
+  .starter .left .v { font-family: 'Bebas Neue'; font-size: 16px; color: var(--ink); }
+  .first-move { background: var(--bg-3); padding: 16px; border-left: 2px solid var(--warm); font-size: 14px; line-height: 1.6; }
+
+  /* Reference DNA chips */
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip { background: var(--bg-3); border: 1px solid var(--line); padding: 10px 14px; font-size: 12px; color: var(--ink); border-radius: 2px; max-width: 360px; }
+
+  /* MIDI / downloads */
+  .download-row { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .download-row:last-child { border: none; }
+  .download-row a { color: var(--red-glow); text-decoration: none; font-family: 'Bebas Neue'; font-size: 16px; letter-spacing: 0.06em; }
+  .download-row a:hover { color: var(--warm); }
+  .download-meta { color: var(--ink-dim); font-size: 11px; }
+
+  /* Lyrics */
+  .lyrics-block { background: var(--bg-3); padding: 18px; border-left: 2px solid var(--ink-faint); font-style: italic; color: var(--ink-dim); white-space: pre-wrap; max-height: 320px; overflow-y: auto; }
+
+  /* Watch-outs */
+  .watchouts { background: rgba(139,32,32,0.08); border: 1px solid rgba(139,32,32,0.3); padding: 16px; border-radius: 2px; }
+  .watchouts h2 { color: var(--red-glow); }
+
+  /* Raw data */
+  details { margin-top: 48px; }
+  details summary { cursor: pointer; font-family: 'Bebas Neue'; font-size: 14px; letter-spacing: 0.15em; color: var(--ink-faint); padding: 12px 0; }
+  details pre { background: #050505; color: #6e6a62; padding: 16px; font-size: 10px; max-height: 480px; overflow: auto; border: 1px solid var(--line); }
+
+  footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--line); color: var(--ink-faint); font-size: 10px; letter-spacing: 0.1em; text-align: center; }
+
+  @media (max-width: 760px) {
+    .grid-2, .grid-3, .starter { grid-template-columns: 1fr; }
+    .chord-grid { grid-template-columns: repeat(4, 1fr); }
+    h1 { font-size: 44px; }
+    .wrap { padding: 32px 18px; }
+    .sd-row { grid-template-columns: 1fr; }
+    .sd-recreate { border-left: none; padding-left: 0; border-top: 1px solid var(--line); padding-top: 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="label">/track-dissect · v0.1</div>
+    <h1>Carl Craig & Moritz von Oswald - Attenuator (Moritz von Oswald Dub)</h1>
+    <div class="subhead">2026-07-16 19:03</div>
+
+    <div class="quick-stats">
+      <div class="stat">
+        <div class="v red">129.2</div>
+        <div class="l">BPM</div>
+      </div>
+      <div class="stat">
+        <div class="v">F MAJOR</div>
+        <div class="l">Key · 7B</div>
+      </div>
+      <div class="stat">
+        <div class="v">6:59</div>
+        <div class="l">Duration</div>
+      </div>
+      <div class="stat">
+        <div class="v">216</div>
+        <div class="l">Bars (4/4)</div>
+      </div>
+      <div class="stat">
+        <div class="v">18</div>
+        <div class="l">Unique chords</div>
+      </div>
+      <div class="stat">
+        <div class="v">9</div>
+        <div class="l">Sections</div>
+      </div>
+    </div>
+  </header>
+
+  
+  
+  <section>
+    <div class="headline">F-minor/major ambiguous 129bpm MvO dub with a Fm↔C oscillation stretched across a 7-minute breathing arc</div>
+  </section>
+  
+
+  
+  
+  <section>
+    <h2>Production diagnosis</h2>
+    <div class="card red-edge diagnosis">The key detector splits F major vs F minor almost 50/50 because the whole track pivots on Fm↔Cmaj with modal borrowing (Fmaj interludes, occasional A#maj/D#maj) — classic Basic Channel harmonic haze where the third gets smeared by the chord stab's filter and delay tails. Structure is a slow-burn: 38s intro at low RMS, then a sustained plateau around 0.30 RMS for the bulk, a mid-track breath at ~116-133s, a second longer plateau to ~330s, then a 70-second outro drain. Chord rhythm is deceptive — 243 detected segments but the actual musical event is a two-chord stab pulsing every 2 bars, the rest is chord-tail reinterpretation by the model. Sub/bass dominance (30.5 / 14.0) vs almost nothing above 1kHz (mid 1.0, high 0.35) confirms MvO's signature dark-bandwidth dub mix.</div>
+  </section>
+  
+
+  
+  <section>
+    <h2>Section timeline</h2>
+    <div class="card">
+      <div class="timeline">
+        
+          
+          <div class="seg mid" style="flex: 0 0 0.10%;" title="0.0s → 0.4s · mid · RMS 0.081">
+            <span class="secLabel">mid</span>
+          </div>
+        
+          
+          <div class="seg low" style="flex: 0 0 8.98%;" title="0.4s → 38.1s · low · RMS 0.0774">
+            <span class="secLabel">low</span>
+          </div>
+        
+          
+          <div class="seg peak" style="flex: 0 0 18.55%;" title="38.1s → 115.9s · peak · RMS 0.3039">
+            <span class="secLabel">peak</span>
+          </div>
+        
+          
+          <div class="seg high" style="flex: 0 0 4.16%;" title="115.9s → 133.3s · high · RMS 0.2217">
+            <span class="secLabel">high</span>
+          </div>
+        
+          
+          <div class="seg mid" style="flex: 0 0 15.44%;" title="133.3s → 198.1s · mid · RMS 0.2164">
+            <span class="secLabel">mid</span>
+          </div>
+        
+          
+          <div class="seg high" style="flex: 0 0 31.54%;" title="198.1s → 330.4s · high · RMS 0.2815">
+            <span class="secLabel">high</span>
+          </div>
+        
+          
+          <div class="seg mid" style="flex: 0 0 7.95%;" title="330.4s → 363.7s · mid · RMS 0.2112">
+            <span class="secLabel">mid</span>
+          </div>
+        
+          
+          <div class="seg low" style="flex: 0 0 8.56%;" title="363.7s → 399.6s · low · RMS 0.0625">
+            <span class="secLabel">low</span>
+          </div>
+        
+          
+          <div class="seg low" style="flex: 0 0 4.71%;" title="399.6s → 419.3s · low · RMS 0.0349">
+            <span class="secLabel">low</span>
+          </div>
+        
+      </div>
+      <div class="timeline-axis">
+        <span>0:00</span>
+        <span>1:44</span>
+        <span>3:29</span>
+        <span>5:14</span>
+        <span>6:59</span>
+      </div>
+
+      
+      <div style="margin-top: 18px;">
+        <div class="label" style="margin-bottom: 8px;">Energy curve (RMS · 1s)</div>
+        <svg class="energy-svg" viewBox="0 0 140 100" preserveAspectRatio="none">
+          <polyline fill="none" stroke="#c43838" stroke-width="1"
+            points="0,77.9 1,85.6 2,80.5 3,83.4 4,76.2 5,79.2 6,89.4 7,75.5 8,84.1 9,77.8 10,81.1 11,84.2 12,80.8 13,14.4 14,15.3 15,8.2 16,13.9 17,15.1 18,7.4 19,14.2 20,12.9 21,8.2 22,14.8 23,15.1 24,10.6 25,13.5 26,12.3 27,11.6 28,14.6 29,0.0 30,10.9 31,11.0 32,7.4 33,7.6 34,11.3 35,5.9 36,13.5 37,12.9 38,3.3 39,14.4 40,15.5 41,44.7 42,61.1 43,33.9 44,64.7 45,41.1 46,42.1 47,47.1 48,28.7 49,54.5 50,39.3 51,49.5 52,39.4 53,28.7 54,64.9 55,37.6 56,26.4 57,39.2 58,38.4 59,55.9 60,36.9 61,58.8 62,30.6 63,2.9 64,8.5 65,8.2 66,13.3 67,2.2 68,13.4 69,10.1 70,7.5 71,13.3 72,3.7 73,18.1 74,21.7 75,10.8 76,9.3 77,9.6 78,10.4 79,11.8 80,16.7 81,17.8 82,16.4 83,25.9 84,11.9 85,23.0 86,26.6 87,32.6 88,53.9 89,37.3 90,60.9 91,45.6 92,37.0 93,41.1 94,29.9 95,60.3 96,6.4 97,9.1 98,7.6 99,10.6 100,14.9 101,6.4 102,14.5 103,8.5 104,9.6 105,19.8 106,9.0 107,14.6 108,10.3 109,6.9 110,23.0 111,16.6 112,17.0 113,10.9 114,37.0 115,42.2 116,49.4 117,47.9 118,66.3 119,65.3 120,66.1 121,90.5 122,89.7 123,73.9 124,89.6 125,81.5 126,76.5 127,87.3 128,78.4 129,90.2 130,83.1 131,56.9 132,85.6 133,95.3 134,95.4 135,96.2 136,59.5 137,99.4 138,99.9 139,100.0 " />
+          <polygon fill="rgba(139,32,32,0.15)"
+            points="0,100 0,77.9 1,85.6 2,80.5 3,83.4 4,76.2 5,79.2 6,89.4 7,75.5 8,84.1 9,77.8 10,81.1 11,84.2 12,80.8 13,14.4 14,15.3 15,8.2 16,13.9 17,15.1 18,7.4 19,14.2 20,12.9 21,8.2 22,14.8 23,15.1 24,10.6 25,13.5 26,12.3 27,11.6 28,14.6 29,0.0 30,10.9 31,11.0 32,7.4 33,7.6 34,11.3 35,5.9 36,13.5 37,12.9 38,3.3 39,14.4 40,15.5 41,44.7 42,61.1 43,33.9 44,64.7 45,41.1 46,42.1 47,47.1 48,28.7 49,54.5 50,39.3 51,49.5 52,39.4 53,28.7 54,64.9 55,37.6 56,26.4 57,39.2 58,38.4 59,55.9 60,36.9 61,58.8 62,30.6 63,2.9 64,8.5 65,8.2 66,13.3 67,2.2 68,13.4 69,10.1 70,7.5 71,13.3 72,3.7 73,18.1 74,21.7 75,10.8 76,9.3 77,9.6 78,10.4 79,11.8 80,16.7 81,17.8 82,16.4 83,25.9 84,11.9 85,23.0 86,26.6 87,32.6 88,53.9 89,37.3 90,60.9 91,45.6 92,37.0 93,41.1 94,29.9 95,60.3 96,6.4 97,9.1 98,7.6 99,10.6 100,14.9 101,6.4 102,14.5 103,8.5 104,9.6 105,19.8 106,9.0 107,14.6 108,10.3 109,6.9 110,23.0 111,16.6 112,17.0 113,10.9 114,37.0 115,42.2 116,49.4 117,47.9 118,66.3 119,65.3 120,66.1 121,90.5 122,89.7 123,73.9 124,89.6 125,81.5 126,76.5 127,87.3 128,78.4 129,90.2 130,83.1 131,56.9 132,85.6 133,95.3 134,95.4 135,96.2 136,59.5 137,99.4 138,99.9 139,100.0  139,100" />
+        </svg>
+      </div>
+
+      
+      <div style="margin-top: 18px;">
+        <div class="label" style="margin-bottom: 8px;">Frequency band balance (relative)</div>
+        <div class="grid-3" style="grid-template-columns: repeat(4, 1fr); gap: 10px;">
+          
+            <div class="stat">
+              <div class="v" style="font-size: 22px;">30.541</div>
+              <div class="l">SUB</div>
+            </div>
+          
+            <div class="stat">
+              <div class="v" style="font-size: 22px;">14.002</div>
+              <div class="l">BASS</div>
+            </div>
+          
+            <div class="stat">
+              <div class="v" style="font-size: 22px;">1.045</div>
+              <div class="l">MID</div>
+            </div>
+          
+            <div class="stat">
+              <div class="v" style="font-size: 22px;">0.347</div>
+              <div class="l">HIGH</div>
+            </div>
+          
+        </div>
+      </div>
+    </div>
+  </section>
+
+  
+  <section>
+    <h2>Chord progression</h2>
+    <div class="grid-2">
+      <div class="card">
+        <div class="label" style="margin-bottom: 12px;">Progression (first 80 segments ≥1s)</div>
+        <div class="chord-grid">
+          
+            <div class="chord-cell">
+              <div class="c min">Dm</div>
+              <div class="t">1.1s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">B</div>
+              <div class="t">1.1s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">D#m</div>
+              <div class="t">1.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">D#m</div>
+              <div class="t">1.1s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">A#</div>
+              <div class="t">1.1s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Cm</div>
+              <div class="t">5.0s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C</div>
+              <div class="t">1.1s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Fm</div>
+              <div class="t">1.8s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">D#</div>
+              <div class="t">1.6s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">F</div>
+              <div class="t">1.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C</div>
+              <div class="t">2.3s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Fm</div>
+              <div class="t">1.8s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Cm</div>
+              <div class="t">1.2s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Fm</div>
+              <div class="t">2.3s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">D#</div>
+              <div class="t">1.2s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Cm</div>
+              <div class="t">1.1s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C</div>
+              <div class="t">1.1s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Cm</div>
+              <div class="t">2.6s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">F</div>
+              <div class="t">1.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">G#</div>
+              <div class="t">1.6s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">F</div>
+              <div class="t">2.2s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Fm</div>
+              <div class="t">1.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">F</div>
+              <div class="t">2.2s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Fm</div>
+              <div class="t">1.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">F</div>
+              <div class="t">1.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">D</div>
+              <div class="t">1.8s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">F</div>
+              <div class="t">1.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">F</div>
+              <div class="t">2.6s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C</div>
+              <div class="t">1.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">F</div>
+              <div class="t">3.1s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Fm</div>
+              <div class="t">1.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">D</div>
+              <div class="t">1.6s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">F</div>
+              <div class="t">2.6s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Fm</div>
+              <div class="t">2.2s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">D</div>
+              <div class="t">3.0s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Em</div>
+              <div class="t">1.2s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C</div>
+              <div class="t">2.6s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">F</div>
+              <div class="t">2.3s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Fm</div>
+              <div class="t">2.2s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">F</div>
+              <div class="t">1.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Fm</div>
+              <div class="t">13.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C</div>
+              <div class="t">3.4s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Fm</div>
+              <div class="t">1.6s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C</div>
+              <div class="t">1.1s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Fm</div>
+              <div class="t">1.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C</div>
+              <div class="t">1.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Fm</div>
+              <div class="t">2.3s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C</div>
+              <div class="t">1.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Dm</div>
+              <div class="t">1.2s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C</div>
+              <div class="t">3.4s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C</div>
+              <div class="t">3.8s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Fm</div>
+              <div class="t">2.0s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C</div>
+              <div class="t">2.2s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Fm</div>
+              <div class="t">1.4s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C</div>
+              <div class="t">2.2s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Fm</div>
+              <div class="t">1.8s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C</div>
+              <div class="t">1.1s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Fm</div>
+              <div class="t">1.8s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C</div>
+              <div class="t">1.1s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">A#</div>
+              <div class="t">1.4s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C</div>
+              <div class="t">2.2s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">A#</div>
+              <div class="t">1.4s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C</div>
+              <div class="t">2.3s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Fm</div>
+              <div class="t">1.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C</div>
+              <div class="t">1.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">A#</div>
+              <div class="t">1.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C</div>
+              <div class="t">1.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">A#</div>
+              <div class="t">1.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C</div>
+              <div class="t">2.6s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">A#</div>
+              <div class="t">1.1s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C</div>
+              <div class="t">5.4s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Dm</div>
+              <div class="t">1.1s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C</div>
+              <div class="t">2.6s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C</div>
+              <div class="t">1.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Fm</div>
+              <div class="t">1.6s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C</div>
+              <div class="t">2.2s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Fm</div>
+              <div class="t">2.2s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Fm</div>
+              <div class="t">12.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">F</div>
+              <div class="t">1.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">F</div>
+              <div class="t">1.8s</div>
+            </div>
+          
+        </div>
+      </div>
+      <div class="card">
+        <div class="label" style="margin-bottom: 12px;">Time-weighted chord histogram</div>
+        
+          
+          
+          <div class="histogram-row">
+            <div class="histogram-chord">Fm</div>
+            <div class="histogram-bar">
+              <div class="histogram-bar-fill" style="width: 100.0%;"></div>
+            </div>
+            <div class="histogram-time">133s</div>
+          </div>
+        
+          
+          
+          <div class="histogram-row">
+            <div class="histogram-chord">C</div>
+            <div class="histogram-bar">
+              <div class="histogram-bar-fill" style="width: 77.9%;"></div>
+            </div>
+            <div class="histogram-time">104s</div>
+          </div>
+        
+          
+          
+          <div class="histogram-row">
+            <div class="histogram-chord">F</div>
+            <div class="histogram-bar">
+              <div class="histogram-bar-fill" style="width: 46.6%;"></div>
+            </div>
+            <div class="histogram-time">62s</div>
+          </div>
+        
+          
+          
+          <div class="histogram-row">
+            <div class="histogram-chord">Dm</div>
+            <div class="histogram-bar">
+              <div class="histogram-bar-fill" style="width: 24.0%;"></div>
+            </div>
+            <div class="histogram-time">32s</div>
+          </div>
+        
+          
+          
+          <div class="histogram-row">
+            <div class="histogram-chord">Cm</div>
+            <div class="histogram-bar">
+              <div class="histogram-bar-fill" style="width: 11.2%;"></div>
+            </div>
+            <div class="histogram-time">15s</div>
+          </div>
+        
+          
+          
+          <div class="histogram-row">
+            <div class="histogram-chord">A#</div>
+            <div class="histogram-bar">
+              <div class="histogram-bar-fill" style="width: 11.0%;"></div>
+            </div>
+            <div class="histogram-time">15s</div>
+          </div>
+        
+          
+          
+          <div class="histogram-row">
+            <div class="histogram-chord">A#m</div>
+            <div class="histogram-bar">
+              <div class="histogram-bar-fill" style="width: 10.5%;"></div>
+            </div>
+            <div class="histogram-time">14s</div>
+          </div>
+        
+          
+          
+          <div class="histogram-row">
+            <div class="histogram-chord">C#</div>
+            <div class="histogram-bar">
+              <div class="histogram-bar-fill" style="width: 7.6%;"></div>
+            </div>
+            <div class="histogram-time">10s</div>
+          </div>
+        
+          
+          
+          <div class="histogram-row">
+            <div class="histogram-chord">D</div>
+            <div class="histogram-bar">
+              <div class="histogram-bar-fill" style="width: 5.3%;"></div>
+            </div>
+            <div class="histogram-time">7s</div>
+          </div>
+        
+          
+          
+          <div class="histogram-row">
+            <div class="histogram-chord">D#m</div>
+            <div class="histogram-bar">
+              <div class="histogram-bar-fill" style="width: 3.6%;"></div>
+            </div>
+            <div class="histogram-time">5s</div>
+          </div>
+        
+          
+          
+          <div class="histogram-row">
+            <div class="histogram-chord">G</div>
+            <div class="histogram-bar">
+              <div class="histogram-bar-fill" style="width: 2.2%;"></div>
+            </div>
+            <div class="histogram-time">3s</div>
+          </div>
+        
+          
+          
+          <div class="histogram-row">
+            <div class="histogram-chord">D#</div>
+            <div class="histogram-bar">
+              <div class="histogram-bar-fill" style="width: 2.0%;"></div>
+            </div>
+            <div class="histogram-time">3s</div>
+          </div>
+        
+      </div>
+    </div>
+  </section>
+
+  
+  
+  <section>
+    <h2>Sound design — reverse-engineer</h2>
+    <div class="card">
+      
+        <div class="sd-row">
+          <div class="sd-element">Kick</div>
+          <div class="sd-obs">Steady 4/4 at 129.2bpm, sub-heavy, no snap — sits entirely under 100Hz based on band balance. Kick and bass are effectively fused.</div>
+          <div class="sd-recreate">Layer a soft 909-style kick with a sine sub tuned to F1. HPF the click layer at 60Hz, LPF the sub at 90Hz. Glue with light saturation (Saturator, warm mode, drive ~3dB). No transient designer — you want round, not punchy.</div>
+        </div>
+      
+        <div class="sd-row">
+          <div class="sd-element">Bass</div>
+          <div class="sd-obs">1335 detected notes, range B0–B3, mean around B1/C2 — the pitch tracker is grabbing both the sub fundamental and the chord-stab's low harmonic. Real bassline is likely a simple root movement F–C with passing tones (D#, G#, A appear).</div>
+          <div class="sd-recreate">Prophet 12: single sawtooth, one octave, LPF cutoff ~200Hz with slight resonance, slow filter env. Play root notes on downbeats, tie to kick sidechain. Add a second layer, sine an octave down, for the sub floor.</div>
+        </div>
+      
+        <div class="sd-row">
+          <div class="sd-element">Pad/Harmony</div>
+          <div class="sd-obs">This is the signature MvO chord stab — a filtered detuned pad hitting on the offbeat, drenched in Space Echo-style delay. Fmin↔Cmaj alternation with occasional A#maj coloring is the entire harmonic content.</div>
+          <div class="sd-recreate">Prophet 12: 2 detuned sawtooths + 1 square, slow attack (~30ms), medium release. LPF around 800Hz with mild env mod. Bounce to audio, chop into a 1/8 stab, send heavy to a Roland RE-201 emulation (or Echoboy 'Space' mode) with feedback ~55%, wow/flutter on. Add a spring reverb after the delay. Automate delay feedback for the breath sections.</div>
+        </div>
+      
+        <div class="sd-row">
+          <div class="sd-element">Percussion/Texture</div>
+          <div class="sd-obs">Extremely subdued — high-band energy is 0.35, meaning hats/shakers are barely there or heavily filtered. Any groove comes from the chord-stab syncopation and micro-noise texture.</div>
+          <div class="sd-recreate">Closed hat sample, LPF at 4kHz, -18dB in the mix. Add a filtered vinyl noise loop through the same delay bus as the chord. Consider a subtle rimshot on beat 3 with a long plate reverb, ducked by the kick.</div>
+        </div>
+      
+        <div class="sd-row">
+          <div class="sd-element">Vocal/Lead</div>
+          <div class="sd-obs">Whisper implies the 'Thank you' segments are Whisper hallucinations on delay tails / pad artifacts — not a real vocal. Voiced ratio 40% but the melodic content (F#5, F5 fragments at intro) is likely the pad's high harmonics being read as pitch.</div>
+          <div class="sd-recreate">No vocal needed. If you want a lead moment, a single sustained note on Prophet 12 (F5 or C5) through the same delay/reverb chain, ducked -6dB under the pad.</div>
+        </div>
+      
+    </div>
+  </section>
+  
+
+  
+  
+  <section>
+    <div class="grid-2">
+      <div>
+        <h2>Mix moves</h2>
+        <div class="card">
+          <ul class="tight">
+            <li>Everything above 2kHz gets shelved down 3-6dB — this is a dark mix, resist the urge to add air.</li><li>Sidechain the pad and bass to the kick with a slow release (~200ms) for that Chain Reaction breathing feel.</li><li>Send all melodic elements to a single stereo dub bus: tape delay → spring reverb → HPF at 200Hz on the return. Automate the send, not the source.</li><li>Use a bus compressor (SSL-style, 2:1, slow attack, auto release) across the master with ~2dB GR to lock the plateau feel.</li>
+          </ul>
+        </div>
+      </div>
+      <div>
+        <h2>Arrangement</h2>
+        <div class="card">Nine detected sections but functionally it's intro (0-38s) → main plateau A (38-116s) → breath (116-133s, filter opens/pad thins) → plateau B (133-198s, mid brightens) → plateau C peak (198-330s, most energy) → drain 1 (330-364s) → tail (364-419s). Transitions are done by opening/closing the delay feedback and swapping which chord (Fm vs Cmaj) dominates, not by adding elements. The 132-second peak section is the DJ tool zone — this is a mixer's record.</div>
+      </div>
+    </div>
+  </section>
+
+  
+  <section>
+    <h2>Remake starter</h2>
+    <div class="card warm-edge">
+      <div class="starter">
+        <div class="left">
+          <div class="row"><span class="k">Tempo</span><span class="v">129.2 BPM</span></div>
+          <div class="row"><span class="k">Key</span><span class="v">F minor (with major-mode chord stabs) / Camelot 4A ↔ 7B ambiguous</span></div>
+        </div>
+        <div>
+          <div class="label" style="margin-bottom: 6px;">Ableton setup</div>
+          <div style="margin-bottom: 16px; color: var(--ink-dim);">Track 1: Kick + sub layer (grouped). Track 2: Prophet 12 bass. Track 3: Prophet 12 chord stab (bounced to audio, sliced). Track 4: Noise/texture. Return A: Tape delay (Echoboy). Return B: Spring/plate reverb. Return C: Full dub chain (delay→reverb→filter). Automate sends on Track 3 into Return C.</div>
+          <div class="label" style="margin-bottom: 6px;">First move</div>
+          <div class="first-move">Build the 2-bar chord stab loop first: Fm7 on beat 2.5, Cmaj on beat 4.5 of bar 2. Get the delay/spring feedback interaction right before you add kick. If the loop doesn't hypnotize you at bar 8 with nothing else, the sound isn't there yet.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  
+  <section>
+    <h2>Reference DNA</h2>
+    <div class="card">
+      <div class="chips">
+        <div class="chip">Basic Channel - Phylyps Trak (the template — same Fm-ish drone, same delay-as-instrument philosophy)</div><div class="chip">Rhythm & Sound - Never Tell You (the chord-stab-through-spring-reverb DNA)</div><div class="chip">Vladislav Delay - Multila (for the way sections breathe without new elements arriving)</div>
+      </div>
+    </div>
+  </section>
+  
+
+  
+  <section>
+    <h2>Stems & MIDI</h2>
+    <div class="card">
+      
+        <div class="download-row">
+          <a href="stems/drums.wav" download>▼ DRUMS.wav</a>
+          <span class="download-meta">demucs · drums</span>
+        </div>
+      
+        <div class="download-row">
+          <a href="stems/bass.wav" download>▼ BASS.wav</a>
+          <span class="download-meta">demucs · bass</span>
+        </div>
+      
+        <div class="download-row">
+          <a href="stems/other.wav" download>▼ OTHER.wav</a>
+          <span class="download-meta">demucs · other</span>
+        </div>
+      
+        <div class="download-row">
+          <a href="stems/vocals.wav" download>▼ VOCALS.wav</a>
+          <span class="download-meta">demucs · vocals</span>
+        </div>
+      
+      
+        <div class="download-row">
+          <a href="midi/vocals.mid" download>▼ VOCALS.mid</a>
+          <span class="download-meta">583 notes · range D#2–B5 · 44 semitones</span>
+        </div>
+      
+      
+        <div class="download-row">
+          <a href="midi/bass.mid" download>▼ BASS.mid</a>
+          <span class="download-meta">1335 notes · range B0–B3 · 36 semitones</span>
+        </div>
+      
+    </div>
+  </section>
+
+  
+  
+  <section>
+    <h2>Vocals · lyrics</h2>
+    
+      <div class="lyrics-block">Thank you. Thank you. Thank you. Thank you Thank you. Thank you. Thank you Thank you. Thank you. Thank you Thank you. Thank you. Thank you.</div>
+      <div class="label" style="margin-top: 8px;">Language: English</div>
+    
+  </section>
+  
+
+  
+  
+  <section>
+    <div class="watchouts">
+      <h2>Watch-outs (ear-verify these)</h2>
+      <ul class="tight">
+        <li>The 'Thank you' lyrics and F#5/F5 vocal notes are almost certainly Whisper + pitch-tracker artifacts on the pad's delay tails — ear-verify before treating as vocal content.</li><li>Key detection is genuinely ambiguous (0.097 confidence gap between F major and F minor) — the track exploits this modal blur on purpose. Trust Fm as tonic with borrowed major-third stabs, not F major.</li>
+      </ul>
+    </div>
+  </section>
+  
+
+  
+  <section>
+    <h2>Key confidence</h2>
+    <div class="card">
+      <div class="label" style="margin-bottom: 8px;">Top-5 key candidates (Krumhansl-Schmuckler correlation)</div>
+      
+        <div class="histogram-row">
+          <div class="histogram-chord" style="width: 84px;">F MAJOR</div>
+          <div class="histogram-bar">
+            
+            <div class="histogram-bar-fill" style="width: 100.0%;"></div>
+          </div>
+          <div class="histogram-time">0.439</div>
+        </div>
+      
+        <div class="histogram-row">
+          <div class="histogram-chord" style="width: 84px;">F MINOR</div>
+          <div class="histogram-bar">
+            
+            <div class="histogram-bar-fill" style="width: 90.4%;"></div>
+          </div>
+          <div class="histogram-time">0.397</div>
+        </div>
+      
+        <div class="histogram-row">
+          <div class="histogram-chord" style="width: 84px;">C MAJOR</div>
+          <div class="histogram-bar">
+            
+            <div class="histogram-bar-fill" style="width: 89.7%;"></div>
+          </div>
+          <div class="histogram-time">0.394</div>
+        </div>
+      
+        <div class="histogram-row">
+          <div class="histogram-chord" style="width: 84px;">E MINOR</div>
+          <div class="histogram-bar">
+            
+            <div class="histogram-bar-fill" style="width: 72.0%;"></div>
+          </div>
+          <div class="histogram-time">0.316</div>
+        </div>
+      
+        <div class="histogram-row">
+          <div class="histogram-chord" style="width: 84px;">D MINOR</div>
+          <div class="histogram-bar">
+            
+            <div class="histogram-bar-fill" style="width: 66.7%;"></div>
+          </div>
+          <div class="histogram-time">0.293</div>
+        </div>
+      
+      <div class="label" style="margin-top: 10px;">Confidence gap to 2nd: 0.097</div>
+    </div>
+  </section>
+
+  <details>
+    <summary>▸ Raw data (JSON)</summary>
+    <pre>{"track": {"path": "/Users/emitr/Downloads/Carl Craig & Moritz von Oswald - Attenuator (Moritz von Oswald Dub).wav", "name": "Carl Craig & Moritz von Oswald - Attenuator (Moritz von Oswald Dub)", "slug": "attenuator-mvo-dub"}, "pipeline": {"version": "0.1", "started_at": "2026-07-16 18:59:25"}, "stems": {"drums": "stems/drums.wav", "bass": "stems/bass.wav", "other": "stems/other.wav", "vocals": "stems/vocals.wav"}, "features": {"duration_s": 419.32, "sample_rate": 22050, "key": {"tonic": "F", "mode": "major", "label": "F major", "camelot": "7B", "confidence_gap": 0.097, "second_best": "F minor", "top_5": [{"key": "F major", "score": 0.439}, {"key": "F minor", "score": 0.397}, {"key": "C major", "score": 0.394}, {"key": "E minor", "score": 0.316}, {"key": "D minor", "score": 0.293}]}, "tempo": {"bpm": 129.2, "beat_count": 867, "bar_count": 216, "downbeat_times": [0.418, 2.2523, 4.1332, 6.0372, 7.918, 9.7988, 11.7029, 13.5837, 15.4877, 17.3685, 19.2726, 21.1534, 23.0574, 24.9382, 26.819, 28.7231]}, "sections": [{"start_s": 0.0, "end_s": 0.42, "duration_s": 0.42, "rms": 0.081, "spectral_centroid": 2815.5, "label": "mid"}, {"start_s": 0.42, "end_s": 38.08, "duration_s": 37.66, "rms": 0.0774, "spectral_centroid": 2237.5, "label": "low"}, {"start_s": 38.08, "end_s": 115.87, "duration_s": 77.79, "rms": 0.3039, "spectral_centroid": 1449.2, "label": "peak"}, {"start_s": 115.87, "end_s": 133.33, "duration_s": 17.46, "rms": 0.2217, "spectral_centroid": 1251.1, "label": "high"}, {"start_s": 133.33, "end_s": 198.09, "duration_s": 64.76, "rms": 0.2164, "spectral_centroid": 1728.3, "label": "mid"}, {"start_s": 198.09, "end_s": 330.35, "duration_s": 132.26, "rms": 0.2815, "spectral_centroid": 2473.0, "label": "high"}, {"start_s": 330.35, "end_s": 363.67, "duration_s": 33.32, "rms": 0.2112, "spectral_centroid": 1504.2, "label": "mid"}, {"start_s": 363.67, "end_s": 399.57, "duration_s": 35.9, "rms": 0.0625, "spectral_centroid": 1578.2, "label": "low"}, {"start_s": 399.57, "end_s": 419.32, "duration_s": 19.75, "rms": 0.0349, "spectral_centroid": 2430.5, "label": "low"}], "energy_curve_1s": [0.0758, 0.0495, 0.0668, 0.0569, 0.0817, 0.0712, 0.0364, 0.0838, 0.0544, 0.076, 0.0647, 0.054, 0.0657, 0.2933, 0.2904, 0.3146, 0.2949, 0.2911, 0.3175, 0.294, 0.2985, 0.3147, 0.2919, 0.2911, 0.3064, 0.2966, 0.3004, 0.3029, 0.2928, 0.3426, 0.3055, 0.3051, 0.3174, 0.3165, 0.3039, 0.3226, 0.2965, 0.2986, 0.3313, 0.2933, 0.2895, 0.1894, 0.1332, 0.2265, 0.1209, 0.2017, 0.1983, 0.1814, 0.2445, 0.1559, 0.2081, 0.1732, 0.2076, 0.2444, 0.1204, 0.214, 0.2522, 0.2085, 0.2111, 0.1513, 0.2162, 0.1413, 0.2379, 0.3328, 0.3137, 0.3145, 0.2972, 0.335, 0.2969, 0.308, 0.3171, 0.2971, 0.3299, 0.2808, 0.2683, 0.3057, 0.3107, 0.3097, 0.3069, 0.3022, 0.2855, 0.2816, 0.2864, 0.2541, 0.3018, 0.264, 0.2514, 0.231, 0.1581, 0.2148, 0.1341, 0.1866, 0.216, 0.2017, 0.2402, 0.1359, 0.3207, 0.3116, 0.3165, 0.3064, 0.2917, 0.3208, 0.293, 0.3136, 0.3097, 0.2749, 0.3118, 0.2925, 0.3075, 0.3191, 0.2639, 0.2857, 0.2845, 0.3052, 0.2159, 0.1981, 0.1734, 0.1787, 0.1155, 0.119, 0.1161, 0.0324, 0.0354, 0.0896, 0.0356, 0.0635, 0.0806, 0.0436, 0.0741, 0.0335, 0.0579, 0.1477, 0.0494, 0.0161, 0.0159, 0.0129, 0.1388, 0.0019, 0.0004, 0.0001], "band_balance": {"sub": 30.541, "bass": 14.002, "mid": 1.045, "high": 0.347}}, "chords": {"per_beat": [{"beat": 0, "time_s": 0.14, "chord": "Dmin"}, {"beat": 1, "time_s": 0.51, "chord": "Dmin"}, {"beat": 2, "time_s": 0.88, "chord": "Dmin"}, {"beat": 3, "time_s": 1.23, "chord": "Bmaj"}, {"beat": 4, "time_s": 1.6, "chord": "Bmaj"}, {"beat": 5, "time_s": 1.95, "chord": "Bmaj"}, {"beat": 6, "time_s": 2.32, "chord": "D#min"}, {"beat": 7, "time_s": 2.69, "chord": "D#min"}, {"beat": 8, "time_s": 3.07, "chord": "D#min"}, {"beat": 9, "time_s": 3.44, "chord": "D#min"}, {"beat": 10, "time_s": 3.81, "chord": "C#maj"}, {"beat": 11, "time_s": 4.18, "chord": "D#min"}, {"beat": 12, "time_s": 4.55, "chord": "C#maj"}, {"beat": 13, "time_s": 4.92, "chord": "C#maj"}, {"beat": 14, "time_s": 5.29, "chord": "D#min"}, {"beat": 15, "time_s": 5.67, "chord": "D#min"}, {"beat": 16, "time_s": 6.04, "chord": "D#min"}, {"beat": 17, "time_s": 6.41, "chord": "C#min"}, {"beat": 18, "time_s": 6.78, "chord": "D#min"}, {"beat": 19, "time_s": 7.15, "chord": "C#min"}, {"beat": 20, "time_s": 7.52, "chord": "C#min"}, {"beat": 21, "time_s": 7.89, "chord": "A#maj"}, {"beat": 22, "time_s": 8.27, "chord": "A#maj"}, {"beat": 23, "time_s": 8.64, "chord": "A#maj"}, {"beat": 24, "time_s": 8.99, "chord": "Cmin"}, {"beat": 25, "time_s": 9.33, "chord": "Cmin"}, {"beat": 26, "time_s": 9.68, "chord": "Cmin"}, {"beat": 27, "time_s": 10.01, "chord": "Cmin"}, {"beat": 28, "time_s": 10.36, "chord": "Cmin"}, {"beat": 29, "time_s": 10.7, "chord": "Cmin"}, {"beat": 30, "time_s": 11.05, "chord": "Cmin"}, {"beat": 31, "time_s": 11.42, "chord": "Cmin"}, {"beat": 32, "time_s": 11.77, "chord": "Cmin"}, {"beat": 33, "time_s": 12.12, "chord": "Cmin"}, {"beat": 34, "time_s": 12.49, "chord": "Cmin"}, {"beat": 35, "time_s": 12.86, "chord": "Cmin"}, {"beat": 36, "time_s": 13.24, "chord": "Cmin"}, {"beat": 37, "time_s": 13.61, "chord": "Cmin"}, {"beat": 38, "time_s": 14.0, "chord": "Cmaj"}, {"beat": 39, "time_s": 14.35, "chord": "Cmaj"}, {"beat": 40, "time_s": 14.7, "chord": "Cmaj"}, {"beat": 41, "time_s": 15.05, "chord": "Fmin"}, {"beat": 42, "time_s": 15.39, "chord": "Fmin"}, {"beat": 43, "time_s": 15.74, "chord": "Fmin"}, {"beat": 44, "time_s": 16.11, "chord": "Fmin"}, {"beat": 45, "time_s": 16.49, "chord": "Fmin"}, {"beat": 46, "time_s": 16.83, "chord": "Cmin"}, {"beat": 47, "time_s": 17.23, "chord": "D#maj"}, {"beat": 48, "time_s": 17.62, "chord": "D#maj"}, {"beat": 49, "time_s": 18.02, "chord": "D#maj"}, {"beat": 50, "time_s": 18.41, "chord": "D#maj"}, {"beat": 51, "time_s": 18.78, "chord": "Fmaj"}, {"beat": 52, "time_s": 19.16, "chord": "Fmaj"}, {"beat": 53, "time_s": 19.53, "chord": "Fmaj"}, {"beat": 54, "time_s": 19.9, "chord": "Fmaj"}, {"beat": 55, "time_s": 20.29, "chord": "Cmaj"}, {"beat": 56, "time_s": 20.64, "chord": "Cmaj"}, {"beat": 57, "time_s": 21.01, "chord": "Cmaj"}, {"beat": 58, "time_s": 21.39, "chord": "Cmaj"}, {"beat": 59, "time_s": 21.78, "chord": "Cmaj"}, {"beat": 60, "time_s": 22.18, "chord": "Cmaj"}, {"beat": 61, "time_s": 22.57, "chord": "Fmin"}, {"beat": 62, "time_s": 22.94, "chord": "Fmin"}, {"beat": 63, "time_s": 23.31, "chord": "Fmin"}, {"beat": 64, "time_s": 23.66, "chord": "Fmin"}, {"beat": 65, "time_s": 24.03, "chord": "Fmin"}, {"beat": 66, "time_s": 24.38, "chord": "Cmin"}, {"beat": 67, "time_s": 24.78, "chord": "Cmin"}, {"beat": 68, "time_s": 25.17, "chord": "Cmin"}, {"beat": 69, "time_s": 25.57, "chord": "Fmin"}, {"beat": 70, "time_s": 25.96, "chord": "Fmin"}, {"beat": 71, "time_s": 26.35, "chord": "Fmin"}, {"beat": 72, "time_s": 26.75, "chord": "Fmin"}, {"beat": 73, "time_s": 27.12, "chord": "Fmin"}, {"beat": 74, "time_s": 27.47, "chord": "Fmin"}, {"beat": 75, "time_s": 27.84, "chord": "D#maj"}, {"beat": 76, "time_s": 28.21, "chord": "D#maj"}, {"beat": 77, "time_s": 28.61, "chord": "D#maj"}, {"beat": 78, "time_s": 29.0, "chord": "Cmaj"}, {"beat": 79, "time_s": 29.4, "chord": "Cmin"}, {"beat": 80, "time_s": 29.77, "chord": "Cmin"}, {"beat": 81, "time_s": 30.14, "chord": "Cmin"}, {"beat": 82, "time_s": 30.53, "chord": "Cmaj"}, {"beat": 83, "time_s": 30.91, "chord": "Cmaj"}, {"beat": 84, "time_s": 31.28, "chord": "Cmaj"}, {"beat": 85, "time_s": 31.65, "chord": "Cmin"}, {"beat": 86, "time_s": 32.02, "chord": "Cmin"}, {"beat": 87, "time_s": 32.42, "chord": "Cmin"}, {"beat": 88, "time_s": 32.79, "chord": "Cmin"}, {"beat": 89, "time_s": 33.16, "chord": "Cmin"}, {"beat": 90, "time_s": 33.53, "chord": "Cmin"}, {"beat": 91, "time_s": 33.92, "chord": "Cmin"}, {"beat": 92, "time_s": 34.3, "chord": "Fmaj"}, {"beat": 93, "time_s": 34.67, "chord": "Fmaj"}, {"beat": 94, "time_s": 35.04, "chord": "Fmaj"}, {"beat": 95, "time_s": 35.41, "chord": "Fmaj"}, {"beat": 96, "time_s": 35.78, "chord": "Fmaj"}, {"beat": 97, "time_s": 36.15, "chord": "Cmin"}, {"beat": 98, "time_s": 36.52, "chord": "G#maj"}, {"beat": 99, "time_s": 36.92, "chord": "G#maj"}, {"beat": 100, "time_s": 37.29, "chord": "G#maj"}, {"beat": 101, "time_s": 37.69, "chord": "G#maj"}, {"beat": 102, "time_s": 38.08, "chord": "Fmaj"}, {"beat": 103, "time_s": 38.45, "chord": "Fmaj"}, {"beat": 104, "time_s": 38.8, "chord": "Fmaj"}, {"beat": 105, "time_s": 39.17, "chord": "Fmaj"}, {"beat": 106, "time_s": 39.52, "chord": "Fmaj"}, {"beat": 107, "time_s": 39.92, "chord": "Fmaj"}, {"beat": 108, "time_s": 40.29, "chord": "Fmin"}, {"beat": 109, "time_s": 40.68, "chord": "Fmaj"}, {"beat": 110, "time_s": 41.08, "chord": "Fmin"}, {"beat": 111, "time_s": 41.47, "chord": "Fmaj"}, {"beat": 112, "time_s": 41.84, "chord": "Fmin"}, {"beat": 113, "time_s": 42.21, "chord": "Fmin"}, {"beat": 114, "time_s": 42.56, "chord": "Fmin"}, {"beat": 115, "time_s": 42.93, "chord": "Fmin"}, {"beat": 116, "time_s": 43.31, "chord": "Fmin"}, {"beat": 117, "time_s": 43.7, "chord": "Gmin"}, {"beat": 118, "time_s": 44.07, "chord": "Gmin"}, {"beat": 119, "time_s": 44.47, "chord": "Fmaj"}, {"beat": 120, "time_s": 44.86, "chord": "Fmin"}, {"beat": 121, "time_s": 45.26, "chord": "Fmaj"}, {"beat": 122, "time_s": 45.65, "chord": "Fmaj"}, {"beat": 123, "time_s": 46.02, "chord": "Fmaj"}, {"beat": 124, "time_s": 46.37, "chord": "Fmaj"}, {"beat": 125, "time_s": 46.74, "chord": "Fmaj"}, {"beat": 126, "time_s": 47.11, "chord": "Fmaj"}, {"beat": 127, "time_s": 47.48, "chord": "Fmin"}, {"beat": 128, "time_s": 47.86, "chord": "Fmin"}, {"beat": 129, "time_s": 48.25, "chord": "Fmin"}, {"beat": 130, "time_s": 48.65, "chord": "Fmin"}, {"beat": 131, "time_s": 49.04, "chord": "Fmin"}, {"beat": 132, "time_s": 49.41, "chord": "Cmaj"}, {"beat": 133, "time_s": 49.78, "chord": "Cmaj"}, {"beat": 134, "time_s": 50.13, "chord": "Fmaj"}, {"beat": 135, "time_s": 50.5, "chord": "Fmaj"}, {"beat": 136, "time_s": 50.85, "chord": "Fmaj"}, {"beat": 137, "time_s": 51.25, "chord": "Fmaj"}, {"beat": 138, "time_s": 51.64, "chord": "Fmaj"}, {"beat": 139, "time_s": 52.04, "chord": "Fmin"}, {"beat": 140, "time_s": 52.43, "chord": "Fmin"}, {"beat": 141, "time_s": 52.83, "chord": "Dmaj"}, {"beat": 142, "time_s": 53.2, "chord": "Dmaj"}, {"beat": 143, "time_s": 53.57, "chord": "Dmaj"}, {"beat": 144, "time_s": 53.92, "chord": "Dmaj"}, {"beat": 145, "time_s": 54.29, "chord": "Dmaj"}, {"beat": 146, "time_s": 54.64, "chord": "Fmaj"}, {"beat": 147, "time_s": 55.03, "chord": "Fmaj"}, {"beat": 148, "time_s": 55.4, "chord": "Fmaj"}, {"beat": 149, "time_s": 55.8, "chord": "Fmaj"}, {"beat": 150, "time_s": 56.19, "chord": "Fmin"}, {"beat": 151, "time_s": 56.59, "chord": "Fmaj"}, {"beat": 152, "time_s": 56.96, "chord": "Fmaj"}, {"beat": 153, "time_s": 57.33, "chord": "Fmaj"}, {"beat": 154, "time_s": 57.68, "chord": "Fmaj"}, {"beat": 155, "time_s": 58.05, "chord": "Fmaj"}, {"beat": 156, "time_s": 58.4, "chord": "Fmaj"}, {"beat": 157, "time_s": 58.79, "chord": "Fmaj"}, {"beat": 158, "time_s": 59.19, "chord": "Fmin"}, {"beat": 159, "time_s": 59.56, "chord": "Fmin"}, {"beat": 160, "time_s": 59.95, "chord": "Cmaj"}, {"beat": 161, "time_s": 60.3, "chord": "Cmaj"}, {"beat": 162, "time_s": 60.67, "chord": "Cmaj"}, {"beat": 163, "time_s": 61.07, "chord": "Cmaj"}, {"beat": 164, "time_s": 61.46, "chord": "Fmaj"}, {"beat": 165, "time_s": 61.86, "chord": "Fmaj"}, {"beat": 166, "time_s": 62.23, "chord": "Fmaj"}, {"beat": 167, "time_s": 62.6, "chord": "Fmaj"}, {"beat": 168, "time_s": 62.97, "chord": "Fmaj"}, {"beat": 169, "time_s": 63.37, "chord": "Fmaj"}, {"beat": 170, "time_s": 63.76, "chord": "Fmaj"}, {"beat": 171, "time_s": 64.16, "chord": "Fmaj"}, {"beat": 172, "time_s": 64.55, "chord": "Fmin"}, {"beat": 173, "time_s": 64.95, "chord": "Fmin"}, {"beat": 174, "time_s": 65.29, "chord": "Fmin"}, {"beat": 175, "time_s": 65.67, "chord": "Fmin"}, {"beat": 176, "time_s": 66.06, "chord": "Fmin"}, {"beat": 177, "time_s": 66.43, "chord": "Fmaj"}, {"beat": 178, "time_s": 66.8, "chord": "Fmin"}, {"beat": 179, "time_s": 67.15, "chord": "Fmaj"}, {"beat": 180, "time_s": 67.55, "chord": "Fmin"}, {"beat": 181, "time_s": 67.94, "chord": "Fmaj"}, {"beat": 182, "time_s": 68.31, "chord": "Fmaj"}, {"beat": 183, "time_s": 68.68, "chord": "Fmin"}, {"beat": 184, "time_s": 69.03, "chord": "Fmaj"}, {"beat": 185, "time_s": 69.38, "chord": "Fmaj"}, {"beat": 186, "time_s": 69.75, "chord": "Dmaj"}, {"beat": 187, "time_s": 70.17, "chord": "Dmaj"}, {"beat": 188, "time_s": 70.61, "chord": "Dmaj"}, {"beat": 189, "time_s": 71.01, "chord": "Dmaj"}, {"beat": 190, "time_s": 71.35, "chord": "Fmin"}, {"beat": 191, "time_s": 71.73, "chord": "Fmin"}, {"beat": 192, "time_s": 72.07, "chord": "Amin"}, {"beat": 193, "time_s": 72.42, "chord": "Amin"}, {"beat": 194, "time_s": 72.79, "chord": "Fmaj"}, {"beat": 195, "time_s": 73.17, "chord": "Fmin"}, {"beat": 196, "time_s": 73.54, "chord": "Fmaj"}, {"beat": 197, "time_s": 73.93, "chord": "Fmaj"}, {"beat": 198, "time_s": 74.3, "chord": "Fmin"}, {"beat": 199, "time_s": 74.7, "chord": "Fmaj"}, {"beat": 200, "time_s": 75.07, "chord": "Fmaj"}, {"beat": 201, "time_s": 75.44, "chord": "Fmaj"}, {"beat": 202, "time_s": 75.81, "chord": "Fmaj"}, {"beat": 203, "time_s": 76.18, "chord": "Fmaj"}, {"beat": 204, "time_s": 76.6, "chord": "Fmaj"}, {"beat": 205, "time_s": 76.95, "chord": "Fmaj"}, {"beat": 206, "time_s": 77.32, "chord": "Fmin"}, {"beat": 207, "time_s": 77.67, "chord": "Fmin"}, {"beat": 208, "time_s": 78.04, "chord": "Fmin"}, {"beat": 209, "time_s": 78.39, "chord": "Fmin"}, {"beat": 210, "time_s": 78.76, "chord": "Fmin"}, {"beat": 211, "time_s": 79.13, "chord": "Fmin"}, {"beat": 212, "time_s": 79.48, "chord": "Dmaj"}, {"beat": 213, "time_s": 79.85, "chord": "Dmaj"}, {"beat": 214, "time_s": 80.22, "chord": "Dmaj"}, {"beat": 215, "time_s": 80.6, "chord": "Dmaj"}, {"beat": 216, "time_s": 80.94, "chord": "Dmaj"}, {"beat": 217, "time_s": 81.32, "chord": "Dmaj"}, {"beat": 218, "time_s": 81.69, "chord": "Dmaj"}, {"beat": 219, "time_s": 82.06, "chord": "Dmaj"}, {"beat": 220, "time_s": 82.43, "chord": "Emin"}, {"beat": 221, "time_s": 82.8, "chord": "Emin"}, {"beat": 222, "time_s": 83.2, "chord": "Emin"}, {"beat": 223, "time_s": 83.59, "chord": "Dmaj"}, {"beat": 224, "time_s": 83.96, "chord": "Dmaj"}, {"beat": 225, "time_s": 84.33, "chord": "Cmaj"}, {"beat": 226, "time_s": 84.71, "chord": "Cmaj"}, {"beat": 227, "time_s": 85.08, "chord": "Cmaj"}, {"beat": 228, "time_s": 85.45, "chord": "Cmaj"}, {"beat": 229, "time_s": 85.82, "chord": "Cmaj"}, {"beat": 230, "time_s": 86.22, "chord": "Cmaj"}, {"beat": 231, "time_s": 86.59, "chord": "Cmaj"}, {"beat": 232, "time_s": 86.96, "chord": "Fmaj"}, {"beat": 233, "time_s": 87.33, "chord": "Fmaj"}, {"beat": 234, "time_s": 87.7, "chord": "Fmin"}, {"beat": 235, "time_s": 88.1, "chord": "Fmaj"}, {"beat": 236, "time_s": 88.49, "chord": "Fmin"}, {"beat": 237, "time_s": 88.86, "chord": "Fmaj"}, {"beat": 238, "time_s": 89.23, "chord": "Fmaj"}, {"beat": 239, "time_s": 89.61, "chord": "Fmaj"}, {"beat": 240, "time_s": 90.0, "chord": "Fmaj"}, {"beat": 241, "time_s": 90.37, "chord": "Fmaj"}, {"beat": 242, "time_s": 90.74, "chord": "Fmaj"}, {"beat": 243, "time_s": 91.14, "chord": "Fmin"}, {"beat": 244, "time_s": 91.53, "chord": "Fmin"}, {"beat": 245, "time_s": 91.9, "chord": "Fmin"}, {"beat": 246, "time_s": 92.25, "chord": "Fmin"}, {"beat": 247, "time_s": 92.65, "chord": "Fmin"}, {"beat": 248, "time_s": 93.02, "chord": "Fmin"}, {"beat": 249, "time_s": 93.39, "chord": "Fmaj"}, {"beat": 250, "time_s": 93.79, "chord": "Fmaj"}, {"beat": 251, "time_s": 94.16, "chord": "Fmaj"}, {"beat": 252, "time_s": 94.53, "chord": "Fmaj"}, {"beat": 253, "time_s": 94.92, "chord": "Fmaj"}, {"beat": 254, "time_s": 95.32, "chord": "Fmin"}, {"beat": 255, "time_s": 95.69, "chord": "Fmin"}, {"beat": 256, "time_s": 96.04, "chord": "Fmin"}, {"beat": 257, "time_s": 96.43, "chord": "Fmin"}, {"beat": 258, "time_s": 96.8, "chord": "Fmin"}, {"beat": 259, "time_s": 97.18, "chord": "Fmin"}, {"beat": 260, "time_s": 97.57, "chord": "Fmin"}, {"beat": 261, "time_s": 97.94, "chord": "Fmin"}, {"beat": 262, "time_s": 98.34, "chord": "Fmin"}, {"beat": 263, "time_s": 98.73, "chord": "Fmin"}, {"beat": 264, "time_s": 99.1, "chord": "Fmin"}, {"beat": 265, "time_s": 99.47, "chord": "Fmin"}, {"beat": 266, "time_s": 99.82, "chord": "Fmin"}, {"beat": 267, "time_s": 100.19, "chord": "Fmin"}, {"beat": 268, "time_s": 100.57, "chord": "Fmin"}, {"beat": 269, "time_s": 100.94, "chord": "Fmin"}, {"beat": 270, "time_s": 101.33, "chord": "Fmin"}, {"beat": 271, "time_s": 101.7, "chord": "Fmin"}, {"beat": 272, "time_s": 102.07, "chord": "Fmin"}, {"beat": 273, "time_s": 102.47, "chord": "Fmin"}, {"beat": 274, "time_s": 102.89, "chord": "Fmin"}, {"beat": 275, "time_s": 103.26, "chord": "Fmin"}, {"beat": 276, "time_s": 103.65, "chord": "Fmin"}, {"beat": 277, "time_s": 104.0, "chord": "Fmin"}, {"beat": 278, "time_s": 104.35, "chord": "Fmin"}, {"beat": 279, "time_s": 104.72, "chord": "Fmin"}, {"beat": 280, "time_s": 105.09, "chord": "Fmin"}, {"beat": 281, "time_s": 105.44, "chord": "Fmin"}, {"beat": 282, "time_s": 105.86, "chord": "Fmin"}, {"beat": 283, "time_s": 106.25, "chord": "Fmin"}, {"beat": 284, "time_s": 106.6, "chord": "Fmin"}, {"beat": 285, "time_s": 106.97, "chord": "Fmin"}, {"beat": 286, "time_s": 107.37, "chord": "Fmin"}, {"beat": 287, "time_s": 107.76, "chord": "Fmin"}, {"beat": 288, "time_s": 108.14, "chord": "Fmin"}, {"beat": 289, "time_s": 108.48, "chord": "Fmin"}, {"beat": 290, "time_s": 108.86, "chord": "Fmin"}, {"beat": 291, "time_s": 109.23, "chord": "Cmaj"}, {"beat": 292, "time_s": 109.62, "chord": "Cmaj"}, {"beat": 293, "time_s": 110.02, "chord": "Cmaj"}, {"beat": 294, "time_s": 110.39, "chord": "Cmaj"}, {"beat": 295, "time_s": 110.76, "chord": "Cmaj"}, {"beat": 296, "time_s": 111.15, "chord": "Cmaj"}, {"beat": 297, "time_s": 111.55, "chord": "Cmaj"}, {"beat": 298, "time_s": 111.92, "chord": "Cmaj"}, {"beat": 299, "time_s": 112.27, "chord": "Cmaj"}, {"beat": 300, "time_s": 112.64, "chord": "Fmin"}, {"beat": 301, "time_s": 113.03, "chord": "Fmin"}, {"beat": 302, "time_s": 113.43, "chord": "Fmin"}, {"beat": 303, "time_s": 113.82, "chord": "Fmin"}, {"beat": 304, "time_s": 114.22, "chord": "Cmaj"}, {"beat": 305, "time_s": 114.59, "chord": "Cmaj"}, {"beat": 306, "time_s": 114.94, "chord": "Cmaj"}, {"beat": 307, "time_s": 115.31, "chord": "Fmin"}, {"beat": 308, "time_s": 115.68, "chord": "Fmin"}, {"beat": 309, "time_s": 116.08, "chord": "Fmin"}, {"beat": 310, "time_s": 116.45, "chord": "Fmin"}, {"beat": 311, "time_s": 116.82, "chord": "Fmin"}, {"beat": 312, "time_s": 117.21, "chord": "Cmaj"}, {"beat": 313, "time_s": 117.61, "chord": "Cmaj"}, {"beat": 314, "time_s": 117.98, "chord": "Fmin"}, {"beat": 315, "time_s": 118.38, "chord": "Fmin"}, {"beat": 316, "time_s": 118.72, "chord": "Cmaj"}, {"beat": 317, "time_s": 119.1, "chord": "Cmaj"}, {"beat": 318, "time_s": 119.47, "chord": "Cmaj"}, {"beat": 319, "time_s": 119.84, "chord": "Cmaj"}, {"beat": 320, "time_s": 120.21, "chord": "Cmaj"}, {"beat": 321, "time_s": 120.6, "chord": "Fmin"}, {"beat": 322, "time_s": 120.98, "chord": "Fmin"}, {"beat": 323, "time_s": 121.37, "chord": "Fmin"}, {"beat": 324, "time_s": 121.77, "chord": "Fmin"}, {"beat": 325, "time_s": 122.16, "chord": "Fmin"}, {"beat": 326, "time_s": 122.51, "chord": "Fmin"}, {"beat": 327, "time_s": 122.88, "chord": "Cmaj"}, {"beat": 328, "time_s": 123.25, "chord": "Cmaj"}, {"beat": 329, "time_s": 123.6, "chord": "Cmaj"}, {"beat": 330, "time_s": 123.99, "chord": "Cmaj"}, {"beat": 331, "time_s": 124.39, "chord": "Dmin"}, {"beat": 332, "time_s": 124.76, "chord": "Dmin"}, {"beat": 333, "time_s": 125.16, "chord": "Dmin"}, {"beat": 334, "time_s": 125.55, "chord": "Cmaj"}, {"beat": 335, "time_s": 125.95, "chord": "Fmin"}, {"beat": 336, "time_s": 126.29, "chord": "Cmaj"}, {"beat": 337, "time_s": 126.64, "chord": "Cmaj"}, {"beat": 338, "time_s": 127.01, "chord": "Cmaj"}, {"beat": 339, "time_s": 127.38, "chord": "Cmaj"}, {"beat": 340, "time_s": 127.78, "chord": "Cmaj"}, {"beat": 341, "time_s": 128.17, "chord": "Cmaj"}, {"beat": 342, "time_s": 128.57, "chord": "Cmaj"}, {"beat": 343, "time_s": 128.96, "chord": "Cmaj"}, {"beat": 344, "time_s": 129.34, "chord": "Cmaj"}, {"beat": 345, "time_s": 129.71, "chord": "Fmin"}, {"beat": 346, "time_s": 130.05, "chord": "Cmaj"}, {"beat": 347, "time_s": 130.43, "chord": "Cmaj"}, {"beat": 348, "time_s": 130.8, "chord": "Cmaj"}, {"beat": 349, "time_s": 131.17, "chord": "Cmaj"}, {"beat": 350, "time_s": 131.56, "chord": "Cmaj"}, {"beat": 351, "time_s": 131.96, "chord": "Cmaj"}, {"beat": 352, "time_s": 132.33, "chord": "Cmaj"}, {"beat": 353, "time_s": 132.7, "chord": "Cmaj"}, {"beat": 354, "time_s": 133.1, "chord": "Cmaj"}, {"beat": 355, "time_s": 133.49, "chord": "Cmaj"}, {"beat": 356, "time_s": 133.86, "chord": "Fmin"}, {"beat": 357, "time_s": 134.21, "chord": "Fmin"}, {"beat": 358, "time_s": 134.54, "chord": "Cmaj"}, {"beat": 359, "time_s": 134.88, "chord": "Cmaj"}, {"beat": 360, "time_s": 135.23, "chord": "A#maj"}, {"beat": 361, "time_s": 135.6, "chord": "Cmaj"}, {"beat": 362, "time_s": 135.98, "chord": "Cmaj"}, {"beat": 363, "time_s": 136.35, "chord": "A#maj"}, {"beat": 364, "time_s": 136.72, "chord": "Fmin"}, {"beat": 365, "time_s": 137.11, "chord": "Fmin"}, {"beat": 366, "time_s": 137.53, "chord": "Fmin"}, {"beat": 367, "time_s": 137.95, "chord": "Fmin"}, {"beat": 368, "time_s": 138.37, "chord": "Fmin"}, {"beat": 369, "time_s": 138.74, "chord": "Cmaj"}, {"beat": 370, "time_s": 139.11, "chord": "Cmaj"}, {"beat": 371, "time_s": 139.46, "chord": "Cmaj"}, {"beat": 372, "time_s": 139.85, "chord": "Cmaj"}, {"beat": 373, "time_s": 140.2, "chord": "Cmaj"}, {"beat": 374, "time_s": 140.55, "chord": "Cmaj"}, {"beat": 375, "time_s": 140.9, "chord": "Fmin"}, {"beat": 376, "time_s": 141.25, "chord": "Fmin"}, {"beat": 377, "time_s": 141.6, "chord": "Fmin"}, {"beat": 378, "time_s": 141.97, "chord": "Fmin"}, {"beat": 379, "time_s": 142.34, "chord": "Cmaj"}, {"beat": 380, "time_s": 142.71, "chord": "Cmaj"}, {"beat": 381, "time_s": 143.1, "chord": "Cmaj"}, {"beat": 382, "time_s": 143.45, "chord": "Cmaj"}, {"beat": 383, "time_s": 143.8, "chord": "Cmaj"}, {"beat": 384, "time_s": 144.15, "chord": "Cmaj"}, {"beat": 385, "time_s": 144.5, "chord": "Fmin"}, {"beat": 386, "time_s": 144.85, "chord": "Fmin"}, {"beat": 387, "time_s": 145.19, "chord": "Fmin"}, {"beat": 388, "time_s": 145.57, "chord": "Fmin"}, {"beat": 389, "time_s": 145.91, "chord": "Fmin"}, {"beat": 390, "time_s": 146.26, "chord": "Cmaj"}, {"beat": 391, "time_s": 146.63, "chord": "Cmaj"}, {"beat": 392, "time_s": 147.01, "chord": "Cmaj"}, {"beat": 393, "time_s": 147.4, "chord": "A#maj"}, {"beat": 394, "time_s": 147.77, "chord": "Fmin"}, {"beat": 395, "time_s": 148.14, "chord": "Fmin"}, {"beat": 396, "time_s": 148.51, "chord": "Fmin"}, {"beat": 397, "time_s": 148.89, "chord": "Fmin"}, {"beat": 398, "time_s": 149.23, "chord": "Fmin"}, {"beat": 399, "time_s": 149.58, "chord": "Cmaj"}, {"beat": 400, "time_s": 149.93, "chord": "Cmaj"}, {"beat": 401, "time_s": 150.3, "chord": "Cmaj"}, {"beat": 402, "time_s": 150.67, "chord": "A#maj"}, {"beat": 403, "time_s": 151.07, "chord": "A#maj"}, {"beat": 404, "time_s": 151.42, "chord": "A#maj"}, {"beat": 405, "time_s": 151.79, "chord": "A#maj"}, {"beat": 406, "time_s": 152.11, "chord": "Cmaj"}, {"beat": 407, "time_s": 152.49, "chord": "Cmaj"}, {"beat": 408, "time_s": 152.86, "chord": "Cmaj"}, {"beat": 409, "time_s": 153.23, "chord": "Cmaj"}, {"beat": 410, "time_s": 153.6, "chord": "Cmaj"}, {"beat": 411, "time_s": 153.97, "chord": "Cmaj"}, {"beat": 412, "time_s": 154.34, "chord": "A#maj"}, {"beat": 413, "time_s": 154.71, "chord": "A#maj"}, {"beat": 414, "time_s": 155.06, "chord": "A#maj"}, {"beat": 415, "time_s": 155.41, "chord": "A#maj"}, {"beat": 416, "time_s": 155.78, "chord": "Cmaj"}, {"beat": 417, "time_s": 156.18, "chord": "Cmaj"}, {"beat": 418, "time_s": 156.55, "chord": "Cmaj"}, {"beat": 419, "time_s": 156.9, "chord": "Cmaj"}, {"beat": 420, "time_s": 157.27, "chord": "Cmaj"}, {"beat": 421, "time_s": 157.66, "chord": "Cmaj"}, {"beat": 422, "time_s": 158.06, "chord": "Fmin"}, {"beat": 423, "time_s": 158.45, "chord": "Fmin"}, {"beat": 424, "time_s": 158.82, "chord": "Fmin"}, {"beat": 425, "time_s": 159.17, "chord": "Fmin"}, {"beat": 426, "time_s": 159.57, "chord": "Cmaj"}, {"beat": 427, "time_s": 159.94, "chord": "Cmaj"}, {"beat": 428, "time_s": 160.31, "chord": "Cmaj"}, {"beat": 429, "time_s": 160.68, "chord": "Cmaj"}, {"beat": 430, "time_s": 161.1, "chord": "Cmaj"}, {"beat": 431, "time_s": 161.49, "chord": "C#maj"}, {"beat": 432, "time_s": 161.84, "chord": "A#maj"}, {"beat": 433, "time_s": 162.21, "chord": "A#maj"}, {"beat": 434, "time_s": 162.59, "chord": "A#maj"}, {"beat": 435, "time_s": 162.96, "chord": "A#maj"}, {"beat": 436, "time_s": 163.35, "chord": "Cmaj"}, {"beat": 437, "time_s": 163.72, "chord": "Cmaj"}, {"beat": 438, "time_s": 164.1, "chord": "Cmaj"}, {"beat": 439, "time_s": 164.47, "chord": "Cmaj"}, {"beat": 440, "time_s": 164.88, "chord": "Cmaj"}, {"beat": 441, "time_s": 165.28, "chord": "Fmin"}, {"beat": 442, "time_s": 165.63, "chord": "A#maj"}, {"beat": 443, "time_s": 166.0, "chord": "A#maj"}, {"beat": 444, "time_s": 166.37, "chord": "A#maj"}, {"beat": 445, "time_s": 166.77, "chord": "A#maj"}, {"beat": 446, "time_s": 167.14, "chord": "Cmaj"}, {"beat": 447, "time_s": 167.53, "chord": "Cmaj"}, {"beat": 448, "time_s": 167.9, "chord": "Cmaj"}, {"beat": 449, "time_s": 168.28, "chord": "Cmaj"}, {"beat": 450, "time_s": 168.67, "chord": "Cmaj"}, {"beat": 451, "time_s": 169.04, "chord": "Cmaj"}, {"beat": 452, "time_s": 169.41, "chord": "Cmaj"}, {"beat": 453, "time_s": 169.76, "chord": "A#maj"}, {"beat": 454, "time_s": 170.11, "chord": "A#maj"}, {"beat": 455, "time_s": 170.48, "chord": "A#maj"}, {"beat": 456, "time_s": 170.83, "chord": "Fmin"}, {"beat": 457, "time_s": 171.2, "chord": "Fmin"}, {"beat": 458, "time_s": 171.57, "chord": "Cmaj"}, {"beat": 459, "time_s": 171.97, "chord": "Cmaj"}, {"beat": 460, "time_s": 172.38, "chord": "Cmaj"}, {"beat": 461, "time_s": 172.76, "chord": "Cmaj"}, {"beat": 462, "time_s": 173.13, "chord": "Cmaj"}, {"beat": 463, "time_s": 173.52, "chord": "Cmaj"}, {"beat": 464, "time_s": 173.92, "chord": "Cmaj"}, {"beat": 465, "time_s": 174.31, "chord": "Cmaj"}, {"beat": 466, "time_s": 174.71, "chord": "Cmaj"}, {"beat": 467, "time_s": 175.08, "chord": "Cmaj"}, {"beat": 468, "time_s": 175.45, "chord": "Cmaj"}, {"beat": 469, "time_s": 175.8, "chord": "Cmaj"}, {"beat": 470, "time_s": 176.22, "chord": "Cmaj"}, {"beat": 471, "time_s": 176.63, "chord": "Cmaj"}, {"beat": 472, "time_s": 176.98, "chord": "Dmin"}, {"beat": 473, "time_s": 177.35, "chord": "Dmin"}, {"beat": 474, "time_s": 177.7, "chord": "Dmin"}, {"beat": 475, "time_s": 178.05, "chord": "A#maj"}, {"beat": 476, "time_s": 178.42, "chord": "Cmaj"}, {"beat": 477, "time_s": 178.82, "chord": "Cmaj"}, {"beat": 478, "time_s": 179.21, "chord": "Cmaj"}, {"beat": 479, "time_s": 179.58, "chord": "Cmaj"}, {"beat": 480, "time_s": 179.93, "chord": "Cmaj"}, {"beat": 481, "time_s": 180.28, "chord": "Cmaj"}, {"beat": 482, "time_s": 180.65, "chord": "Cmaj"}, {"beat": 483, "time_s": 181.02, "chord": "Fmin"}, {"beat": 484, "time_s": 181.39, "chord": "Fmin"}, {"beat": 485, "time_s": 181.79, "chord": "Cmaj"}, {"beat": 486, "time_s": 182.18, "chord": "Cmaj"}, {"beat": 487, "time_s": 182.58, "chord": "Cmaj"}, {"beat": 488, "time_s": 182.97, "chord": "Cmaj"}, {"beat": 489, "time_s": 183.34, "chord": "Cmaj"}, {"beat": 490, "time_s": 183.72, "chord": "Fmin"}, {"beat": 491, "time_s": 184.13, "chord": "Fmin"}, {"beat": 492, "time_s": 184.55, "chord": "Fmin"}, {"beat": 493, "time_s": 184.97, "chord": "Fmin"}, {"beat": 494, "time_s": 185.34, "chord": "Cmaj"}, {"beat": 495, "time_s": 185.71, "chord": "Cmaj"}, {"beat": 496, "time_s": 186.08, "chord": "Cmaj"}, {"beat": 497, "time_s": 186.46, "chord": "Cmaj"}, {"beat": 498, "time_s": 186.83, "chord": "Cmaj"}, {"beat": 499, "time_s": 187.2, "chord": "Cmaj"}, {"beat": 500, "time_s": 187.57, "chord": "Fmin"}, {"beat": 501, "time_s": 187.94, "chord": "Fmin"}, {"beat": 502, "time_s": 188.31, "chord": "Fmin"}, {"beat": 503, "time_s": 188.69, "chord": "Fmin"}, {"beat": 504, "time_s": 189.06, "chord": "Fmin"}, {"beat": 505, "time_s": 189.45, "chord": "Fmin"}, {"beat": 506, "time_s": 189.82, "chord": "Cmaj"}, {"beat": 507, "time_s": 190.22, "chord": "Fmin"}, {"beat": 508, "time_s": 190.59, "chord": "Fmin"}, {"beat": 509, "time_s": 190.96, "chord": "Fmin"}, {"beat": 510, "time_s": 191.33, "chord": "Fmin"}, {"beat": 511, "time_s": 191.7, "chord": "Fmin"}, {"beat": 512, "time_s": 192.05, "chord": "Fmin"}, {"beat": 513, "time_s": 192.42, "chord": "Fmin"}, {"beat": 514, "time_s": 192.8, "chord": "Fmin"}, {"beat": 515, "time_s": 193.17, "chord": "Fmin"}, {"beat": 516, "time_s": 193.52, "chord": "Fmin"}, {"beat": 517, "time_s": 193.89, "chord": "Fmin"}, {"beat": 518, "time_s": 194.23, "chord": "Fmin"}, {"beat": 519, "time_s": 194.61, "chord": "Fmin"}, {"beat": 520, "time_s": 194.98, "chord": "Fmin"}, {"beat": 521, "time_s": 195.33, "chord": "Fmin"}, {"beat": 522, "time_s": 195.7, "chord": "Fmin"}, {"beat": 523, "time_s": 196.07, "chord": "Fmin"}, {"beat": 524, "time_s": 196.44, "chord": "Fmin"}, {"beat": 525, "time_s": 196.81, "chord": "Fmin"}, {"beat": 526, "time_s": 197.21, "chord": "Fmin"}, {"beat": 527, "time_s": 197.58, "chord": "Fmin"}, {"beat": 528, "time_s": 197.95, "chord": "Fmin"}, {"beat": 529, "time_s": 198.32, "chord": "Fmin"}, {"beat": 530, "time_s": 198.72, "chord": "Fmin"}, {"beat": 531, "time_s": 199.09, "chord": "Fmin"}, {"beat": 532, "time_s": 199.46, "chord": "Fmin"}, {"beat": 533, "time_s": 199.83, "chord": "Fmin"}, {"beat": 534, "time_s": 200.23, "chord": "Fmin"}, {"beat": 535, "time_s": 200.6, "chord": "Fmin"}, {"beat": 536, "time_s": 200.97, "chord": "Fmin"}, {"beat": 537, "time_s": 201.32, "chord": "Fmin"}, {"beat": 538, "time_s": 201.67, "chord": "Fmin"}, {"beat": 539, "time_s": 202.01, "chord": "Fmin"}, {"beat": 540, "time_s": 202.39, "chord": "Fmin"}, {"beat": 541, "time_s": 202.78, "chord": "Fmin"}, {"beat": 542, "time_s": 203.17, "chord": "Fmaj"}, {"beat": 543, "time_s": 203.57, "chord": "Fmaj"}, {"beat": 544, "time_s": 203.94, "chord": "Fmaj"}, {"beat": 545, "time_s": 204.31, "chord": "Fmaj"}, {"beat": 546, "time_s": 204.68, "chord": "Fmaj"}, {"beat": 547, "time_s": 205.06, "chord": "Fmin"}, {"beat": 548, "time_s": 205.43, "chord": "Fmaj"}, {"beat": 549, "time_s": 205.78, "chord": "Fmaj"}, {"beat": 550, "time_s": 206.15, "chord": "Fmaj"}, {"beat": 551, "time_s": 206.5, "chord": "Fmaj"}, {"beat": 552, "time_s": 206.84, "chord": "Fmaj"}, {"beat": 553, "time_s": 207.19, "chord": "Fmin"}, {"beat": 554, "time_s": 207.54, "chord": "Fmin"}, {"beat": 555, "time_s": 207.89, "chord": "Fmin"}, {"beat": 556, "time_s": 208.26, "chord": "Fmin"}, {"beat": 557, "time_s": 208.63, "chord": "Fmin"}, {"beat": 558, "time_s": 208.98, "chord": "Fmin"}, {"beat": 559, "time_s": 209.35, "chord": "Fmin"}, {"beat": 560, "time_s": 209.7, "chord": "Fmin"}, {"beat": 561, "time_s": 210.05, "chord": "Fmin"}, {"beat": 562, "time_s": 210.4, "chord": "Fmin"}, {"beat": 563, "time_s": 210.74, "chord": "Fmin"}, {"beat": 564, "time_s": 211.12, "chord": "Fmin"}, {"beat": 565, "time_s": 211.46, "chord": "Fmin"}, {"beat": 566, "time_s": 211.84, "chord": "Fmin"}, {"beat": 567, "time_s": 212.21, "chord": "Fmaj"}, {"beat": 568, "time_s": 212.58, "chord": "Fmaj"}, {"beat": 569, "time_s": 212.95, "chord": "Fmaj"}, {"beat": 570, "time_s": 213.32, "chord": "Fmaj"}, {"beat": 571, "time_s": 213.72, "chord": "Fmaj"}, {"beat": 572, "time_s": 214.11, "chord": "Fmaj"}, {"beat": 573, "time_s": 214.48, "chord": "Fmin"}, {"beat": 574, "time_s": 214.85, "chord": "Fmin"}, {"beat": 575, "time_s": 215.23, "chord": "Fmin"}, {"beat": 576, "time_s": 215.62, "chord": "Fmaj"}, {"beat": 577, "time_s": 215.99, "chord": "Fmaj"}, {"beat": 578, "time_s": 216.36, "chord": "Fmin"}, {"beat": 579, "time_s": 216.74, "chord": "Fmin"}, {"beat": 580, "time_s": 217.11, "chord": "Fmin"}, {"beat": 581, "time_s": 217.48, "chord": "Fmin"}, {"beat": 582, "time_s": 217.83, "chord": "Fmin"}, {"beat": 583, "time_s": 218.17, "chord": "Cmaj"}, {"beat": 584, "time_s": 218.52, "chord": "Fmin"}, {"beat": 585, "time_s": 218.87, "chord": "Fmin"}, {"beat": 586, "time_s": 219.24, "chord": "Fmin"}, {"beat": 587, "time_s": 219.64, "chord": "Fmin"}, {"beat": 588, "time_s": 219.99, "chord": "Fmin"}, {"beat": 589, "time_s": 220.36, "chord": "Fmin"}, {"beat": 590, "time_s": 220.71, "chord": "Fmin"}, {"beat": 591, "time_s": 221.05, "chord": "Fmin"}, {"beat": 592, "time_s": 221.43, "chord": "Fmin"}, {"beat": 593, "time_s": 221.8, "chord": "Fmin"}, {"beat": 594, "time_s": 222.17, "chord": "Fmin"}, {"beat": 595, "time_s": 222.54, "chord": "C#maj"}, {"beat": 596, "time_s": 222.91, "chord": "C#maj"}, {"beat": 597, "time_s": 223.28, "chord": "C#maj"}, {"beat": 598, "time_s": 223.63, "chord": "C#maj"}, {"beat": 599, "time_s": 223.98, "chord": "C#maj"}, {"beat": 600, "time_s": 224.37, "chord": "C#maj"}, {"beat": 601, "time_s": 224.77, "chord": "Dmin"}, {"beat": 602, "time_s": 225.14, "chord": "C#maj"}, {"beat": 603, "time_s": 225.51, "chord": "Dmin"}, {"beat": 604, "time_s": 225.88, "chord": "C#min"}, {"beat": 605, "time_s": 226.28, "chord": "Dmin"}, {"beat": 606, "time_s": 226.67, "chord": "Dmin"}, {"beat": 607, "time_s": 227.04, "chord": "C#maj"}, {"beat": 608, "time_s": 227.44, "chord": "Fmin"}, {"beat": 609, "time_s": 227.79, "chord": "Fmin"}, {"beat": 610, "time_s": 228.16, "chord": "Fmin"}, {"beat": 611, "time_s": 228.53, "chord": "Fmin"}, {"beat": 612, "time_s": 228.93, "chord": "Cmaj"}, {"beat": 613, "time_s": 229.3, "chord": "Cmaj"}, {"beat": 614, "time_s": 229.67, "chord": "Cmaj"}, {"beat": 615, "time_s": 230.06, "chord": "Cmaj"}, {"beat": 616, "time_s": 230.46, "chord": "Fmin"}, {"beat": 617, "time_s": 230.83, "chord": "Fmaj"}, {"beat": 618, "time_s": 231.2, "chord": "Fmaj"}, {"beat": 619, "time_s": 231.55, "chord": "Fmaj"}, {"beat": 620, "time_s": 231.92, "chord": "Fmaj"}, {"beat": 621, "time_s": 232.29, "chord": "Fmaj"}, {"beat": 622, "time_s": 232.66, "chord": "Fmaj"}, {"beat": 623, "time_s": 233.04, "chord": "Fmaj"}, {"beat": 624, "time_s": 233.43, "chord": "Fmaj"}, {"beat": 625, "time_s": 233.82, "chord": "Fmaj"}, {"beat": 626, "time_s": 234.22, "chord": "Fmaj"}, {"beat": 627, "time_s": 234.61, "chord": "Fmaj"}, {"beat": 628, "time_s": 234.99, "chord": "Fmin"}, {"beat": 629, "time_s": 235.33, "chord": "Fmin"}, {"beat": 630, "time_s": 235.71, "chord": "Fmin"}, {"beat": 631, "time_s": 236.08, "chord": "Fmin"}, {"beat": 632, "time_s": 236.45, "chord": "A#min"}, {"beat": 633, "time_s": 236.84, "chord": "A#min"}, {"beat": 634, "time_s": 237.22, "chord": "A#min"}, {"beat": 635, "time_s": 237.61, "chord": "A#maj"}, {"beat": 636, "time_s": 238.0, "chord": "A#maj"}, {"beat": 637, "time_s": 238.4, "chord": "A#maj"}, {"beat": 638, "time_s": 238.77, "chord": "Fmaj"}, {"beat": 639, "time_s": 239.12, "chord": "Fmaj"}, {"beat": 640, "time_s": 239.47, "chord": "Fmin"}, {"beat": 641, "time_s": 239.84, "chord": "Fmin"}, {"beat": 642, "time_s": 240.21, "chord": "Fmin"}, {"beat": 643, "time_s": 240.58, "chord": "Fmin"}, {"beat": 644, "time_s": 240.98, "chord": "A#maj"}, {"beat": 645, "time_s": 241.37, "chord": "Emin"}, {"beat": 646, "time_s": 241.77, "chord": "A#maj"}, {"beat": 647, "time_s": 242.16, "chord": "A#maj"}, {"beat": 648, "time_s": 242.53, "chord": "Cmaj"}, {"beat": 649, "time_s": 242.9, "chord": "Cmaj"}, {"beat": 650, "time_s": 243.28, "chord": "Cmaj"}, {"beat": 651, "time_s": 243.65, "chord": "Cmaj"}, {"beat": 652, "time_s": 244.02, "chord": "Cmaj"}, {"beat": 653, "time_s": 244.39, "chord": "Cmaj"}, {"beat": 654, "time_s": 244.78, "chord": "Cmaj"}, {"beat": 655, "time_s": 245.18, "chord": "Fmin"}, {"beat": 656, "time_s": 245.57, "chord": "Fmin"}, {"beat": 657, "time_s": 245.95, "chord": "Fmin"}, {"beat": 658, "time_s": 246.32, "chord": "Fmin"}, {"beat": 659, "time_s": 246.67, "chord": "Fmin"}, {"beat": 660, "time_s": 247.04, "chord": "Fmin"}, {"beat": 661, "time_s": 247.41, "chord": "Fmin"}, {"beat": 662, "time_s": 247.8, "chord": "Fmin"}, {"beat": 663, "time_s": 248.17, "chord": "Fmin"}, {"beat": 664, "time_s": 248.57, "chord": "Fmin"}, {"beat": 665, "time_s": 248.94, "chord": "Fmin"}, {"beat": 666, "time_s": 249.34, "chord": "Fmin"}, {"beat": 667, "time_s": 249.73, "chord": "Fmin"}, {"beat": 668, "time_s": 250.1, "chord": "Fmaj"}, {"beat": 669, "time_s": 250.45, "chord": "Fmaj"}, {"beat": 670, "time_s": 250.82, "chord": "Fmaj"}, {"beat": 671, "time_s": 251.19, "chord": "Fmaj"}, {"beat": 672, "time_s": 251.59, "chord": "Fmaj"}, {"beat": 673, "time_s": 251.96, "chord": "Cmaj"}, {"beat": 674, "time_s": 252.33, "chord": "Cmaj"}, {"beat": 675, "time_s": 252.73, "chord": "Cmaj"}, {"beat": 676, "time_s": 253.12, "chord": "Cmaj"}, {"beat": 677, "time_s": 253.52, "chord": "Cmaj"}, {"beat": 678, "time_s": 253.89, "chord": "Cmaj"}, {"beat": 679, "time_s": 254.24, "chord": "Cmaj"}, {"beat": 680, "time_s": 254.61, "chord": "Cmaj"}, {"beat": 681, "time_s": 254.96, "chord": "Cmaj"}, {"beat": 682, "time_s": 255.33, "chord": "Cmaj"}, {"beat": 683, "time_s": 255.72, "chord": "Cmaj"}, {"beat": 684, "time_s": 256.12, "chord": "Cmaj"}, {"beat": 685, "time_s": 256.51, "chord": "Fmin"}, {"beat": 686, "time_s": 256.91, "chord": "Fmin"}, {"beat": 687, "time_s": 257.28, "chord": "Fmin"}, {"beat": 688, "time_s": 257.65, "chord": "Fmin"}, {"beat": 689, "time_s": 258.02, "chord": "Fmin"}, {"beat": 690, "time_s": 258.37, "chord": "Fmin"}, {"beat": 691, "time_s": 258.74, "chord": "Fmin"}, {"beat": 692, "time_s": 259.11, "chord": "Fmin"}, {"beat": 693, "time_s": 259.51, "chord": "Cmaj"}, {"beat": 694, "time_s": 259.9, "chord": "Cmaj"}, {"beat": 695, "time_s": 260.3, "chord": "Cmaj"}, {"beat": 696, "time_s": 260.69, "chord": "Cmaj"}, {"beat": 697, "time_s": 261.06, "chord": "Cmaj"}, {"beat": 698, "time_s": 261.43, "chord": "Cmaj"}, {"beat": 699, "time_s": 261.78, "chord": "Cmaj"}, {"beat": 700, "time_s": 262.15, "chord": "Cmaj"}, {"beat": 701, "time_s": 262.52, "chord": "Cmaj"}, {"beat": 702, "time_s": 262.92, "chord": "Cmaj"}, {"beat": 703, "time_s": 263.31, "chord": "Cmaj"}, {"beat": 704, "time_s": 263.69, "chord": "Cmaj"}, {"beat": 705, "time_s": 264.08, "chord": "Cmaj"}, {"beat": 706, "time_s": 264.48, "chord": "Fmin"}, {"beat": 707, "time_s": 264.85, "chord": "Fmin"}, {"beat": 708, "time_s": 265.22, "chord": "Fmin"}, {"beat": 709, "time_s": 265.57, "chord": "Fmin"}, {"beat": 710, "time_s": 265.94, "chord": "Fmin"}, {"beat": 711, "time_s": 266.31, "chord": "Fmin"}, {"beat": 712, "time_s": 266.7, "chord": "Fmin"}, {"beat": 713, "time_s": 267.08, "chord": "Fmaj"}, {"beat": 714, "time_s": 267.45, "chord": "Fmaj"}, {"beat": 715, "time_s": 267.84, "chord": "Fmin"}, {"beat": 716, "time_s": 268.24, "chord": "Cmaj"}, {"beat": 717, "time_s": 268.63, "chord": "Cmaj"}, {"beat": 718, "time_s": 268.98, "chord": "Cmaj"}, {"beat": 719, "time_s": 269.33, "chord": "Cmaj"}, {"beat": 720, "time_s": 269.65, "chord": "Cmaj"}, {"beat": 721, "time_s": 270.0, "chord": "Cmaj"}, {"beat": 722, "time_s": 270.35, "chord": "Cmaj"}, {"beat": 723, "time_s": 270.72, "chord": "Cmaj"}, {"beat": 724, "time_s": 271.07, "chord": "Cmaj"}, {"beat": 725, "time_s": 271.42, "chord": "Cmaj"}, {"beat": 726, "time_s": 271.77, "chord": "Cmaj"}, {"beat": 727, "time_s": 272.09, "chord": "Dmin"}, {"beat": 728, "time_s": 272.42, "chord": "Dmin"}, {"beat": 729, "time_s": 272.76, "chord": "Dmin"}, {"beat": 730, "time_s": 273.14, "chord": "Cmaj"}, {"beat": 731, "time_s": 273.51, "chord": "Dmin"}, {"beat": 732, "time_s": 273.86, "chord": "Dmin"}, {"beat": 733, "time_s": 274.23, "chord": "Cmaj"}, {"beat": 734, "time_s": 274.62, "chord": "Cmaj"}, {"beat": 735, "time_s": 275.02, "chord": "Dmin"}, {"beat": 736, "time_s": 275.41, "chord": "Cmaj"}, {"beat": 737, "time_s": 275.78, "chord": "Cmaj"}, {"beat": 738, "time_s": 276.15, "chord": "Dmin"}, {"beat": 739, "time_s": 276.5, "chord": "Dmin"}, {"beat": 740, "time_s": 276.9, "chord": "Dmin"}, {"beat": 741, "time_s": 277.27, "chord": "Dmin"}, {"beat": 742, "time_s": 277.64, "chord": "Dmin"}, {"beat": 743, "time_s": 278.01, "chord": "Dmin"}, {"beat": 744, "time_s": 278.41, "chord": "Dmin"}, {"beat": 745, "time_s": 278.78, "chord": "Dmin"}, {"beat": 746, "time_s": 279.17, "chord": "Dmin"}, {"beat": 747, "time_s": 279.57, "chord": "Dmin"}, {"beat": 748, "time_s": 279.96, "chord": "Dmin"}, {"beat": 749, "time_s": 280.31, "chord": "Dmin"}, {"beat": 750, "time_s": 280.68, "chord": "Dmin"}, {"beat": 751, "time_s": 281.08, "chord": "Dmin"}, {"beat": 752, "time_s": 281.47, "chord": "Dmin"}, {"beat": 753, "time_s": 281.87, "chord": "Dmin"}, {"beat": 754, "time_s": 282.26, "chord": "D#min"}, {"beat": 755, "time_s": 282.66, "chord": "A#maj"}, {"beat": 756, "time_s": 283.0, "chord": "A#maj"}, {"beat": 757, "time_s": 283.35, "chord": "A#maj"}, {"beat": 758, "time_s": 283.75, "chord": "A#maj"}, {"beat": 759, "time_s": 284.07, "chord": "Dmin"}, {"beat": 760, "time_s": 284.47, "chord": "Dmin"}, {"beat": 761, "time_s": 284.84, "chord": "Dmin"}, {"beat": 762, "time_s": 285.21, "chord": "Dmin"}, {"beat": 763, "time_s": 285.61, "chord": "Dmin"}, {"beat": 764, "time_s": 285.95, "chord": "Dmin"}, {"beat": 765, "time_s": 286.42, "chord": "Dmin"}, {"beat": 766, "time_s": 286.77, "chord": "Cmaj"}, {"beat": 767, "time_s": 287.14, "chord": "Cmaj"}, {"beat": 768, "time_s": 287.53, "chord": "Cmaj"}, {"beat": 769, "time_s": 287.9, "chord": "Cmaj"}, {"beat": 770, "time_s": 288.25, "chord": "Cmaj"}, {"beat": 771, "time_s": 288.62, "chord": "Cmaj"}, {"beat": 772, "time_s": 289.0, "chord": "Gmaj"}, {"beat": 773, "time_s": 289.37, "chord": "Gmaj"}, {"beat": 774, "time_s": 289.74, "chord": "Gmaj"}, {"beat": 775, "time_s": 290.13, "chord": "Gmaj"}, {"beat": 776, "time_s": 290.53, "chord": "Dmin"}, {"beat": 777, "time_s": 290.92, "chord": "Dmin"}, {"beat": 778, "time_s": 291.32, "chord": "Dmin"}, {"beat": 779, "time_s": 291.69, "chord": "Cmaj"}, {"beat": 780, "time_s": 292.06, "chord": "Cmaj"}, {"beat": 781, "time_s": 292.46, "chord": "Cmaj"}, {"beat": 782, "time_s": 292.85, "chord": "Cmaj"}, {"beat": 783, "time_s": 293.24, "chord": "Cmaj"}, {"beat": 784, "time_s": 293.64, "chord": "Cmaj"}, {"beat": 785, "time_s": 293.99, "chord": "Cmaj"}, {"beat": 786, "time_s": 294.34, "chord": "Cmaj"}, {"beat": 787, "time_s": 294.68, "chord": "Fmin"}, {"beat": 788, "time_s": 295.08, "chord": "Fmin"}, {"beat": 789, "time_s": 295.45, "chord": "Fmin"}, {"beat": 790, "time_s": 295.8, "chord": "Fmin"}, {"beat": 791, "time_s": 296.17, "chord": "Fmin"}, {"beat": 792, "time_s": 296.54, "chord": "C#maj"}, {"beat": 793, "time_s": 296.94, "chord": "C#maj"}, {"beat": 794, "time_s": 297.31, "chord": "C#maj"}, {"beat": 795, "time_s": 297.7, "chord": "C#maj"}, {"beat": 796, "time_s": 298.1, "chord": "C#maj"}, {"beat": 797, "time_s": 298.47, "chord": "Fmin"}, {"beat": 798, "time_s": 298.86, "chord": "C#maj"}, {"beat": 799, "time_s": 299.24, "chord": "C#maj"}, {"beat": 800, "time_s": 299.58, "chord": "Dmin"}, {"beat": 801, "time_s": 299.96, "chord": "Dmin"}, {"beat": 802, "time_s": 300.33, "chord": "Dmin"}, {"beat": 803, "time_s": 300.7, "chord": "Dmin"}, {"beat": 804, "time_s": 301.07, "chord": "Dmin"}, {"beat": 805, "time_s": 301.46, "chord": "Dmin"}, {"beat": 806, "time_s": 301.86, "chord": "Dmin"}, {"beat": 807, "time_s": 302.25, "chord": "Fmin"}, {"beat": 808, "time_s": 302.65, "chord": "Fmin"}, {"beat": 809, "time_s": 303.02, "chord": "Fmin"}, {"beat": 810, "time_s": 303.37, "chord": "Fmin"}, {"beat": 811, "time_s": 303.74, "chord": "C#maj"}, {"beat": 812, "time_s": 304.09, "chord": "C#maj"}, {"beat": 813, "time_s": 304.46, "chord": "C#maj"}, {"beat": 814, "time_s": 304.85, "chord": "C#maj"}, {"beat": 815, "time_s": 305.25, "chord": "C#maj"}, {"beat": 816, "time_s": 305.62, "chord": "C#maj"}, {"beat": 817, "time_s": 306.02, "chord": "C#maj"}, {"beat": 818, "time_s": 306.39, "chord": "C#maj"}, {"beat": 819, "time_s": 306.76, "chord": "Cmaj"}, {"beat": 820, "time_s": 307.13, "chord": "Cmaj"}, {"beat": 821, "time_s": 307.53, "chord": "Cmaj"}, {"beat": 822, "time_s": 307.87, "chord": "Cmaj"}, {"beat": 823, "time_s": 308.24, "chord": "Cmaj"}, {"beat": 824, "time_s": 308.64, "chord": "Cmaj"}, {"beat": 825, "time_s": 309.03, "chord": "Cmaj"}, {"beat": 826, "time_s": 309.43, "chord": "Cmaj"}, {"beat": 827, "time_s": 309.82, "chord": "Cmaj"}, {"beat": 828, "time_s": 310.2, "chord": "Cmaj"}, {"beat": 829, "time_s": 310.57, "chord": "Cmaj"}, {"beat": 830, "time_s": 310.94, "chord": "Cmaj"}, {"beat": 831, "time_s": 311.31, "chord": "Cmaj"}, {"beat": 832, "time_s": 311.66, "chord": "Cmaj"}, {"beat": 833, "time_s": 312.03, "chord": "Cmaj"}, {"beat": 834, "time_s": 312.4, "chord": "Cmaj"}, {"beat": 835, "time_s": 312.8, "chord": "Fmin"}, {"beat": 836, "time_s": 313.19, "chord": "Fmin"}, {"beat": 837, "time_s": 313.61, "chord": "Fmin"}, {"beat": 838, "time_s": 313.98, "chord": "Fmin"}, {"beat": 839, "time_s": 314.37, "chord": "Fmin"}, {"beat": 840, "time_s": 314.77, "chord": "Dmin"}, {"beat": 841, "time_s": 315.14, "chord": "Dmin"}, {"beat": 842, "time_s": 315.51, "chord": "Dmin"}, {"beat": 843, "time_s": 315.88, "chord": "Dmin"}, {"beat": 844, "time_s": 316.26, "chord": "Dmin"}, {"beat": 845, "time_s": 316.63, "chord": "Dmin"}, {"beat": 846, "time_s": 317.0, "chord": "Dmin"}, {"beat": 847, "time_s": 317.37, "chord": "Dmin"}, {"beat": 848, "time_s": 317.77, "chord": "Dmin"}, {"beat": 849, "time_s": 318.16, "chord": "Dmin"}, {"beat": 850, "time_s": 318.53, "chord": "Dmin"}, {"beat": 851, "time_s": 318.9, "chord": "Fmin"}, {"beat": 852, "time_s": 319.27, "chord": "Cmaj"}, {"beat": 853, "time_s": 319.65, "chord": "Cmaj"}, {"beat": 854, "time_s": 320.02, "chord": "Cmaj"}, {"beat": 855, "time_s": 320.39, "chord": "Cmaj"}, {"beat": 856, "time_s": 320.76, "chord": "Cmaj"}, {"beat": 857, "time_s": 321.16, "chord": "Fmin"}, {"beat": 858, "time_s": 321.55, "chord": "Fmin"}, {"beat": 859, "time_s": 321.92, "chord": "Fmin"}, {"beat": 860, "time_s": 322.27, "chord": "Fmin"}, {"beat": 861, "time_s": 322.64, "chord": "Fmin"}, {"beat": 862, "time_s": 323.01, "chord": "Cmaj"}, {"beat": 863, "time_s": 323.38, "chord": "Cmaj"}, {"beat": 864, "time_s": 323.78, "chord": "Cmaj"}, {"beat": 865, "time_s": 324.15, "chord": "Cmaj"}, {"beat": 866, "time_s": 324.55, "chord": "Cmaj"}, {"beat": 867, "time_s": 324.94, "chord": "Cmaj"}, {"beat": 868, "time_s": 325.31, "chord": "Cmaj"}, {"beat": 869, "time_s": 325.68, "chord": "Fmin"}, {"beat": 870, "time_s": 326.05, "chord": "Fmin"}, {"beat": 871, "time_s": 326.43, "chord": "Fmin"}, {"beat": 872, "time_s": 326.8, "chord": "Fmin"}, {"beat": 873, "time_s": 327.17, "chord": "Fmin"}, {"beat": 874, "time_s": 327.54, "chord": "Fmin"}, {"beat": 875, "time_s": 327.94, "chord": "Fmin"}, {"beat": 876, "time_s": 328.33, "chord": "Fmin"}, {"beat": 877, "time_s": 328.7, "chord": "Fmin"}, {"beat": 878, "time_s": 329.1, "chord": "Fmin"}, {"beat": 879, "time_s": 329.47, "chord": "Fmin"}, {"beat": 880, "time_s": 329.82, "chord": "Fmin"}, {"beat": 881, "time_s": 330.19, "chord": "Fmin"}, {"beat": 882, "time_s": 330.56, "chord": "Fmin"}, {"beat": 883, "time_s": 330.95, "chord": "Fmin"}, {"beat": 884, "time_s": 331.33, "chord": "Fmaj"}, {"beat": 885, "time_s": 331.72, "chord": "Fmaj"}, {"beat": 886, "time_s": 332.12, "chord": "Fmin"}, {"beat": 887, "time_s": 332.49, "chord": "Fmin"}, {"beat": 888, "time_s": 332.88, "chord": "Fmin"}, {"beat": 889, "time_s": 333.23, "chord": "Fmin"}, {"beat": 890, "time_s": 333.6, "chord": "Fmin"}, {"beat": 891, "time_s": 333.97, "chord": "Fmin"}, {"beat": 892, "time_s": 334.32, "chord": "Fmin"}, {"beat": 893, "time_s": 334.69, "chord": "Fmin"}, {"beat": 894, "time_s": 335.09, "chord": "Fmin"}, {"beat": 895, "time_s": 335.48, "chord": "Fmin"}, {"beat": 896, "time_s": 335.88, "chord": "Fmin"}, {"beat": 897, "time_s": 336.27, "chord": "Fmin"}, {"beat": 898, "time_s": 336.64, "chord": "Fmin"}, {"beat": 899, "time_s": 337.01, "chord": "Fmin"}, {"beat": 900, "time_s": 337.39, "chord": "Fmin"}, {"beat": 901, "time_s": 337.76, "chord": "Fmin"}, {"beat": 902, "time_s": 338.11, "chord": "Fmin"}, {"beat": 903, "time_s": 338.48, "chord": "Fmin"}, {"beat": 904, "time_s": 338.87, "chord": "Fmin"}, {"beat": 905, "time_s": 339.27, "chord": "Dmin"}, {"beat": 906, "time_s": 339.66, "chord": "Dmin"}, {"beat": 907, "time_s": 340.06, "chord": "Dmin"}, {"beat": 908, "time_s": 340.45, "chord": "Dmin"}, {"beat": 909, "time_s": 340.78, "chord": "Dmin"}, {"beat": 910, "time_s": 341.15, "chord": "Dmin"}, {"beat": 911, "time_s": 341.52, "chord": "Cmin"}, {"beat": 912, "time_s": 341.89, "chord": "Cmin"}, {"beat": 913, "time_s": 342.26, "chord": "Cmin"}, {"beat": 914, "time_s": 342.66, "chord": "Cmin"}, {"beat": 915, "time_s": 343.05, "chord": "Dmin"}, {"beat": 916, "time_s": 343.45, "chord": "Dmin"}, {"beat": 917, "time_s": 343.84, "chord": "Dmin"}, {"beat": 918, "time_s": 344.21, "chord": "Dmin"}, {"beat": 919, "time_s": 344.54, "chord": "Fmin"}, {"beat": 920, "time_s": 344.93, "chord": "Fmin"}, {"beat": 921, "time_s": 345.26, "chord": "Fmin"}, {"beat": 922, "time_s": 345.61, "chord": "Fmin"}, {"beat": 923, "time_s": 345.95, "chord": "Fmin"}, {"beat": 924, "time_s": 346.42, "chord": "Fmin"}, {"beat": 925, "time_s": 346.81, "chord": "Cmin"}, {"beat": 926, "time_s": 347.21, "chord": "Cmin"}, {"beat": 927, "time_s": 347.6, "chord": "Fmin"}, {"beat": 928, "time_s": 347.95, "chord": "Fmin"}, {"beat": 929, "time_s": 348.32, "chord": "Fmin"}, {"beat": 930, "time_s": 348.72, "chord": "Fmin"}, {"beat": 931, "time_s": 349.11, "chord": "Fmin"}, {"beat": 932, "time_s": 349.51, "chord": "D#min"}, {"beat": 933, "time_s": 349.86, "chord": "Cmaj"}, {"beat": 934, "time_s": 350.2, "chord": "Cmaj"}, {"beat": 935, "time_s": 350.57, "chord": "Fmin"}, {"beat": 936, "time_s": 350.92, "chord": "Fmin"}, {"beat": 937, "time_s": 351.27, "chord": "Fmin"}, {"beat": 938, "time_s": 351.62, "chord": "Fmin"}, {"beat": 939, "time_s": 351.99, "chord": "Fmin"}, {"beat": 940, "time_s": 352.34, "chord": "Fmin"}, {"beat": 941, "time_s": 352.69, "chord": "Fmaj"}, {"beat": 942, "time_s": 353.04, "chord": "Fmaj"}, {"beat": 943, "time_s": 353.41, "chord": "Fmaj"}, {"beat": 944, "time_s": 353.76, "chord": "Fmaj"}, {"beat": 945, "time_s": 354.1, "chord": "Fmaj"}, {"beat": 946, "time_s": 354.45, "chord": "Fmin"}, {"beat": 947, "time_s": 354.82, "chord": "Fmin"}, {"beat": 948, "time_s": 355.17, "chord": "Fmin"}, {"beat": 949, "time_s": 355.54, "chord": "Fmin"}, {"beat": 950, "time_s": 355.87, "chord": "Fmin"}, {"beat": 951, "time_s": 356.26, "chord": "Fmin"}, {"beat": 952, "time_s": 356.59, "chord": "Fmin"}, {"beat": 953, "time_s": 356.94, "chord": "Fmin"}, {"beat": 954, "time_s": 357.29, "chord": "Dmin"}, {"beat": 955, "time_s": 357.59, "chord": "Dmin"}, {"beat": 956, "time_s": 357.89, "chord": "Dmin"}, {"beat": 957, "time_s": 358.24, "chord": "Dmin"}, {"beat": 958, "time_s": 358.59, "chord": "Dmin"}, {"beat": 959, "time_s": 358.93, "chord": "Fmin"}, {"beat": 960, "time_s": 359.33, "chord": "Fmin"}, {"beat": 961, "time_s": 359.65, "chord": "Fmin"}, {"beat": 962, "time_s": 360.05, "chord": "Fmin"}, {"beat": 963, "time_s": 360.37, "chord": "Dmin"}, {"beat": 964, "time_s": 360.72, "chord": "Dmin"}, {"beat": 965, "time_s": 361.07, "chord": "Dmin"}, {"beat": 966, "time_s": 361.53, "chord": "Dmin"}, {"beat": 967, "time_s": 362.0, "chord": "Dmin"}, {"beat": 968, "time_s": 362.37, "chord": "Dmin"}, {"beat": 969, "time_s": 362.72, "chord": "Dmin"}, {"beat": 970, "time_s": 363.11, "chord": "Fmin"}, {"beat": 971, "time_s": 363.44, "chord": "Fmin"}, {"beat": 972, "time_s": 363.83, "chord": "Fmin"}, {"beat": 973, "time_s": 364.14, "chord": "Fmin"}, {"beat": 974, "time_s": 364.55, "chord": "Fmin"}, {"beat": 975, "time_s": 364.86, "chord": "Fmin"}, {"beat": 976, "time_s": 365.2, "chord": "Fmaj"}, {"beat": 977, "time_s": 365.55, "chord": "Fmaj"}, {"beat": 978, "time_s": 365.9, "chord": "Fmaj"}, {"beat": 979, "time_s": 366.25, "chord": "Fmaj"}, {"beat": 980, "time_s": 366.62, "chord": "A#min"}, {"beat": 981, "time_s": 366.97, "chord": "A#min"}, {"beat": 982, "time_s": 367.34, "chord": "A#min"}, {"beat": 983, "time_s": 367.69, "chord": "Fmaj"}, {"beat": 984, "time_s": 368.04, "chord": "Fmaj"}, {"beat": 985, "time_s": 368.38, "chord": "Fmaj"}, {"beat": 986, "time_s": 368.76, "chord": "Fmaj"}, {"beat": 987, "time_s": 369.1, "chord": "Fmaj"}, {"beat": 988, "time_s": 369.45, "chord": "Cmin"}, {"beat": 989, "time_s": 369.8, "chord": "Cmin"}, {"beat": 990, "time_s": 370.17, "chord": "Cmin"}, {"beat": 991, "time_s": 370.52, "chord": "Fmaj"}, {"beat": 992, "time_s": 370.87, "chord": "Fmaj"}, {"beat": 993, "time_s": 371.22, "chord": "Fmaj"}, {"beat": 994, "time_s": 371.59, "chord": "Cmin"}, {"beat": 995, "time_s": 371.94, "chord": "Cmin"}, {"beat": 996, "time_s": 372.29, "chord": "A#min"}, {"beat": 997, "time_s": 372.63, "chord": "A#min"}, {"beat": 998, "time_s": 373.01, "chord": "A#min"}, {"beat": 999, "time_s": 373.35, "chord": "A#min"}, {"beat": 1000, "time_s": 373.82, "chord": "A#min"}, {"beat": 1001, "time_s": 374.17, "chord": "A#min"}, {"beat": 1002, "time_s": 374.51, "chord": "A#min"}, {"beat": 1003, "time_s": 374.89, "chord": "A#min"}, {"beat": 1004, "time_s": 375.23, "chord": "A#min"}, {"beat": 1005, "time_s": 375.61, "chord": "Cmaj"}, {"beat": 1006, "time_s": 375.95, "chord": "Cmaj"}, {"beat": 1007, "time_s": 376.3, "chord": "Cmaj"}, {"beat": 1008, "time_s": 376.65, "chord": "Cmaj"}, {"beat": 1009, "time_s": 377.02, "chord": "Cmaj"}, {"beat": 1010, "time_s": 377.37, "chord": "Cmaj"}, {"beat": 1011, "time_s": 377.74, "chord": "Gmaj"}, {"beat": 1012, "time_s": 378.09, "chord": "Gmaj"}, {"beat": 1013, "time_s": 378.44, "chord": "Gmaj"}, {"beat": 1014, "time_s": 378.79, "chord": "Gmaj"}, {"beat": 1015, "time_s": 379.16, "chord": "Fmaj"}, {"beat": 1016, "time_s": 379.51, "chord": "Fmaj"}, {"beat": 1017, "time_s": 379.86, "chord": "Fmaj"}, {"beat": 1018, "time_s": 380.2, "chord": "Fmaj"}, {"beat": 1019, "time_s": 380.58, "chord": "Fmaj"}, {"beat": 1020, "time_s": 380.92, "chord": "A#min"}, {"beat": 1021, "time_s": 381.39, "chord": "A#min"}, {"beat": 1022, "time_s": 381.76, "chord": "A#min"}, {"beat": 1023, "time_s": 382.11, "chord": "A#min"}, {"beat": 1024, "time_s": 382.57, "chord": "A#min"}, {"beat": 1025, "time_s": 382.92, "chord": "Cmaj"}, {"beat": 1026, "time_s": 383.27, "chord": "Cmaj"}, {"beat": 1027, "time_s": 383.64, "chord": "Cmaj"}, {"beat": 1028, "time_s": 383.99, "chord": "Cmaj"}, {"beat": 1029, "time_s": 384.36, "chord": "Cmaj"}, {"beat": 1030, "time_s": 384.71, "chord": "Cmaj"}, {"beat": 1031, "time_s": 385.06, "chord": "Cmaj"}, {"beat": 1032, "time_s": 385.4, "chord": "Cmaj"}, {"beat": 1033, "time_s": 385.75, "chord": "Cmaj"}, {"beat": 1034, "time_s": 386.1, "chord": "Cmaj"}, {"beat": 1035, "time_s": 386.47, "chord": "Fmaj"}, {"beat": 1036, "time_s": 386.82, "chord": "Fmaj"}, {"beat": 1037, "time_s": 387.19, "chord": "A#min"}, {"beat": 1038, "time_s": 387.66, "chord": "A#min"}, {"beat": 1039, "time_s": 388.01, "chord": "A#min"}, {"beat": 1040, "time_s": 388.35, "chord": "A#min"}, {"beat": 1041, "time_s": 388.7, "chord": "A#min"}, {"beat": 1042, "time_s": 389.07, "chord": "A#min"}, {"beat": 1043, "time_s": 389.42, "chord": "A#min"}, {"beat": 1044, "time_s": 389.89, "chord": "A#min"}, {"beat": 1045, "time_s": 390.23, "chord": "A#min"}, {"beat": 1046, "time_s": 390.58, "chord": "A#min"}, {"beat": 1047, "time_s": 390.95, "chord": "A#min"}, {"beat": 1048, "time_s": 391.33, "chord": "A#min"}, {"beat": 1049, "time_s": 391.77, "chord": "Cmaj"}, {"beat": 1050, "time_s": 392.14, "chord": "Cmaj"}, {"beat": 1051, "time_s": 392.49, "chord": "Cmaj"}, {"beat": 1052, "time_s": 392.86, "chord": "Cmaj"}, {"beat": 1053, "time_s": 393.21, "chord": "Cmaj"}, {"beat": 1054, "time_s": 393.58, "chord": "Cmaj"}, {"beat": 1055, "time_s": 393.97, "chord": "Fmaj"}, {"beat": 1056, "time_s": 394.39, "chord": "Fmaj"}, {"beat": 1057, "time_s": 394.79, "chord": "Fmaj"}, {"beat": 1058, "time_s": 395.16, "chord": "Fmaj"}, {"beat": 1059, "time_s": 395.53, "chord": "Fmaj"}, {"beat": 1060, "time_s": 395.9, "chord": "Fmaj"}, {"beat": 1061, "time_s": 396.27, "chord": "Fmaj"}, {"beat": 1062, "time_s": 396.62, "chord": "A#min"}, {"beat": 1063, "time_s": 396.97, "chord": "A#min"}, {"beat": 1064, "time_s": 397.34, "chord": "A#min"}, {"beat": 1065, "time_s": 397.71, "chord": "A#min"}, {"beat": 1066, "time_s": 398.06, "chord": "A#min"}, {"beat": 1067, "time_s": 398.41, "chord": "D#min"}, {"beat": 1068, "time_s": 398.76, "chord": "D#min"}, {"beat": 1069, "time_s": 399.1, "chord": "A#maj"}, {"beat": 1070, "time_s": 399.48, "chord": "A#maj"}, {"beat": 1071, "time_s": 399.82, "chord": "A#maj"}, {"beat": 1072, "time_s": 400.17, "chord": "A#maj"}, {"beat": 1073, "time_s": 400.5, "chord": "Gmin"}, {"beat": 1074, "time_s": 400.87, "chord": "Fmaj"}, {"beat": 1075, "time_s": 401.24, "chord": "Fmaj"}, {"beat": 1076, "time_s": 401.59, "chord": "Fmaj"}, {"beat": 1077, "time_s": 401.94, "chord": "Fmaj"}, {"beat": 1078, "time_s": 402.33, "chord": "Fmaj"}, {"beat": 1079, "time_s": 402.73, "chord": "Fmaj"}, {"beat": 1080, "time_s": 403.12, "chord": "Fmaj"}, {"beat": 1081, "time_s": 403.47, "chord": "Gmin"}, {"beat": 1082, "time_s": 403.82, "chord": "Gmin"}, {"beat": 1083, "time_s": 404.19, "chord": "Gmin"}, {"beat": 1084, "time_s": 404.54, "chord": "Fmaj"}, {"beat": 1085, "time_s": 404.91, "chord": "Fmaj"}, {"beat": 1086, "time_s": 405.26, "chord": "Fmaj"}, {"beat": 1087, "time_s": 405.7, "chord": "Fmaj"}, {"beat": 1088, "time_s": 406.07, "chord": "Fmaj"}, {"beat": 1089, "time_s": 406.42, "chord": "Fmaj"}, {"beat": 1090, "time_s": 406.79, "chord": "Cmaj"}, {"beat": 1091, "time_s": 407.14, "chord": "Cmaj"}, {"beat": 1092, "time_s": 407.49, "chord": "Cmaj"}, {"beat": 1093, "time_s": 407.84, "chord": "Cmaj"}, {"beat": 1094, "time_s": 408.25, "chord": "Cmaj"}, {"beat": 1095, "time_s": 408.62, "chord": "Fmaj"}, {"beat": 1096, "time_s": 408.97, "chord": "Fmaj"}, {"beat": 1097, "time_s": 409.34, "chord": "Fmaj"}, {"beat": 1098, "time_s": 409.72, "chord": "Fmaj"}], "progression": [{"chord": "Dmin", "start_s": 0.14, "end_s": 1.23}, {"chord": "Bmaj", "start_s": 1.23, "end_s": 2.32}, {"chord": "D#min", "start_s": 2.32, "end_s": 3.81}, {"chord": "C#maj", "start_s": 3.81, "end_s": 4.18}, {"chord": "D#min", "start_s": 4.18, "end_s": 4.55}, {"chord": "C#maj", "start_s": 4.55, "end_s": 5.29}, {"chord": "D#min", "start_s": 5.29, "end_s": 6.41}, {"chord": "C#min", "start_s": 6.41, "end_s": 6.78}, {"chord": "D#min", "start_s": 6.78, "end_s": 7.15}, {"chord": "C#min", "start_s": 7.15, "end_s": 7.89}, {"chord": "A#maj", "start_s": 7.89, "end_s": 8.99}, {"chord": "Cmin", "start_s": 8.99, "end_s": 14.0}, {"chord": "Cmaj", "start_s": 14.0, "end_s": 15.05}, {"chord": "Fmin", "start_s": 15.05, "end_s": 16.83}, {"chord": "Cmin", "start_s": 16.83, "end_s": 17.23}, {"chord": "D#maj", "start_s": 17.23, "end_s": 18.78}, {"chord": "Fmaj", "start_s": 18.78, "end_s": 20.29}, {"chord": "Cmaj", "start_s": 20.29, "end_s": 22.57}, {"chord": "Fmin", "start_s": 22.57, "end_s": 24.38}, {"chord": "Cmin", "start_s": 24.38, "end_s": 25.57}, {"chord": "Fmin", "start_s": 25.57, "end_s": 27.84}, {"chord": "D#maj", "start_s": 27.84, "end_s": 29.0}, {"chord": "Cmaj", "start_s": 29.0, "end_s": 29.4}, {"chord": "Cmin", "start_s": 29.4, "end_s": 30.53}, {"chord": "Cmaj", "start_s": 30.53, "end_s": 31.65}, {"chord": "Cmin", "start_s": 31.65, "end_s": 34.3}, {"chord": "Fmaj", "start_s": 34.3, "end_s": 36.15}, {"chord": "Cmin", "start_s": 36.15, "end_s": 36.52}, {"chord": "G#maj", "start_s": 36.52, "end_s": 38.08}, {"chord": "Fmaj", "start_s": 38.08, "end_s": 40.29}, {"chord": "Fmin", "start_s": 40.29, "end_s": 40.68}, {"chord": "Fmaj", "start_s": 40.68, "end_s": 41.08}, {"chord": "Fmin", "start_s": 41.08, "end_s": 41.47}, {"chord": "Fmaj", "start_s": 41.47, "end_s": 41.84}, {"chord": "Fmin", "start_s": 41.84, "end_s": 43.7}, {"chord": "Gmin", "start_s": 43.7, "end_s": 44.47}, {"chord": "Fmaj", "start_s": 44.47, "end_s": 44.86}, {"chord": "Fmin", "start_s": 44.86, "end_s": 45.26}, {"chord": "Fmaj", "start_s": 45.26, "end_s": 47.48}, {"chord": "Fmin", "start_s": 47.48, "end_s": 49.41}, {"chord": "Cmaj", "start_s": 49.41, "end_s": 50.13}, {"chord": "Fmaj", "start_s": 50.13, "end_s": 52.04}, {"chord": "Fmin", "start_s": 52.04, "end_s": 52.83}, {"chord": "Dmaj", "start_s": 52.83, "end_s": 54.64}, {"chord": "Fmaj", "start_s": 54.64, "end_s": 56.19}, {"chord": "Fmin", "start_s": 56.19, "end_s": 56.59}, {"chord": "Fmaj", "start_s": 56.59, "end_s": 59.19}, {"chord": "Fmin", "start_s": 59.19, "end_s": 59.95}, {"chord": "Cmaj", "start_s": 59.95, "end_s": 61.46}, {"chord": "Fmaj", "start_s": 61.46, "end_s": 64.55}, {"chord": "Fmin", "start_s": 64.55, "end_s": 66.43}, {"chord": "Fmaj", "start_s": 66.43, "end_s": 66.8}, {"chord": "Fmin", "start_s": 66.8, "end_s": 67.15}, {"chord": "Fmaj", "start_s": 67.15, "end_s": 67.55}, {"chord": "Fmin", "start_s": 67.55, "end_s": 67.94}, {"chord": "Fmaj", "start_s": 67.94, "end_s": 68.68}, {"chord": "Fmin", "start_s": 68.68, "end_s": 69.03}, {"chord": "Fmaj", "start_s": 69.03, "end_s": 69.75}, {"chord": "Dmaj", "start_s": 69.75, "end_s": 71.35}, {"chord": "Fmin", "start_s": 71.35, "end_s": 72.07}, {"chord": "Amin", "start_s": 72.07, "end_s": 72.79}, {"chord": "Fmaj", "start_s": 72.79, "end_s": 73.17}, {"chord": "Fmin", "start_s": 73.17, "end_s": 73.54}, {"chord": "Fmaj", "start_s": 73.54, "end_s": 74.3}, {"chord": "Fmin", "start_s": 74.3, "end_s": 74.7}, {"chord": "Fmaj", "start_s": 74.7, "end_s": 77.32}, {"chord": "Fmin", "start_s": 77.32, "end_s": 79.48}, {"chord": "Dmaj", "start_s": 79.48, "end_s": 82.43}, {"chord": "Emin", "start_s": 82.43, "end_s": 83.59}, {"chord": "Dmaj", "start_s": 83.59, "end_s": 84.33}, {"chord": "Cmaj", "start_s": 84.33, "end_s": 86.96}, {"chord": "Fmaj", "start_s": 86.96, "end_s": 87.7}, {"chord": "Fmin", "start_s": 87.7, "end_s": 88.1}, {"chord": "Fmaj", "start_s": 88.1, "end_s": 88.49}, {"chord": "Fmin", "start_s": 88.49, "end_s": 88.86}, {"chord": "Fmaj", "start_s": 88.86, "end_s": 91.14}, {"chord": "Fmin", "start_s": 91.14, "end_s": 93.39}, {"chord": "Fmaj", "start_s": 93.39, "end_s": 95.32}, {"chord": "Fmin", "start_s": 95.32, "end_s": 109.23}, {"chord": "Cmaj", "start_s": 109.23, "end_s": 112.64}, {"chord": "Fmin", "start_s": 112.64, "end_s": 114.22}, {"chord": "Cmaj", "start_s": 114.22, "end_s": 115.31}, {"chord": "Fmin", "start_s": 115.31, "end_s": 117.21}, {"chord": "Cmaj", "start_s": 117.21, "end_s": 117.98}, {"chord": "Fmin", "start_s": 117.98, "end_s": 118.72}, {"chord": "Cmaj", "start_s": 118.72, "end_s": 120.6}, {"chord": "Fmin", "start_s": 120.6, "end_s": 122.88}, {"chord": "Cmaj", "start_s": 122.88, "end_s": 124.39}, {"chord": "Dmin", "start_s": 124.39, "end_s": 125.55}, {"chord": "Cmaj", "start_s": 125.55, "end_s": 125.95}, {"chord": "Fmin", "start_s": 125.95, "end_s": 126.29}, {"chord": "Cmaj", "start_s": 126.29, "end_s": 129.71}, {"chord": "Fmin", "start_s": 129.71, "end_s": 130.05}, {"chord": "Cmaj", "start_s": 130.05, "end_s": 133.86}, {"chord": "Fmin", "start_s": 133.86, "end_s": 134.54}, {"chord": "Cmaj", "start_s": 134.54, "end_s": 135.23}, {"chord": "A#maj", "start_s": 135.23, "end_s": 135.6}, {"chord": "Cmaj", "start_s": 135.6, "end_s": 136.35}, {"chord": "A#maj", "start_s": 136.35, "end_s": 136.72}, {"chord": "Fmin", "start_s": 136.72, "end_s": 138.74}, {"chord": "Cmaj", "start_s": 138.74, "end_s": 140.9}, {"chord": "Fmin", "start_s": 140.9, "end_s": 142.34}, {"chord": "Cmaj", "start_s": 142.34, "end_s": 144.5}, {"chord": "Fmin", "start_s": 144.5, "end_s": 146.26}, {"chord": "Cmaj", "start_s": 146.26, "end_s": 147.4}, {"chord": "A#maj", "start_s": 147.4, "end_s": 147.77}, {"chord": "Fmin", "start_s": 147.77, "end_s": 149.58}, {"chord": "Cmaj", "start_s": 149.58, "end_s": 150.67}, {"chord": "A#maj", "start_s": 150.67, "end_s": 152.11}, {"chord": "Cmaj", "start_s": 152.11, "end_s": 154.34}, {"chord": "A#maj", "start_s": 154.34, "end_s": 155.78}, {"chord": "Cmaj", "start_s": 155.78, "end_s": 158.06}, {"chord": "Fmin", "start_s": 158.06, "end_s": 159.57}, {"chord": "Cmaj", "start_s": 159.57, "end_s": 161.49}, {"chord": "C#maj", "start_s": 161.49, "end_s": 161.84}, {"chord": "A#maj", "start_s": 161.84, "end_s": 163.35}, {"chord": "Cmaj", "start_s": 163.35, "end_s": 165.28}, {"chord": "Fmin", "start_s": 165.28, "end_s": 165.63}, {"chord": "A#maj", "start_s": 165.63, "end_s": 167.14}, {"chord": "Cmaj", "start_s": 167.14, "end_s": 169.76}, {"chord": "A#maj", "start_s": 169.76, "end_s": 170.83}, {"chord": "Fmin", "start_s": 170.83, "end_s": 171.57}, {"chord": "Cmaj", "start_s": 171.57, "end_s": 176.98}, {"chord": "Dmin", "start_s": 176.98, "end_s": 178.05}, {"chord": "A#maj", "start_s": 178.05, "end_s": 178.42}, {"chord": "Cmaj", "start_s": 178.42, "end_s": 181.02}, {"chord": "Fmin", "start_s": 181.02, "end_s": 181.79}, {"chord": "Cmaj", "start_s": 181.79, "end_s": 183.72}, {"chord": "Fmin", "start_s": 183.72, "end_s": 185.34}, {"chord": "Cmaj", "start_s": 185.34, "end_s": 187.57}, {"chord": "Fmin", "start_s": 187.57, "end_s": 189.82}, {"chord": "Cmaj", "start_s": 189.82, "end_s": 190.22}, {"chord": "Fmin", "start_s": 190.22, "end_s": 203.17}, {"chord": "Fmaj", "start_s": 203.17, "end_s": 205.06}, {"chord": "Fmin", "start_s": 205.06, "end_s": 205.43}, {"chord": "Fmaj", "start_s": 205.43, "end_s": 207.19}, {"chord": "Fmin", "start_s": 207.19, "end_s": 212.21}, {"chord": "Fmaj", "start_s": 212.21, "end_s": 214.48}, {"chord": "Fmin", "start_s": 214.48, "end_s": 215.62}, {"chord": "Fmaj", "start_s": 215.62, "end_s": 216.36}, {"chord": "Fmin", "start_s": 216.36, "end_s": 218.17}, {"chord": "Cmaj", "start_s": 218.17, "end_s": 218.52}, {"chord": "Fmin", "start_s": 218.52, "end_s": 222.54}, {"chord": "C#maj", "start_s": 222.54, "end_s": 224.77}, {"chord": "Dmin", "start_s": 224.77, "end_s": 225.14}, {"chord": "C#maj", "start_s": 225.14, "end_s": 225.51}, {"chord": "Dmin", "start_s": 225.51, "end_s": 225.88}, {"chord": "C#min", "start_s": 225.88, "end_s": 226.28}, {"chord": "Dmin", "start_s": 226.28, "end_s": 227.04}, {"chord": "C#maj", "start_s": 227.04, "end_s": 227.44}, {"chord": "Fmin", "start_s": 227.44, "end_s": 228.93}, {"chord": "Cmaj", "start_s": 228.93, "end_s": 230.46}, {"chord": "Fmin", "start_s": 230.46, "end_s": 230.83}, {"chord": "Fmaj", "start_s": 230.83, "end_s": 234.99}, {"chord": "Fmin", "start_s": 234.99, "end_s": 236.45}, {"chord": "A#min", "start_s": 236.45, "end_s": 237.61}, {"chord": "A#maj", "start_s": 237.61, "end_s": 238.77}, {"chord": "Fmaj", "start_s": 238.77, "end_s": 239.47}, {"chord": "Fmin", "start_s": 239.47, "end_s": 240.98}, {"chord": "A#maj", "start_s": 240.98, "end_s": 241.37}, {"chord": "Emin", "start_s": 241.37, "end_s": 241.77}, {"chord": "A#maj", "start_s": 241.77, "end_s": 242.53}, {"chord": "Cmaj", "start_s": 242.53, "end_s": 245.18}, {"chord": "Fmin", "start_s": 245.18, "end_s": 250.1}, {"chord": "Fmaj", "start_s": 250.1, "end_s": 251.96}, {"chord": "Cmaj", "start_s": 251.96, "end_s": 256.51}, {"chord": "Fmin", "start_s": 256.51, "end_s": 259.51}, {"chord": "Cmaj", "start_s": 259.51, "end_s": 264.48}, {"chord": "Fmin", "start_s": 264.48, "end_s": 267.08}, {"chord": "Fmaj", "start_s": 267.08, "end_s": 267.84}, {"chord": "Fmin", "start_s": 267.84, "end_s": 268.24}, {"chord": "Cmaj", "start_s": 268.24, "end_s": 272.09}, {"chord": "Dmin", "start_s": 272.09, "end_s": 273.14}, {"chord": "Cmaj", "start_s": 273.14, "end_s": 273.51}, {"chord": "Dmin", "start_s": 273.51, "end_s": 274.23}, {"chord": "Cmaj", "start_s": 274.23, "end_s": 275.02}, {"chord": "Dmin", "start_s": 275.02, "end_s": 275.41}, {"chord": "Cmaj", "start_s": 275.41, "end_s": 276.15}, {"chord": "Dmin", "start_s": 276.15, "end_s": 282.26}, {"chord": "D#min", "start_s": 282.26, "end_s": 282.66}, {"chord": "A#maj", "start_s": 282.66, "end_s": 284.07}, {"chord": "Dmin", "start_s": 284.07, "end_s": 286.77}, {"chord": "Cmaj", "start_s": 286.77, "end_s": 289.0}, {"chord": "Gmaj", "start_s": 289.0, "end_s": 290.53}, {"chord": "Dmin", "start_s": 290.53, "end_s": 291.69}, {"chord": "Cmaj", "start_s": 291.69, "end_s": 294.68}, {"chord": "Fmin", "start_s": 294.68, "end_s": 296.54}, {"chord": "C#maj", "start_s": 296.54, "end_s": 298.47}, {"chord": "Fmin", "start_s": 298.47, "end_s": 298.86}, {"chord": "C#maj", "start_s": 298.86, "end_s": 299.58}, {"chord": "Dmin", "start_s": 299.58, "end_s": 302.25}, {"chord": "Fmin", "start_s": 302.25, "end_s": 303.74}, {"chord": "C#maj", "start_s": 303.74, "end_s": 306.76}, {"chord": "Cmaj", "start_s": 306.76, "end_s": 312.8}, {"chord": "Fmin", "start_s": 312.8, "end_s": 314.77}, {"chord": "Dmin", "start_s": 314.77, "end_s": 318.9}, {"chord": "Fmin", "start_s": 318.9, "end_s": 319.27}, {"chord": "Cmaj", "start_s": 319.27, "end_s": 321.16}, {"chord": "Fmin", "start_s": 321.16, "end_s": 323.01}, {"chord": "Cmaj", "start_s": 323.01, "end_s": 325.68}, {"chord": "Fmin", "start_s": 325.68, "end_s": 331.33}, {"chord": "Fmaj", "start_s": 331.33, "end_s": 332.12}, {"chord": "Fmin", "start_s": 332.12, "end_s": 339.27}, {"chord": "Dmin", "start_s": 339.27, "end_s": 341.52}, {"chord": "Cmin", "start_s": 341.52, "end_s": 343.05}, {"chord": "Dmin", "start_s": 343.05, "end_s": 344.54}, {"chord": "Fmin", "start_s": 344.54, "end_s": 346.81}, {"chord": "Cmin", "start_s": 346.81, "end_s": 347.6}, {"chord": "Fmin", "start_s": 347.6, "end_s": 349.51}, {"chord": "D#min", "start_s": 349.51, "end_s": 349.86}, {"chord": "Cmaj", "start_s": 349.86, "end_s": 350.57}, {"chord": "Fmin", "start_s": 350.57, "end_s": 352.69}, {"chord": "Fmaj", "start_s": 352.69, "end_s": 354.45}, {"chord": "Fmin", "start_s": 354.45, "end_s": 357.29}, {"chord": "Dmin", "start_s": 357.29, "end_s": 358.93}, {"chord": "Fmin", "start_s": 358.93, "end_s": 360.37}, {"chord": "Dmin", "start_s": 360.37, "end_s": 363.11}, {"chord": "Fmin", "start_s": 363.11, "end_s": 365.2}, {"chord": "Fmaj", "start_s": 365.2, "end_s": 366.62}, {"chord": "A#min", "start_s": 366.62, "end_s": 367.69}, {"chord": "Fmaj", "start_s": 367.69, "end_s": 369.45}, {"chord": "Cmin", "start_s": 369.45, "end_s": 370.52}, {"chord": "Fmaj", "start_s": 370.52, "end_s": 371.59}, {"chord": "Cmin", "start_s": 371.59, "end_s": 372.29}, {"chord": "A#min", "start_s": 372.29, "end_s": 375.61}, {"chord": "Cmaj", "start_s": 375.61, "end_s": 377.74}, {"chord": "Gmaj", "start_s": 377.74, "end_s": 379.16}, {"chord": "Fmaj", "start_s": 379.16, "end_s": 380.92}, {"chord": "A#min", "start_s": 380.92, "end_s": 382.92}, {"chord": "Cmaj", "start_s": 382.92, "end_s": 386.47}, {"chord": "Fmaj", "start_s": 386.47, "end_s": 387.19}, {"chord": "A#min", "start_s": 387.19, "end_s": 391.77}, {"chord": "Cmaj", "start_s": 391.77, "end_s": 393.97}, {"chord": "Fmaj", "start_s": 393.97, "end_s": 396.62}, {"chord": "A#min", "start_s": 396.62, "end_s": 398.41}, {"chord": "D#min", "start_s": 398.41, "end_s": 399.1}, {"chord": "A#maj", "start_s": 399.1, "end_s": 400.5}, {"chord": "Gmin", "start_s": 400.5, "end_s": 400.87}, {"chord": "Fmaj", "start_s": 400.87, "end_s": 403.47}, {"chord": "Gmin", "start_s": 403.47, "end_s": 404.54}, {"chord": "Fmaj", "start_s": 404.54, "end_s": 406.79}, {"chord": "Cmaj", "start_s": 406.79, "end_s": 408.62}, {"chord": "Fmaj", "start_s": 408.62, "end_s": 410.22}], "summary": {"unique_chords": 18, "unique_list": ["A#maj", "A#min", "Amin", "Bmaj", "C#maj", "C#min", "Cmaj", "Cmin", "D#maj", "D#min", "Dmaj", "Dmin", "Emin", "Fmaj", "Fmin", "G#maj", "Gmaj", "Gmin"], "histogram": [{"chord": "Fmin", "total_s": 132.92}, {"chord": "Cmaj", "total_s": 103.58}, {"chord": "Fmaj", "total_s": 61.95}, {"chord": "Dmin", "total_s": 31.87}, {"chord": "Cmin", "total_s": 14.84}, {"chord": "A#maj", "total_s": 14.67}, {"chord": "A#min", "total_s": 13.92}, {"chord": "C#maj", "total_s": 10.13}, {"chord": "Dmaj", "total_s": 7.1}, {"chord": "D#min", "total_s": 4.79}, {"chord": "Gmaj", "total_s": 2.95}, {"chord": "D#maj", "total_s": 2.71}, {"chord": "Gmin", "total_s": 2.21}, {"chord": "G#maj", "total_s": 1.56}, {"chord": "Emin", "total_s": 1.56}, {"chord": "C#min", "total_s": 1.51}, {"chord": "Bmaj", "total_s": 1.09}, {"chord": "Amin", "total_s": 0.72}], "n_segments": 243}}, "melody": {"vocals": {"stem": "vocals", "voiced_ratio": 0.405, "note_count": 583, "midi_path": "midi/vocals.mid", "pitch_range": {"min": 39, "min_name": "D#2", "max": 83, "max_name": "B5", "mean": 65, "range_semitones": 44}, "notes_preview": [{"pitch": 78, "name": "F#5", "start_s": 0.557, "end_s": 0.743, "duration_s": 0.186}, {"pitch": 77, "name": "F5", "start_s": 2.229, "end_s": 2.345, "duration_s": 0.116}, {"pitch": 73, "name": "C#5", "start_s": 2.345, "end_s": 2.415, "duration_s": 0.07}, {"pitch": 78, "name": "F#5", "start_s": 2.461, "end_s": 2.67, "duration_s": 0.209}, {"pitch": 77, "name": "F5", "start_s": 2.717, "end_s": 2.81, "duration_s": 0.093}, {"pitch": 78, "name": "F#5", "start_s": 4.342, "end_s": 4.551, "duration_s": 0.209}, {"pitch": 77, "name": "F5", "start_s": 6.2, "end_s": 6.548, "duration_s": 0.348}, {"pitch": 78, "name": "F#5", "start_s": 6.548, "end_s": 6.664, "duration_s": 0.116}, {"pitch": 77, "name": "F5", "start_s": 11.935, "end_s": 12.121, "duration_s": 0.186}, {"pitch": 78, "name": "F#5", "start_s": 13.839, "end_s": 14.002, "duration_s": 0.163}]}, "bass": {"stem": "bass", "voiced_ratio": 0.864, "note_count": 1335, "midi_path": "midi/bass.mid", "pitch_range": {"min": 23, "min_name": "B0", "max": 59, "max_name": "B3", "mean": 35, "range_semitones": 36}, "notes_preview": [{"pitch": 41, "name": "F2", "start_s": 0.07, "end_s": 0.186, "duration_s": 0.116}, {"pitch": 48, "name": "C3", "start_s": 0.348, "end_s": 0.418, "duration_s": 0.07}, {"pitch": 45, "name": "A2", "start_s": 0.511, "end_s": 0.58, "duration_s": 0.07}, {"pitch": 41, "name": "F2", "start_s": 0.789, "end_s": 0.906, "duration_s": 0.116}, {"pitch": 42, "name": "F#2", "start_s": 0.906, "end_s": 0.975, "duration_s": 0.07}, {"pitch": 39, "name": "D#2", "start_s": 1.44, "end_s": 1.509, "duration_s": 0.07}, {"pitch": 44, "name": "G#2", "start_s": 2.159, "end_s": 2.229, "duration_s": 0.07}, {"pitch": 40, "name": "E2", "start_s": 2.577, "end_s": 2.833, "duration_s": 0.255}, {"pitch": 41, "name": "F2", "start_s": 3.855, "end_s": 3.947, "duration_s": 0.093}, {"pitch": 45, "name": "A2", "start_s": 4.296, "end_s": 4.365, "duration_s": 0.07}]}}, "lyrics": {"text": "Thank you. Thank you. Thank you. Thank you Thank you. Thank you. Thank you Thank you. Thank you. Thank you Thank you. Thank you. Thank you.", "language": "English", "segments": [{"start_s": 0.0, "end_s": 29.98, "text": "Thank you."}, {"start_s": 30.0, "end_s": 59.98, "text": "Thank you."}, {"start_s": 60.0, "end_s": 89.98, "text": "Thank you."}, {"start_s": 90.0, "end_s": 129.81, "text": "Thank you"}, {"start_s": 129.83, "end_s": 159.81, "text": "Thank you."}, {"start_s": 159.83, "end_s": 189.81, "text": "Thank you."}, {"start_s": 189.83, "end_s": 234.64, "text": "Thank you"}, {"start_s": 234.66, "end_s": 264.64, "text": "Thank you."}, {"start_s": 264.66, "end_s": 294.64, "text": "Thank you."}, {"start_s": 294.66, "end_s": 339.47, "text": "Thank you"}, {"start_s": 339.49, "end_s": 369.47, "text": "Thank you."}, {"start_s": 369.49, "end_s": 399.47, "text": "Thank you."}, {"start_s": 399.49, "end_s": 404.59, "text": "Thank you."}], "rms": 0.02444}, "synthesis": {"brief": {"headline": "F-minor/major ambiguous 129bpm MvO dub with a Fm↔C oscillation stretched across a 7-minute breathing arc", "production_diagnosis": "The key detector splits F major vs F minor almost 50/50 because the whole track pivots on Fm↔Cmaj with modal borrowing (Fmaj interludes, occasional A#maj/D#maj) — classic Basic Channel harmonic haze where the third gets smeared by the chord stab's filter and delay tails. Structure is a slow-burn: 38s intro at low RMS, then a sustained plateau around 0.30 RMS for the bulk, a mid-track breath at ~116-133s, a second longer plateau to ~330s, then a 70-second outro drain. Chord rhythm is deceptive — 243 detected segments but the actual musical event is a two-chord stab pulsing every 2 bars, the rest is chord-tail reinterpretation by the model. Sub/bass dominance (30.5 / 14.0) vs almost nothing above 1kHz (mid 1.0, high 0.35) confirms MvO's signature dark-bandwidth dub mix.", "sound_design": [{"element": "Kick", "observation": "Steady 4/4 at 129.2bpm, sub-heavy, no snap — sits entirely under 100Hz based on band balance. Kick and bass are effectively fused.", "recreate": "Layer a soft 909-style kick with a sine sub tuned to F1. HPF the click layer at 60Hz, LPF the sub at 90Hz. Glue with light saturation (Saturator, warm mode, drive ~3dB). No transient designer — you want round, not punchy."}, {"element": "Bass", "observation": "1335 detected notes, range B0–B3, mean around B1/C2 — the pitch tracker is grabbing both the sub fundamental and the chord-stab's low harmonic. Real bassline is likely a simple root movement F–C with passing tones (D#, G#, A appear).", "recreate": "Prophet 12: single sawtooth, one octave, LPF cutoff ~200Hz with slight resonance, slow filter env. Play root notes on downbeats, tie to kick sidechain. Add a second layer, sine an octave down, for the sub floor."}, {"element": "Pad/Harmony", "observation": "This is the signature MvO chord stab — a filtered detuned pad hitting on the offbeat, drenched in Space Echo-style delay. Fmin↔Cmaj alternation with occasional A#maj coloring is the entire harmonic content.", "recreate": "Prophet 12: 2 detuned sawtooths + 1 square, slow attack (~30ms), medium release. LPF around 800Hz with mild env mod. Bounce to audio, chop into a 1/8 stab, send heavy to a Roland RE-201 emulation (or Echoboy 'Space' mode) with feedback ~55%, wow/flutter on. Add a spring reverb after the delay. Automate delay feedback for the breath sections."}, {"element": "Percussion/Texture", "observation": "Extremely subdued — high-band energy is 0.35, meaning hats/shakers are barely there or heavily filtered. Any groove comes from the chord-stab syncopation and micro-noise texture.", "recreate": "Closed hat sample, LPF at 4kHz, -18dB in the mix. Add a filtered vinyl noise loop through the same delay bus as the chord. Consider a subtle rimshot on beat 3 with a long plate reverb, ducked by the kick."}, {"element": "Vocal/Lead", "observation": "Whisper implies the 'Thank you' segments are Whisper hallucinations on delay tails / pad artifacts — not a real vocal. Voiced ratio 40% but the melodic content (F#5, F5 fragments at intro) is likely the pad's high harmonics being read as pitch.", "recreate": "No vocal needed. If you want a lead moment, a single sustained note on Prophet 12 (F5 or C5) through the same delay/reverb chain, ducked -6dB under the pad."}], "mix_moves": ["Everything above 2kHz gets shelved down 3-6dB — this is a dark mix, resist the urge to add air.", "Sidechain the pad and bass to the kick with a slow release (~200ms) for that Chain Reaction breathing feel.", "Send all melodic elements to a single stereo dub bus: tape delay → spring reverb → HPF at 200Hz on the return. Automate the send, not the source.", "Use a bus compressor (SSL-style, 2:1, slow attack, auto release) across the master with ~2dB GR to lock the plateau feel."], "arrangement_notes": "Nine detected sections but functionally it's intro (0-38s) → main plateau A (38-116s) → breath (116-133s, filter opens/pad thins) → plateau B (133-198s, mid brightens) → plateau C peak (198-330s, most energy) → drain 1 (330-364s) → tail (364-419s). Transitions are done by opening/closing the delay feedback and swapping which chord (Fm vs Cmaj) dominates, not by adding elements. The 132-second peak section is the DJ tool zone — this is a mixer's record.", "remake_starter": {"tempo": "129.2 BPM", "key": "F minor (with major-mode chord stabs) / Camelot 4A ↔ 7B ambiguous", "ableton_setup": "Track 1: Kick + sub layer (grouped). Track 2: Prophet 12 bass. Track 3: Prophet 12 chord stab (bounced to audio, sliced). Track 4: Noise/texture. Return A: Tape delay (Echoboy). Return B: Spring/plate reverb. Return C: Full dub chain (delay→reverb→filter). Automate sends on Track 3 into Return C.", "first_move": "Build the 2-bar chord stab loop first: Fm7 on beat 2.5, Cmaj on beat 4.5 of bar 2. Get the delay/spring feedback interaction right before you add kick. If the loop doesn't hypnotize you at bar 8 with nothing else, the sound isn't there yet."}, "reference_dna": ["Basic Channel - Phylyps Trak (the template — same Fm-ish drone, same delay-as-instrument philosophy)", "Rhythm & Sound - Never Tell You (the chord-stab-through-spring-reverb DNA)", "Vladislav Delay - Multila (for the way sections breathe without new elements arriving)"], "watch_outs": ["The 'Thank you' lyrics and F#5/F5 vocal notes are almost certainly Whisper + pitch-tracker artifacts on the pad's delay tails — ear-verify before treating as vocal content.", "Key detection is genuinely ambiguous (0.097 confidence gap between F major and F minor) — the track exploits this modal blur on purpose. Trust Fm as tonic with borrowed major-third stabs, not F major."]}, "model": "claude-opus-4-7"}}</pre>
+  </details>
+
+  <footer>
+    /track-dissect · pipeline 0.1 · stems htdemucs · key krumhansl-schmuckler · chords chroma+24-templates · midi pyin · lyrics groq-whisper-large-v3 · synthesis claude-opus-4-7
+  </footer>
+
+</div>
+</body>
+</html>

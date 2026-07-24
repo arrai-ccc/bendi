@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bendi · Teaching Cockpit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0c0b0a; --bg-card:#141319; --bg-card-soft:#1a1820; --bg-elevated:#1f1d27;
+    --ink:#ece6d6; --ink-soft:#b8b0a3; --ink-mute:#6e6a60;
+    --gold:#c79a5f; --gold-soft:#a8814f; --gold-glow:#e3a86b; --red-flag:#b85c4a;
+    --line:rgba(199,154,95,0.18);
+    --blue:#6f8aa8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 400;
+    font-size: 15.5px;
+    line-height: 1.62;
+    letter-spacing: 0.004em;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Film grain overlay (exact spec) */
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:0.045;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+
+  h1,h2,h3,h4 { font-family:'Space Grotesk', sans-serif; font-weight:500; letter-spacing:-0.01em; }
+
+  .mono { font-family:'JetBrains Mono', monospace; letter-spacing:0; }
+
+  a { color: var(--gold); text-decoration:none; border-bottom:1px solid rgba(199,154,95,0.25); }
+  a:hover { color: var(--gold-glow); border-color: var(--gold-glow); }
+
+  .container { max-width: 1080px; margin:0 auto; padding:0 28px; }
+
+  /* ============ TOP BAR ============ */
+  .topbar {
+    position: sticky; top:0; z-index: 500;
+    background: rgba(12,11,10,0.94);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar-inner { padding: 18px 0 16px; }
+  .topbar-row1 {
+    display:flex; align-items:baseline; justify-content:space-between;
+    flex-wrap:wrap; gap:12px;
+  }
+  .topbar-title {
+    font-family:'Space Grotesk', sans-serif;
+    font-size: clamp(20px, 3vw, 30px);
+    font-weight:500; letter-spacing:-0.02em; color: var(--ink);
+  }
+  .topbar-title em { font-style:normal; color: var(--gold); }
+  .internal-tag {
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px; text-transform:uppercase; letter-spacing:0.16em;
+    color: var(--red-flag);
+    border:1px solid rgba(184,92,74,0.4);
+    padding:4px 9px; border-radius:3px;
+    white-space:nowrap;
+  }
+  .topbar-sub {
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px; text-transform:uppercase; letter-spacing:0.16em;
+    color: var(--ink-mute); margin-top:8px;
+  }
+  .topbar-sub .sep { color: rgba(199,154,95,0.4); margin:0 9px; }
+
+  /* ciclo progress strip */
+  .ciclo-strip {
+    display:flex; align-items:center; gap:9px; margin-top:16px; flex-wrap:wrap;
+  }
+  .ciclo-seg {
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+  }
+  .ciclo-dot {
+    width:34px; height:7px; border-radius:4px;
+    background: rgba(110,106,96,0.22);
+    border:1px solid rgba(110,106,96,0.25);
+    transition: all .3s ease;
+  }
+  .ciclo-dot.done {
+    background: var(--gold);
+    border-color: var(--gold);
+    box-shadow: 0 0 9px rgba(227,168,107,0.45);
+  }
+  .ciclo-dot.next {
+    background: transparent;
+    border:1.5px solid var(--gold);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { box-shadow:0 0 0 0 rgba(199,154,95,0.0); border-color: var(--gold-soft); }
+    50% { box-shadow:0 0 10px 1px rgba(227,168,107,0.5); border-color: var(--gold-glow); }
+  }
+  .ciclo-label {
+    font-family:'JetBrains Mono', monospace;
+    font-size:8.5px; letter-spacing:0.08em; color: var(--ink-mute);
+  }
+  .ciclo-seg.done .ciclo-label { color: var(--gold-soft); }
+  .ciclo-seg.next .ciclo-label { color: var(--gold); }
+
+  /* ============ TAB NAV ============ */
+  .tabnav {
+    position: sticky; top: 0; z-index: 480;
+    background: rgba(12,11,10,0.97);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border-bottom:1px solid var(--line);
+  }
+  .tabnav-inner { display:flex; gap:4px; overflow-x:auto; }
+  .tab-btn {
+    appearance:none; background:none; border:none; cursor:pointer;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px; text-transform:uppercase; letter-spacing:0.13em;
+    color: var(--ink-mute); padding:16px 18px 14px;
+    border-bottom:2px solid transparent;
+    transition: color .2s ease, border-color .2s ease;
+    white-space:nowrap;
+  }
+  .tab-btn:hover { color: var(--ink-soft); }
+  .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  /* ============ PANELS ============ */
+  .panel { display:none; padding: 48px 0 90px; }
+  .panel.active { display:block; animation: fadein .35s ease; }
+  @keyframes fadein { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+  .panel-intro { color: var(--ink-soft); font-size:15px; max-width:760px; margin-bottom:40px; }
+  .panel-intro strong { color: var(--ink); font-weight:600; }
+  .panel-intro em { color: var(--gold-soft); font-style:italic; }
+
+  .section-num {
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px; color: var(--gold); letter-spacing:0.2em;
+    text-transform:uppercase; display:block; margin-bottom:14px;
+  }
+  h2.block-title {
+    font-size: clamp(22px,3vw,30px); font-weight:400; color: var(--ink);
+    letter-spacing:-0.02em; margin-bottom:26px; line-height:1.15;
+  }
+  h2.block-title em { font-style:normal; color: var(--gold); font-weight:500; }
+
+  /* ============ ARC TABLE ============ */
+  .arc-wrap { overflow-x:auto; margin-bottom:54px; border:1px solid var(--line); border-radius:8px; }
+  table.arc { width:100%; border-collapse:collapse; min-width:620px; }
+  table.arc th, table.arc td {
+    text-align:left; padding:13px 16px; border-bottom:1px solid var(--line);
+    font-size:14px; vertical-align:top;
+  }
+  table.arc th {
+    font-family:'JetBrains Mono', monospace; font-size:10.5px;
+    text-transform:uppercase; letter-spacing:0.13em; color: var(--ink-mute);
+    background: var(--bg-card-soft); font-weight:400;
+  }
+  table.arc tr:last-child td { border-bottom:none; }
+  table.arc td.num { font-family:'JetBrains Mono', monospace; color: var(--ink-mute); width:42px; }
+  table.arc td.code { font-family:'JetBrains Mono', monospace; color: var(--gold-soft); white-space:nowrap; }
+  table.arc tr.is-next { background: rgba(199,154,95,0.05); }
+  table.arc tr.is-next td.code { color: var(--gold); }
+  table.arc .sess { color: var(--ink); }
+
+  .pill {
+    display:inline-block; font-family:'JetBrains Mono', monospace;
+    font-size:10px; text-transform:uppercase; letter-spacing:0.1em;
+    padding:4px 9px; border-radius:20px; white-space:nowrap; border:1px solid transparent;
+  }
+  .pill.done { color: var(--gold); border-color: var(--gold-soft); background: rgba(199,154,95,0.1); }
+  .pill.next { color: #0c0b0a; background: var(--gold); border-color: var(--gold); }
+  .pill.planned { color: var(--ink-soft); border-color: rgba(184,176,163,0.3); }
+  .pill.backhalf { color: var(--ink-mute); border-color: rgba(110,106,96,0.3); }
+
+  /* ============ CLASS CARDS (track style) ============ */
+  .class-card {
+    background: var(--bg-card); border:1px solid var(--line);
+    border-radius:10px; padding:30px 30px 26px; margin-bottom:26px;
+    transition: border-color .3s ease, background .3s ease;
+  }
+  .class-card:hover { border-color: rgba(199,154,95,0.32); }
+  .cc-head { display:flex; align-items:flex-start; gap:18px; flex-wrap:wrap; }
+  .cc-badge {
+    font-family:'JetBrains Mono', monospace; font-size:12px; font-weight:500;
+    color: var(--gold); background: rgba(199,154,95,0.08);
+    border:1px solid var(--gold-soft); border-radius:5px;
+    padding:7px 11px; letter-spacing:0.06em; white-space:nowrap;
+  }
+  .cc-titles { flex:1; min-width:220px; }
+  .cc-titles h3 { font-size:20px; font-weight:500; color: var(--ink); margin-bottom:6px; line-height:1.2; }
+  .cc-meta {
+    font-family:'JetBrains Mono', monospace; font-size:10.5px;
+    text-transform:uppercase; letter-spacing:0.12em; color: var(--ink-mute);
+  }
+  .cc-meta .dot { color: rgba(199,154,95,0.5); margin:0 7px; }
+
+  .cc-blocks { margin-top:22px; display:flex; flex-direction:column; gap:18px; }
+  .cc-block {}
+  .cc-block .blabel {
+    font-family:'JetBrains Mono', monospace; font-size:10px;
+    text-transform:uppercase; letter-spacing:0.16em; color: var(--gold-soft);
+    margin-bottom:8px; display:block;
+  }
+  .cc-block p { color: var(--ink-soft); font-size:14.5px; margin-bottom:6px; }
+  .cc-block ul { list-style:none; }
+  .cc-block ul li {
+    color: var(--ink-soft); font-size:14.5px; padding-left:18px; position:relative; margin-bottom:7px;
+  }
+  .cc-block ul li::before {
+    content:"—"; position:absolute; left:0; color: var(--gold-soft);
+  }
+  .cc-block strong { color: var(--ink); font-weight:600; }
+  .cc-block em { color: var(--gold-glow); font-style:italic; }
+  .cc-block.sauce {
+    background: var(--bg-card-soft); border-left:2px solid var(--gold-soft);
+    padding:14px 16px; border-radius:0 6px 6px 0;
+  }
+
+  /* ============ CLASS LOG ============ */
+  .log-entry {
+    background: var(--bg-card); border:1px solid var(--line);
+    border-radius:10px; padding:32px; margin-bottom:26px;
+  }
+  .log-head { border-bottom:1px solid var(--line); padding-bottom:18px; margin-bottom:24px; }
+  .log-head h3 { font-size:22px; font-weight:500; color: var(--ink); margin-bottom:8px; }
+  .log-head .theme { color: var(--ink-soft); font-size:14.5px; }
+  .log-head .theme strong { color: var(--ink); }
+  .log-head .src {
+    font-family:'JetBrains Mono', monospace; font-size:11px;
+    color: var(--ink-mute); margin-top:6px; display:block;
+  }
+  .log-sub { margin-bottom:24px; }
+  .log-sub:last-child { margin-bottom:0; }
+  .log-sub .slabel {
+    font-family:'JetBrains Mono', monospace; font-size:10.5px;
+    text-transform:uppercase; letter-spacing:0.16em; color: var(--gold);
+    margin-bottom:11px; display:block;
+  }
+  .log-sub ol, .log-sub ul { padding-left:0; list-style:none; }
+  .log-sub ol li, .log-sub ul li {
+    color: var(--ink-soft); font-size:14.5px; margin-bottom:9px;
+    padding-left:24px; position:relative;
+  }
+  .log-sub ol { counter-reset: li; }
+  .log-sub ol li::before {
+    counter-increment: li; content: counter(li);
+    position:absolute; left:0; top:0;
+    font-family:'JetBrains Mono', monospace; font-size:11px; color: var(--gold-soft);
+  }
+  .log-sub ul li::before { content:"—"; position:absolute; left:0; color: var(--gold-soft); }
+  .log-sub strong { color: var(--ink); font-weight:600; }
+  .log-sub em { color: var(--gold-glow); font-style:italic; }
+  .log-sub p { color: var(--ink-soft); font-size:14.5px; margin-bottom:8px; }
+  .log-sub.sauce-sub {
+    background: var(--bg-card-soft); border-left:2px solid var(--gold-soft);
+    padding:18px 20px; border-radius:0 6px 6px 0;
+  }
+
+  .placeholder-card {
+    border:1.5px dashed rgba(110,106,96,0.4); border-radius:10px;
+    padding:34px; text-align:center; color: var(--ink-mute);
+    background: rgba(26,24,32,0.3);
+  }
+  .placeholder-card .ph-code {
+    font-family:'JetBrains Mono', monospace; font-size:12px;
+    letter-spacing:0.1em; color: var(--ink-mute); margin-bottom:8px;
+  }
+  .placeholder-card .ph-text { font-size:14px; }
+
+  /* ============ TEACHING MAP ============ */
+  .legend {
+    display:flex; flex-wrap:wrap; gap:14px; margin-bottom:34px;
+    padding:16px 18px; background: var(--bg-card-soft);
+    border:1px solid var(--line); border-radius:8px;
+  }
+  .legend-item {
+    display:flex; align-items:center; gap:8px;
+    font-family:'JetBrains Mono', monospace; font-size:11px; color: var(--ink-soft);
+    letter-spacing:0.04em;
+  }
+  .stat-pill {
+    display:inline-flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono', monospace; font-size:10px;
+    min-width:18px; height:18px; padding:0 5px; border-radius:4px; border:1px solid transparent;
+  }
+  .stat-pill.covered { color:#0c0b0a; background: var(--gold); border-color: var(--gold); }
+  .stat-pill.planned { color: var(--gold); background:transparent; border-color: var(--gold-soft); }
+  .stat-pill.refresh { color: var(--blue); background: rgba(111,138,168,0.12); border-color: rgba(111,138,168,0.45); }
+  .stat-pill.bonus { color: var(--ink-mute); background:transparent; border-color: rgba(110,106,96,0.4); }
+
+  .map-grid {
+    display:grid; grid-template-columns: repeat(auto-fill, minmax(320px,1fr));
+    gap:20px; margin-bottom:44px;
+  }
+  .map-card {
+    background: var(--bg-card); border:1px solid var(--line);
+    border-radius:9px; padding:24px;
+  }
+  .map-card h3 {
+    font-size:17px; font-weight:500; color: var(--ink);
+    margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--line);
+  }
+  .map-card h3 .mc-num {
+    font-family:'JetBrains Mono', monospace; font-size:12px; color: var(--gold);
+    margin-right:8px;
+  }
+  .map-card ul { list-style:none; }
+  .map-card li {
+    display:flex; gap:10px; align-items:flex-start; margin-bottom:11px;
+    font-size:14px; color: var(--ink-soft); line-height:1.5;
+  }
+  .map-card li .stat-pill { flex-shrink:0; margin-top:2px; }
+  .map-card li strong { color: var(--ink); font-weight:600; }
+  .map-card li em { color: var(--ink-mute); font-style:italic; }
+  .map-card li .cls { font-family:'JetBrains Mono', monospace; font-size:10px; color: var(--gold-soft); }
+
+  .info-block {
+    background: var(--bg-card); border:1px solid var(--line);
+    border-radius:9px; padding:26px; margin-bottom:24px;
+  }
+  .info-block h3 { font-size:18px; font-weight:500; color: var(--ink); margin-bottom:8px; }
+  .info-block .sub-note {
+    font-family:'JetBrains Mono', monospace; font-size:11px; color: var(--ink-mute);
+    margin-bottom:18px;
+  }
+  .info-block p { color: var(--ink-soft); font-size:14.5px; margin-bottom:14px; }
+  .info-block p:last-child { margin-bottom:0; }
+  .info-block strong { color: var(--ink); font-weight:600; }
+  .info-block em { color: var(--gold-glow); font-style:italic; }
+  .info-block ul { list-style:none; margin:10px 0; }
+  .info-block ul li {
+    color: var(--ink-soft); font-size:14px; padding-left:18px; position:relative; margin-bottom:9px;
+  }
+  .info-block ul li::before { content:"—"; position:absolute; left:0; color: var(--gold-soft); }
+  .info-block .rig-line {
+    font-size:14px; color: var(--ink); margin-top:14px; padding-top:14px;
+    border-top:1px solid var(--line);
+  }
+
+  .callout-red {
+    background: rgba(184,92,74,0.08);
+    border:1px solid rgba(184,92,74,0.4);
+    border-left:3px solid var(--red-flag);
+    border-radius:0 8px 8px 0; padding:20px 22px; margin-bottom:24px;
+  }
+  .callout-red .cr-label {
+    font-family:'JetBrains Mono', monospace; font-size:10.5px;
+    text-transform:uppercase; letter-spacing:0.16em; color: var(--red-flag);
+    margin-bottom:10px; display:block;
+  }
+  .callout-red p { color: var(--ink-soft); font-size:14.5px; }
+  .callout-red strong { color: var(--ink); font-weight:600; }
+
+  .accuracy-flag {
+    background: rgba(184,92,74,0.06);
+    border:1px dashed rgba(184,92,74,0.35);
+    border-radius:8px; padding:18px 20px; margin-bottom:24px;
+  }
+  .accuracy-flag .cr-label {
+    font-family:'JetBrains Mono', monospace; font-size:10.5px;
+    text-transform:uppercase; letter-spacing:0.16em; color: var(--red-flag);
+    margin-bottom:10px; display:block;
+  }
+  .accuracy-flag p { color: var(--ink-soft); font-size:14px; }
+  .accuracy-flag strong { color: var(--ink); }
+
+  .curios { list-style:none; }
+  .curios li {
+    color: var(--ink-soft); font-size:14.5px; padding-left:20px; position:relative; margin-bottom:11px;
+  }
+  .curios li::before { content:"◆"; position:absolute; left:0; color: var(--gold-soft); font-size:9px; top:4px; }
+  .curios li strong { color: var(--ink); font-weight:600; }
+
+  /* ============ SHORTCUTS ============ */
+  .sc-banner {
+    background: linear-gradient(180deg, rgba(199,154,95,0.12), rgba(199,154,95,0.05));
+    border:1px solid var(--gold-soft); border-radius:9px;
+    padding:20px 24px; margin-bottom:40px;
+  }
+  .sc-banner .scb-label {
+    font-family:'JetBrains Mono', monospace; font-size:10.5px;
+    text-transform:uppercase; letter-spacing:0.16em; color: var(--gold);
+    margin-bottom:10px; display:block;
+  }
+  .sc-banner p { color: var(--ink); font-size:15px; line-height:1.55; }
+  .sc-banner kbd { vertical-align:middle; }
+
+  .sc-group { margin-bottom:38px; }
+  .sc-group-label {
+    font-family:'JetBrains Mono', monospace; font-size:12px;
+    text-transform:uppercase; letter-spacing:0.16em; color: var(--gold);
+    margin-bottom:16px; display:flex; align-items:center; gap:12px;
+  }
+  .sc-group-label::after {
+    content:""; flex:1; height:1px; background: var(--line);
+  }
+  .sc-chips { display:flex; flex-wrap:wrap; gap:10px; }
+  .sc-chip {
+    display:inline-flex; align-items:center; gap:5px;
+    background: var(--bg-card); border:1px solid var(--line);
+    border-radius:7px; padding:8px 11px; cursor:default;
+    transition: border-color .2s ease, background .2s ease, transform .15s ease;
+    position:relative;
+  }
+  .sc-chip:hover, .sc-chip.open {
+    border-color: var(--gold-soft); background: var(--bg-card-soft);
+    transform: translateY(-1px);
+  }
+  .sc-note-inline {
+    width:100%; color: var(--ink-mute); font-size:13px; font-style:italic;
+    padding:4px 2px; margin-top:2px;
+  }
+  .sc-note-inline .mono { font-style:normal; color: var(--ink-soft); }
+
+  kbd {
+    font-family:'JetBrains Mono', monospace; font-size:12px; font-weight:500;
+    color: var(--ink); background: var(--bg-elevated);
+    border:1px solid var(--line); border-radius:4px;
+    padding:3px 7px; min-width:22px; text-align:center; display:inline-block;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.03);
+    line-height:1.2;
+  }
+  kbd.sym { color: var(--gold-soft); }
+
+  /* popup */
+  .sc-popup {
+    position: fixed; z-index: 9000;
+    background: var(--bg-elevated); border:1px solid var(--gold-soft);
+    border-radius:8px; padding:12px 14px; max-width:280px;
+    box-shadow: 0 14px 40px rgba(0,0,0,0.55), 0 0 16px rgba(227,168,107,0.16);
+    color: var(--ink-soft); font-size:13.5px; line-height:1.5;
+    opacity:0; transform: translateY(6px); pointer-events:none;
+    transition: opacity .18s ease, transform .18s ease;
+  }
+  .sc-popup.show { opacity:1; transform: translateY(0); }
+  .sc-popup .pp-combo {
+    font-family:'JetBrains Mono', monospace; font-size:11px;
+    color: var(--gold); letter-spacing:0.06em; margin-bottom:7px;
+    text-transform:uppercase; display:block;
+  }
+  .sc-popup strong { color: var(--ink); font-weight:600; }
+  .sc-popup em { color: var(--gold-glow); font-style:italic; }
+
+  /* ============ FOOTER ============ */
+  footer {
+    border-top:1px solid var(--line); padding:30px 0 50px;
+    font-family:'JetBrains Mono', monospace; font-size:11px;
+    color: var(--ink-mute); letter-spacing:0.04em;
+  }
+  footer .sep { color: rgba(199,154,95,0.4); margin:0 8px; }
+
+  @media (max-width: 640px) {
+    .container { padding:0 18px; }
+    .cc-head { gap:12px; }
+    .map-grid { grid-template-columns: 1fr; }
+    .ciclo-dot { width:26px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== TOP BAR ===================== -->
+<header class="topbar">
+  <div class="container topbar-inner">
+    <div class="topbar-row1">
+      <div class="topbar-title">BENDI · <em>TEACHING COCKPIT</em></div>
+      <div class="internal-tag">Internal — not shared with Bendi</div>
+    </div>
+    <div class="topbar-sub mono">
+      CICLO-8 <span class="sep">·</span> JUEVES 19:30 <span class="sep">·</span> €55/SESIÓN <span class="sep">·</span> €220/MO <span class="sep">·</span> PILOTO
+    </div>
+    <div class="ciclo-strip" id="cicloStrip"></div>
+  </div>
+</header>
+
+<!-- ===================== TAB NAV ===================== -->
+<nav class="tabnav">
+  <div class="container">
+    <div class="tabnav-inner">
+      <button class="tab-btn active" data-tab="plan">Plan</button>
+      <button class="tab-btn" data-tab="log">Class Log</button>
+      <button class="tab-btn" data-tab="map">Teaching Map</button>
+      <button class="tab-btn" data-tab="shortcuts">Shortcuts</button>
+    </div>
+  </div>
+</nav>
+
+<main class="container">
+
+  <!-- ===================== PLAN ===================== -->
+  <section class="panel active" id="panel-plan">
+    <span class="section-num">01 — Plan</span>
+    <h2 class="block-title">4-Class Plan <em>(Classes 2–5)</em></h2>
+    <p class="panel-intro">
+      Inside the locked <strong>8-session ciclo</strong> from the proposal. Orientative map, not rigid — <em>"la realidad de cada sesión manda."</em>
+      Realistic goal of the ciclo: <strong>1 developed track + a library of 5–8 loop-ideas</strong> Bendi can return to.
+    </p>
+
+    <span class="section-num">Where we are in the 8-ciclo arc</span>
+    <div class="arc-wrap">
+      <table class="arc">
+        <thead>
+          <tr><th>#</th><th>Code</th><th>Session</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="num">1</td><td class="code">A.01 + A.02a</td>
+            <td class="sess">Setup + rhythm foundations (Drum Rack, Splice, grooves, take lanes, clip envelopes)</td>
+            <td><span class="pill done">✅ Done 06-04</span></td>
+          </tr>
+          <tr>
+            <td class="num">2</td><td class="code">A.02b→c</td>
+            <td class="sess">Diverged → instrumentos como trigger · pad gateado · audio + MIDI FX racks · movimiento</td>
+            <td><span class="pill done">✅ Done 06-11</span></td>
+          </tr>
+          <tr class="is-next">
+            <td class="num">3</td><td class="code">A.03</td>
+            <td class="sess">Deep dive — un solo device a fondo (candidato: Operator)</td>
+            <td><span class="pill next">▶ Next 06-18</span></td>
+          </tr>
+          <tr>
+            <td class="num">4</td><td class="code">A.04</td>
+            <td class="sess">Armonía aplicada</td>
+            <td><span class="pill planned">Planned 06-25</span></td>
+          </tr>
+          <tr>
+            <td class="num">5</td><td class="code">B.05</td>
+            <td class="sess">De loop a arrangement</td>
+            <td><span class="pill planned">Planned 07-02</span></td>
+          </tr>
+          <tr>
+            <td class="num">6</td><td class="code">B.06</td>
+            <td class="sess">Mezcla 1 — limpieza, espacio, frecuencias</td>
+            <td><span class="pill backhalf">Back half</span></td>
+          </tr>
+          <tr>
+            <td class="num">7</td><td class="code">B.07</td>
+            <td class="sess">Mezcla 2 — carácter, glue, dinámica</td>
+            <td><span class="pill backhalf">Back half</span></td>
+          </tr>
+          <tr>
+            <td class="num">8</td><td class="code">B.08</td>
+            <td class="sess">Cierre, exportación, próximo paso</td>
+            <td><span class="pill backhalf">Back half</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="panel-intro" style="margin-bottom:46px;">
+      The cards below detail Classes 2–5. Pacing rule from the proposal: any of these can expand to two sessions if the work demands it — <em>that's sanctioned, not failure.</em>
+    </p>
+
+    <!-- CLASS 2 — DONE (diverged) -->
+    <div class="class-card">
+      <div class="cc-head">
+        <div class="cc-badge">A.02c</div>
+        <div class="cc-titles">
+          <h3>✅ Dale vida al sonido <span style="color:var(--ink-mute);font-weight:400;font-size:0.7em;">(diverged from A.02b)</span></h3>
+          <div class="cc-meta mono">DONE <span class="dot">·</span> TRIGGERS + RACKS + EXPRESIÓN <span class="dot">·</span> THU 2026-06-11</div>
+        </div>
+      </div>
+      <div class="cc-blocks">
+        <div class="cc-block">
+          <span class="blabel">Qué pasó de verdad</span>
+          <p>Bendi trajo un beat (bueno) + una referencia house con pads rítmicos preciosos. Felipe agarró ese pad como norte y montó la clase sobre la herida de Bendi: <em>sus pads suenan planos y no sabe por qué.</em> El sidechain volvió como <strong>gate-trigger</strong> (puente C1→C2). El descubrimiento del día: <strong>un pad plano no está roto — le falta movimiento y expresión.</strong> Full record → <code>class-log.md</code> Class 2.</p>
+        </div>
+        <div class="cc-block">
+          <span class="blabel">Qué cubrimos</span>
+          <ul>
+            <li><strong>Instrumentos como señal de trigger</strong> — un kit de 808 como <em>señal</em> (no como sonido) para disparar efectos en otra pista.</li>
+            <li><strong>Gate disparado por el 808</strong> sobre un pad con acordes → pad plano se vuelve rítmico, vivo. Esculpir su forma eligiendo qué dispara.</li>
+            <li><strong>Audio Effect Racks</strong> — reverb+sat+filtro / delays / Roar (Bendi armó el suyo). Macros = una mano sobre el carácter.</li>
+            <li><strong>MIDI Effect Racks</strong> — Arp · Scale · Chord · Note Echo en cadena, tocando piano encima → ideas que no escribirías a mano.</li>
+            <li><strong>El sonido como personaje</strong> — darle herramientas para expresarse (etapas, momentos, agresivo/tierno/crujiente).</li>
+            <li><strong>Duplicar trigger + jugar con los espacios</strong> — apagar las notas originales y rellenar los huecos → capas que se interlockean y rebotan.</li>
+          </ul>
+        </div>
+        <div class="cc-block sauce">
+          <span class="blabel">Salsa entregada</span>
+          <ul>
+            <li>Cualquier instrumento puede ser la llave (no solo el kick) — cada trigger esculpe un ritmo distinto sobre el pad.</li>
+            <li>Rellena los huecos, no los repitas — el groove vive en lo que <em>no</em> suena.</li>
+            <li>Un pad plano no está roto, le falta moverse — gate/filtro/envelope antes de cambiar preset.</li>
+            <li>Un macro = una mano sobre el sonido; guarda el rack en User Library.</li>
+            <li>Apila MIDI FX y deja que la cadena proponga; baja a audio el oro.</li>
+            <li>Roar multibanda = peso en los medios-graves sin ensuciar el sub.</li>
+          </ul>
+        </div>
+        <div class="cc-block">
+          <span class="blabel">Deberes</span>
+          <p>One Beat Per Day + reto movimiento (haz mover un pad) + ejercicio de espacios (dos capas que se rellenen). Traer otro beat a C3.</p>
+        </div>
+        <div class="cc-block">
+          <span class="blabel">Diferido</span>
+          <p><strong>Kick/bass frequency-fitting</strong> (el core original de A.02b) NO fue el foco — reabsorber en sesión futura o en la mitad de mezcla. <strong>Abierto:</strong> confirmar Live edition de Bendi en <em>su casa</em> (usó Roar en el estudio = Suite de Felipe; su setup propio sigue sin confirmar).</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLASS 3 -->
+    <div class="class-card">
+      <div class="cc-head">
+        <div class="cc-badge">A.03</div>
+        <div class="cc-titles">
+          <h3>▶ Deep dive: un solo device a fondo</h3>
+          <div class="cc-meta mono">DEEP DIVE <span class="dot">·</span> 1.5–2H <span class="dot">·</span> THU 2026-06-18 <span class="dot">·</span> RE-SEQUENCED</div>
+        </div>
+      </div>
+      <div class="cc-blocks">
+        <div class="cc-block">
+          <span class="blabel">El cambio (Felipe's call 06-11)</span>
+          <p>C2 tocó muchas herramientas en la superficie (gates, racks, MIDI FX, Roar). C3 hace lo contrario: <strong>un solo device, hasta el fondo.</strong> Bendi aprende el <em>método</em> de dominar una herramienta a fondo — transferible a todas las demás. Device = curiosidad de Bendi (pregunta de deberes) + elección de Felipe.</p>
+        </div>
+        <div class="cc-block">
+          <span class="blabel">Recomendación ARC — Operator (FM, Suite)</span>
+          <ul>
+            <li>Secuela natural de C2: C2 movió el pad <em>desde fuera</em> (gate/racks/MIDI FX) → Operator enseña el movimiento <em>desde dentro</em> (envelopes por operador, LFO, filtro, FM). Cierra la herida del pad en la raíz.</li>
+            <li>Un device profundo &gt; tres synths superficiales. FM es la esquina que todos evitan — desmitificarla es alto-leverage. Stock Suite, coste €0.</li>
+            <li><strong>Qué hacemos:</strong> 4 osciladores + algoritmos (carrier/modulador), envelopes por operador (ahí nace el movimiento), filtro + su envelope, LFO. Construir un <strong>pad evolutivo</strong> y un <strong>bajo/lead con carácter</strong> desde un patch init.</li>
+            <li><strong>El método (transferible):</strong> init → un oscilador → moldea su envelope → añade modulador → movimiento de filtro → guardar. El mismo ritual para cualquier device.</li>
+          </ul>
+        </div>
+        <div class="cc-block">
+          <span class="blabel">Alt — Echo (delay)</span>
+          <p>Si se inclina a efectos: Echo como <em>instrumento creativo</em>, no utilidad — feedback hasta auto-oscilar, filtro en el loop, ducking, modulación, blend de reverb. Convierte un loop seco en espacio dub-techno. Liga con el tema "movimiento y expresión" de C2.</p>
+        </div>
+        <div class="cc-block sauce">
+          <span class="blabel">Salsa</span>
+          <ul>
+            <li>Arranca siempre de <strong>init/default</strong>, nunca de un preset — solo aprendes construyendo desde cero.</li>
+            <li>Un parámetro bien automatizado &gt; diez estáticos (lección de movimiento de C2 dentro del synth).</li>
+            <li>Resamplea a audio cuando esté — lo compromete, libera CPU, corta el tweaking infinito.</li>
+            <li>Guarda patch + FX rack juntos en User Library — así un "signature sound" se vuelve reutilizable.</li>
+          </ul>
+        </div>
+        <div class="cc-block">
+          <span class="blabel">Deberes</span>
+          <p>One Beat Per Day; un sonido al día construido <em>desde cero</em> en el device de la clase. Traer otro beat + decir qué device/efecto le pica la curiosidad (alimenta la elección).</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLASS 4 -->
+    <div class="class-card">
+      <div class="cc-head">
+        <div class="cc-badge">A.04</div>
+        <div class="cc-titles">
+          <h3>Armonía aplicada</h3>
+          <div class="cc-meta mono">ARMONÍA <span class="dot">·</span> 1.5–2H <span class="dot">·</span> THU 2026-06-25</div>
+        </div>
+      </div>
+      <div class="cc-blocks">
+        <div class="cc-block">
+          <span class="blabel">Objetivo</span>
+          <p>He already knows grados, escalas, triadas (studied with El Chiru). Translate theory → his music: a progression that moves and sustains tension without cliché, on one of his loops.</p>
+        </div>
+        <div class="cc-block">
+          <span class="blabel">Qué hacemos</span>
+          <ul>
+            <li>Build a progression that holds tension — why a <strong>4-note chord</strong> sounds more mature than a triad; voice-leading; tension/release at the harmonic level.</li>
+            <li>Bass-line vs chord relationship; inversions for smooth movement.</li>
+            <li>Translate his theory knowledge into hands-on Ableton moves.</li>
+          </ul>
+        </div>
+        <div class="cc-block">
+          <span class="blabel">Ableton 12 <span style="color:var(--ink-mute);text-transform:none;letter-spacing:0;">(this is where 12 saves hours — teach + refresh-myself)</span></span>
+          <ul>
+            <li><strong>Scale awareness / Key &amp; Scales</strong> — set the clip scale, off-scale rows dim, stay diatonic effortlessly.</li>
+            <li><strong>MIDI Generator → Stacks</strong> — generate chords/progressions from the scale (root, inversion, duration). Harmonic scaffolding in seconds.</li>
+            <li><strong>MIDI Transformation → Strum</strong> (MPE) — chord rolls (the Floating Points shimmer); <strong>Recombine</strong> for instant melodic variations from one good bar; <strong>Span</strong> to make a progression legato (pad) or staccato (pluck).</li>
+            <li><strong>Expressive Chords</strong> (12.2) — build progressions one key at a time, then feed into Stacks/Recombine.</li>
+          </ul>
+        </div>
+        <div class="cc-block sauce">
+          <span class="blabel">Salsa</span>
+          <ul>
+            <li>Write the progression once, then <strong>Recombine</strong> it 4 times → 4 variations for different sections, all in key.</li>
+            <li>An unlinked clip envelope on a chord's filter (Class 1 callback) makes a static pad evolve across the whole 8-bar phrase.</li>
+            <li>Add the 7th/9th <em>last</em> — write the triad skeleton first, color after.</li>
+          </ul>
+        </div>
+        <div class="cc-block">
+          <span class="blabel">Deberes</span>
+          <p>One Beat Per Day with a harmonic focus — one progression per day using scale-mode + Stacks.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLASS 5 -->
+    <div class="class-card">
+      <div class="cc-head">
+        <div class="cc-badge">B.05</div>
+        <div class="cc-titles">
+          <h3>De loop a arrangement</h3>
+          <div class="cc-meta mono">ARRANGEMENT <span class="dot">·</span> 1.5–2H <span class="dot">·</span> THU 2026-07-02</div>
+        </div>
+      </div>
+      <div class="cc-blocks">
+        <div class="cc-block">
+          <span class="blabel">Objetivo</span>
+          <p>"El paso más difícil" — and Bendi's core wound (the guardador profesional who never finishes). The most important session of the front half. Take one of his most promising loops to a 5–6 minute arrangement.</p>
+        </div>
+        <div class="cc-block">
+          <span class="blabel">Qué hacemos</span>
+          <ul>
+            <li>Structure as <strong>tensión y resolución</strong> — when to build, when to drop, where the breaks go, when to let it breathe.</li>
+            <li>The decision framework: what comes after the first 16 bars; when to add, when to subtract.</li>
+            <li>Drag the Session loops (built across Classes 1–4) into the Arrangement; shape the energy curve.</li>
+          </ul>
+        </div>
+        <div class="cc-block">
+          <span class="blabel">Ableton 12</span>
+          <ul>
+            <li><strong>Arrangement editing shortcuts</strong> — Duplicate Time (⌘⇧D) to repeat a section, Insert Silence (⌘I) to open a gap, Consolidate (⌘J).</li>
+            <li><strong>Take lanes</strong> (Class 1 callback) for recorded filter-performance automation across the build.</li>
+            <li><strong>Locators</strong> to mark intro / build / drop / break / outro.</li>
+          </ul>
+        </div>
+        <div class="cc-block sauce">
+          <span class="blabel">Salsa</span>
+          <ul>
+            <li>Arrange by <strong>subtraction</strong>: lay the full loop across 5 min first, then <em>remove</em> elements to create the intro/breakdown. Easier than building from nothing.</li>
+            <li>The arrangement is a series of <strong>irreversible decisions</strong> — this is the antidote to his hoarding pattern. Commit sections to audio so he can't keep reopening them.</li>
+            <li>One transition trick per section (a reverse cymbal, a filter sweep, a 1-bar silence before the drop) is enough — don't over-produce transitions.</li>
+          </ul>
+        </div>
+        <div class="cc-block">
+          <span class="blabel">Deberes</span>
+          <p>Finish (rough is fine) the arrangement of the Class-5 track before Class 6. The point is <em>done</em>, not perfect.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-block" style="margin-top:8px;">
+      <h3>After Class 5</h3>
+      <p>Classes 6–7 = the two mix sessions (clean/space/frequencies, then character/glue/dynamics — gain staging, EQ quirúrgico, FabFilter Q3/Pro-MB, compresión, saturación, SoundToys/Valhalla). Class 8 = pre-master, export, ciclo review, decide second-ciclo-or-pause.</p>
+    </div>
+  </section>
+
+  <!-- ===================== CLASS LOG ===================== -->
+  <section class="panel" id="panel-log">
+    <span class="section-num">02 — Class Log</span>
+    <h2 class="block-title">Class <em>Log</em></h2>
+    <p class="panel-intro">
+      Running record of every class. From Class 2 onward, Felipe records audio → transcript → this entry.
+      Each entry: <strong>what we covered</strong> (verified) · <strong>extra techniques</strong> (adjacent moves worth showing) · <strong>sauce</strong> (the non-obvious pro tips to hand Bendi) · <strong>homework</strong> · <strong>next-class hooks</strong>.
+    </p>
+
+    <!-- CLASS 1 ENTRY -->
+    <div class="log-entry">
+      <div class="log-head">
+        <h3>Class 1 — 2026-06-04 · Thu 19:30 · Studio</h3>
+        <div class="theme"><strong>Theme:</strong> Ableton mechanics + rhythm foundations (≈ A.01 setup + the rhythm half of A.02)</div>
+        <span class="src mono">Source: Felipe's verbal recap (no audio recorded — Class 2 onward will be recorded).</span>
+      </div>
+
+      <div class="log-sub">
+        <span class="slabel">Lo que cubrimos</span>
+        <ol>
+          <li><strong>Drum Rack</strong> — how it works, loading samples into pads, building a first rhythm.</li>
+          <li><strong>Built the first rhythm</strong> on the Drum Rack using <strong>Splice</strong> samples.</li>
+          <li><strong>Choke mode</strong> (choke groups) — pads that cut each other off.</li>
+          <li><strong>Take lanes in the Arrangement</strong> while looping a section — capturing multiple passes.</li>
+          <li>The <strong>"versatile" track in Session View</strong> — one go-to track to record loops and manage ideas fast.</li>
+          <li><strong>Clip Envelopes — Linked vs Unlinked</strong> mode.</li>
+          <li>The <strong>Splice engine</strong> — searching, auditioning, drag-drop inside Live.</li>
+          <li><strong>Grooves / Groove Pool</strong> — feel and swing.</li>
+        </ol>
+      </div>
+
+      <div class="log-sub">
+        <span class="slabel">Extra — adjacent, show when natural</span>
+        <ul>
+          <li><strong>Capture MIDI</strong> as the safety net: noodle with nothing armed, hit Capture, Live grabs the last phrase, detects tempo, sets the loop. Pairs perfectly with the "versatile track" idea — he never loses a good bar.</li>
+          <li><strong>Drum Rack return chains</strong> (up to 6) — parallel processing <em>inside</em> the rack (a parallel-saturation bus, a reverb-throw bus per pad).</li>
+          <li><strong>Macros on the Drum Rack</strong> (up to 16) — map cutoff + drive + reverb-send to one knob for a live one-knob build.</li>
+          <li><strong>Commit a groove</strong> — once the feel is right, Commit writes it into the clip (MIDI notes move; audio gets warp markers).</li>
+        </ul>
+      </div>
+
+      <div class="log-sub sauce-sub">
+        <span class="slabel">Salsa — the non-obvious pro tips to hand Bendi</span>
+        <ul>
+          <li><strong>Choke beyond hats:</strong> put a <em>long evolving sound</em> (noise sweep, vinyl crackle, a sustained texture) in a choke group with itself across two pads — retriggering chops it rhythmically. Free stutter, no effect. Also choke a texture pad against a "silence" sample to gate atmospheres on demand.</li>
+          <li><strong>Don't</strong> choke kick + snare together — choke is a hard cut, wrong for two simultaneous core hits. Choke is for <em>one-at-a-time</em> families (hats, tails, sweeps).</li>
+          <li><strong>Take-lane comping:</strong> use <strong>Audition Mode</strong> (headphone icon on a take lane) to hear a take <em>in context</em> before committing. Turn on <strong>Create Fades on Clip Edges</strong> so comped slices auto-crossfade (4 ms) — no clicks. Comping works for MIDI too (loop-record an improvised line, comp the best phrases).</li>
+          <li><strong>Unlinked clip envelopes = Ableton's built-in polyrhythmic LFO.</strong> A 1-bar loop with an <strong>8-bar unlinked filter-cutoff envelope</strong> evolves over 8 bars while the notes repeat every bar — never static. Use <strong>odd/prime lengths</strong> (3, 5, 7 bars against a 1–2 bar clip) for Mullaert-style evolving phasing. Stack several at different lengths (cutoff 7 / reverb-send 5 / pan 3) for generative movement with zero automation lanes.</li>
+          <li><strong>Groove sauce:</strong> extract a groove off a swung hat loop and apply it <em>only to the bassline</em> at ~50–70% Timing → bass locks into the hat's pocket ("everything breathes together"). Keep <strong>Random low (5–15%)</strong> — humanizes without smearing the kick. Watch the <strong>Base</strong> value: wrong base = swing on the wrong subdivision.</li>
+          <li><strong>Splice "Search with Sound":</strong> drag a clip from his own session into the Splice panel → Splice returns loops that match his track's key + groove. Reverse-search instead of keyword-hunting. Auditions are tempo-synced and key-conformed before he commits.</li>
+        </ul>
+      </div>
+
+      <div class="log-sub">
+        <span class="slabel">Deberes</span>
+        <ul>
+          <li><strong>One Beat Per Day</strong> (Mathew Jonson / Freedom Engine): 15–45 min daily, one loop/idea, save it, move on. Quality irrelevant — it's the creative-state muscle. Folder <span class="mono" style="color:var(--gold-soft);">/one-beat-per-day/YYYY-MM-DD/</span>. Rule isn't 365/365 — it's <em>never more than 2 days without sitting down.</em></li>
+          <li>Bring one of those beats (or a backlog idea) to Class 2 with the rhythm started.</li>
+        </ul>
+      </div>
+
+      <div class="log-sub">
+        <span class="slabel">Hooks próxima clase (→ Class 2: kick + bass + sidechain)</span>
+        <ul>
+          <li>He now has a rhythm on a Drum Rack. Class 2 completes the rhythm half of A.02: choosing a kick that fits the bass, sidechain that doesn't <em>sound</em> like sidechain, groove from the simplest seed.</li>
+          <li>Tooling watch: confirm <strong>Bendi's Live edition</strong> (Standard vs Suite) — gates whether Max for Live devices are even loadable. Load-bearing before recommending any M4L.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- CLASS 2 — LOGGED -->
+    <div class="placeholder-card" style="border-color:var(--line);">
+      <div class="ph-code mono">✅ CLASS 2 · A.02c · 2026-06-11 · LOGGED</div>
+      <div class="ph-text">Diverged → dale vida al sonido: triggers (808→gate), audio + MIDI FX racks, Roar, sonido-como-personaje, interlocking de espacios. Verbal recap (no audio). Full entry → <code>class-log.md</code> Class 2. Student page updated (2-class switcher).</div>
+    </div>
+
+    <!-- CLASS 3 — LOGGED -->
+    <div class="placeholder-card" style="border-color:var(--line);">
+      <div class="ph-code mono">✅ CLASS 3 · 2026-07-13 · LOGGED (recorded)</div>
+      <div class="ph-text">Diverged again (Launchpad Mini firmware wall + Bendi brought 3 ideas) → <strong>homework review + effects/sends deep-dive</strong>: the "random vs flat" diagnosis → <strong>polyrhythm</strong>, <strong>Resonator</strong> (root+3/5/7/12 super-chord), <strong>return/send tracks</strong> (color FX = parallel comp), <strong>Freeze→pad</strong> (vocal tail), <strong>Grain Delay</strong> on hats (+ Utility bass-mono), <strong>saturation/Utility</strong>. Locked a <strong>direction: disco/psychedelic house</strong>. mlx-whisper transcript (~93 min). Full entry → <code>class-log.md</code> Class 3. Student page updated (3-class switcher). <strong>→ C4 Thu 07-16:</strong> gain staging → work the disco track; Envelope Follower; optional house-harmony mini-lesson.</div>
+    </div>
+
+    <!-- CLASS 4 PLACEHOLDER -->
+    <div class="placeholder-card">
+      <div class="ph-code mono">CLASS 4 · 2026-07-16 · GAIN STAGING + DISCO TRACK</div>
+      <div class="ph-text">Open with gain staging (kick ~−12 RMS, master −12/−6, no limiters) → work the disco/psychedelic track directly. Envelope Follower demo. Optional: musical side of house (chords/scales/progressions). Record audio → transcript → entry after the session.</div>
+    </div>
+  </section>
+
+  <!-- ===================== TEACHING MAP ===================== -->
+  <section class="panel" id="panel-map">
+    <span class="section-num">03 — Teaching Map</span>
+    <h2 class="block-title">Teaching <em>Map</em> <span style="font-size:13px;color:var(--ink-mute);">(internal)</span></h2>
+    <p class="panel-intro">
+      Felipe's surface: everything that <em>could</em> be taught, organized by theme — including new Ableton 12 territory worth refreshing/learning yourself, and the free Max for Live ecosystem.
+    </p>
+
+    <div class="legend">
+      <div class="legend-item"><span class="stat-pill covered">✅</span> covered</div>
+      <div class="legend-item"><span class="stat-pill planned">▶</span> planned (class #)</div>
+      <div class="legend-item"><span class="stat-pill refresh">◷</span> refresh-myself</div>
+      <div class="legend-item"><span class="stat-pill bonus">☆</span> bonus</div>
+    </div>
+
+    <div class="map-grid">
+      <!-- 1 -->
+      <div class="map-card">
+        <h3><span class="mc-num">1</span>Rhythm &amp; Drums</h3>
+        <ul>
+          <li><span class="stat-pill covered">✅</span><span>Drum Rack basics, building a rhythm with Splice samples <span class="cls">(C1)</span></span></li>
+          <li><span class="stat-pill covered">✅</span><span>Choke groups / choke mode <span class="cls">(C1)</span> — incl. choke-beyond-hats stutter trick <span class="stat-pill refresh">◷</span></span></li>
+          <li><span class="stat-pill covered">✅</span><span>Groove Pool — extract / apply / commit <span class="cls">(C1)</span></span></li>
+          <li><span class="stat-pill planned">▶</span><span>Kick selection vs bass, mono low end <span class="cls">(C2)</span></span></li>
+          <li><span class="stat-pill planned">▶</span><span>Sidechain — subtle vs stylistic pump <span class="cls">(C2)</span></span></li>
+          <li><span class="stat-pill bonus">☆</span><span><strong>MIDI Generator → Rhythm</strong> (12.0) — per-pad percussion generation, accents</span></li>
+          <li><span class="stat-pill bonus">☆</span><span><strong>Euclidean generator</strong> (12.0, M4L) — N hits over M steps, rotate for tension (classic techno polyrhythm)</span></li>
+          <li><span class="stat-pill bonus">☆</span><span>Drum Rack return chains (parallel punch/reverb-throw) <span class="stat-pill refresh">◷</span> · Drum Sampler one-shot device (12.1)</span></li>
+        </ul>
+      </div>
+
+      <!-- 2 -->
+      <div class="map-card">
+        <h3><span class="mc-num">2</span>Sound Design &amp; Synthesis</h3>
+        <ul>
+          <li><span class="stat-pill planned">▶</span><span>Tour of <em>his</em> synths — Vital · Hive · Repro <span class="cls">(C3)</span></span></li>
+          <li><span class="stat-pill planned">▶</span><span>Signature sounds (pad / character lead / texture) + secret-weapon FX rack <span class="cls">(C3)</span></span></li>
+          <li><span class="stat-pill refresh">◷</span><span><strong>Meld</strong> (12.1) — bi-timbral MPE synth, scale-quantizable osc → evolving drones</span></li>
+          <li><span class="stat-pill refresh">◷</span><span><strong>Granulator III</strong> (12.0, Suite) — capture audio → grain clouds, MPE grain mod</span></li>
+          <li><span class="stat-pill refresh">◷</span><span><strong>Roar</strong> (12.0, Suite) — multi-stage saturation/coloring, serial/parallel/multiband/mid-side/feedback; bus glue → howl drones</span></li>
+          <li><span class="stat-pill bonus">☆</span><span>"One knob is the song" — single hand-automated parameter as the hook</span></li>
+          <li><span class="stat-pill bonus">☆</span><span>Redux (native bitcrush, all editions) · Spectral Resonator (tuning-aware, 12.2)</span></li>
+        </ul>
+      </div>
+
+      <!-- 3 -->
+      <div class="map-card">
+        <h3><span class="mc-num">3</span>Harmony</h3>
+        <ul>
+          <li><span class="stat-pill refresh">◷</span><span>4-note chords &gt; triads, voice-leading, tension/release <span class="cls">(C4)</span></span></li>
+          <li><span class="stat-pill refresh">◷</span><span><strong>Key &amp; Scales / scale awareness</strong> (12.0) — diatonic writing, off-scale dimming</span></li>
+          <li><span class="stat-pill refresh">◷</span><span><strong>MIDI Generator → Stacks</strong> (12.0) — chords/progressions from scale in seconds</span></li>
+          <li><span class="stat-pill refresh">◷</span><span><strong>Transform → Strum</strong> (chord rolls) · <strong>Recombine</strong> (variations) · <strong>Span</strong> (legato/staccato)</span></li>
+          <li><span class="stat-pill bonus">☆</span><span><strong>Expressive Chords</strong> (12.2, MPE) — build progressions one key at a time</span></li>
+          <li><span class="stat-pill bonus">☆</span><span>Tuning systems / microtonal (Scala .scl import) — escape 12-TET <span class="stat-pill refresh">◷</span></span></li>
+        </ul>
+      </div>
+
+      <!-- 4 -->
+      <div class="map-card">
+        <h3><span class="mc-num">4</span>Arrangement</h3>
+        <ul>
+          <li><span class="stat-pill planned">▶</span><span>Loop → 5–6 min, tensión y resolución, energy curve <span class="cls">(C5)</span></span></li>
+          <li><span class="stat-pill planned">▶</span><span>Arrange-by-subtraction; commit sections to audio (anti-hoarding) <span class="cls">(C5)</span></span></li>
+          <li><span class="stat-pill refresh">◷</span><span><strong>MIDI Transform → Connect / Ornament / Chop / Time Warp</strong> — fills, grace notes, stutters, accel/rit</span></li>
+          <li><span class="stat-pill bonus">☆</span><span>Locators, Duplicate/Insert/Cut Time workflow</span></li>
+        </ul>
+      </div>
+
+      <!-- 5 -->
+      <div class="map-card">
+        <h3><span class="mc-num">5</span>Mixing</h3>
+        <ul>
+          <li><span class="stat-pill backhalf-pill bonus" style="visibility:hidden;">·</span><span>Gain staging, EQ quirúrgico, low-end management <span class="cls">(C6 — back half)</span></span></li>
+          <li><span class="stat-pill bonus" style="visibility:hidden;">·</span><span>Compresión con propósito, saturación, reverbs/delays sin embarrar <span class="cls">(C7)</span></span></li>
+          <li><span class="stat-pill bonus" style="visibility:hidden;">·</span><span>FabFilter Pro-Q3 / Pro-MB (he owns these), Valhalla, stock Live 12 reverb</span></li>
+          <li><span class="stat-pill bonus">☆</span><span><strong>Color Limiter</strong> (free Creative Extensions) for drum-bus glue · <strong>Re-Enveloper</strong> for transient reshape</span></li>
+          <li><span class="stat-pill bonus" style="visibility:hidden;">·</span><span>Pre-master + export for club/Spotify/WeTransfer <span class="cls">(C8)</span></span></li>
+        </ul>
+      </div>
+
+      <!-- 6 -->
+      <div class="map-card">
+        <h3><span class="mc-num">6</span>Workflow &amp; Capture</h3>
+        <ul>
+          <li><span class="stat-pill covered">✅</span><span>Take lanes + comping in Arrangement loop <span class="cls">(C1)</span> — Audition Mode, auto-fades <span class="stat-pill refresh">◷</span></span></li>
+          <li><span class="stat-pill covered">✅</span><span>"Versatile" idea track in Session View <span class="cls">(C1)</span></span></li>
+          <li><span class="stat-pill covered">✅</span><span>Clip envelopes Linked/Unlinked — polyrhythmic LFO trick <span class="cls">(C1)</span> <span class="stat-pill refresh">◷</span></span></li>
+          <li><span class="stat-pill covered">✅</span><span>Splice engine + "Search with Sound" <span class="cls">(C1)</span></span></li>
+          <li><span class="stat-pill refresh">◷</span><span><strong>Capture MIDI</strong> — retroactive grab, never lose a phrase</span></li>
+          <li><span class="stat-pill refresh">◷</span><span><strong>Bounce to New Track / in Place</strong> (12.2) — commit + CPU relief</span></li>
+          <li><span class="stat-pill bonus">☆</span><span><strong>Stem Separation</strong> (12.3, Suite) — isolate vocals/drums/bass/other from any clip</span></li>
+          <li><span class="stat-pill bonus">☆</span><span>Browser: custom tags, <strong>Similarity Search</strong>, Quick Tags (12.2)</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Ableton 12 new -->
+    <div class="info-block">
+      <h3>Ableton 12 — "new since 11, worth teaching + refreshing myself"</h3>
+      <div class="sub-note">Version timeline: 12.0 (Mar '24) · 12.1 (Oct '24) · 12.2 (Jun '25) · 12.3 (Nov '25) · 12.4 (May '26).</div>
+      <ul>
+        <li><strong>MIDI Transformations (12.0)</strong> — non-destructive, previewable: Arpeggiate · Chop · Connect · Glissando · LFO · Ornament · Quantize · Recombine · Span · Strum · Time Warp · Velocity Shaper. <em>The biggest workflow shift from 11 — the variation engine.</em></li>
+        <li><strong>MIDI Generators (12.0)</strong> — make MIDI from rules: Rhythm · Seed · Shape · Stacks · Euclidean.</li>
+        <li><strong>New devices</strong> — Roar (12.0) · Meld (12.1) · Granulator III (12.0) · Auto Shift (12.1) · Drum Sampler (12.1) · Auto Filter redesign w/ Vowel/DJ/Comb (12.2) · Auto Pan-Tremolo (12.3).</li>
+        <li><strong>Scale awareness + Tuning systems (12.0)</strong> · expanded note probability/chance.</li>
+        <li><strong>Stacked / multi-clip editing (12.0)</strong> · Mixer in Arrangement (12.0).</li>
+        <li><strong>Bounce to New Track / in Place (12.2)</strong> · <strong>Stem Separation (12.3, Suite)</strong> · <strong>Splice integration (12.3+)</strong>.</li>
+        <li><strong>Browser</strong> — custom tags, Similarity Search, Quick Tags (12.2), history.</li>
+      </ul>
+    </div>
+
+    <div class="accuracy-flag">
+      <span class="cr-label">⚠ Accuracy flags (caught in research)</span>
+      <p><strong>"Bite"</strong> and <strong>"Gentle Compressor"</strong> are NOT native Live devices. "Bite" = 3rd-party M4L bitcrusher; native bitcrush is <strong>Redux</strong>; native dynamics are Compressor / Glue Compressor / Multiband Dynamics ("Gentle Squeeze" is an old <em>preset</em> name). Don't teach these as native.</p>
+    </div>
+
+    <!-- Free Max for Live -->
+    <div class="callout-red">
+      <span class="cr-label">⚠ Load-bearing — Suite dependency</span>
+      <p>Max for Live requires Live <strong>Suite</strong> (or the ~$199 M4L add-on for Standard). <strong>Nothing below loads on Intro/Standard without that.</strong> Confirm Bendi's edition (Help → About) before recommending. Cheapest unlock if he's on Standard = the $199 M4L add-on (unlocks all community devices too).</p>
+    </div>
+
+    <div class="info-block">
+      <h3>Free Max for Live — for Bendi's budget</h3>
+      <p><strong>Best free official:</strong> <strong>Creative Extensions</strong> pack (free) — Melodic Steps (polyrhythmic step seq, the standout), Spectral Blur (ethereal pads), Color Limiter (bus glue), Re-Enveloper (transient reshape), Pitch Hack, Gated Delay, + Bass/Poli synths. <em>(Max for Live Essentials pack is discontinued; its devices were absorbed into Suite's core install.)</em></p>
+      <p style="color:var(--ink);font-weight:600;margin-top:6px;">Best free community (stock M4L unless noted):</p>
+      <ul>
+        <li><strong>LFO 2.0</strong> (Robert Henke) — the modulation backbone; v2.2.2 confirmed Live 12.2. <a href="https://www.roberthenke.com/technology/lfo.html" target="_blank" rel="noopener">roberthenke.com/technology/lfo.html</a></li>
+        <li><strong>EUCLIDIATOR</strong> — euclidean arpeggiator. maxforlive.com/library/device/7370</li>
+        <li><strong>Tombola Sequencer</strong> — physics-bowl generative melodies (OP-1 style). maxforlive.com/library/device/8201</li>
+        <li><strong>Turing Machine</strong> (ntrm free) — random looping sequencer, probability-locked. maxforlive.com/library/device/10129 <em>(the polished encoderaudio v5 is PAID — use the free one)</em></li>
+        <li><strong>Flechtwerk</strong> (trnr) — free port of Mutable <strong>Plaits</strong>, 16 synth models. trnr.gumroad.com/l/flechtwerk</li>
+        <li><strong>Duck Buddy</strong> (Slynk) — MIDI-keyed sidechain ducking, no kick-on-aux needed. slynk.gumroad.com/l/duckbuddy — <em>core house/techno pump</em></li>
+        <li><strong>Geometrum 02</strong> — BPM-reactive 3D visuals (ties to Felipe's live-visuals lane). maxforlive.com/library/device/13169</li>
+        <li><strong>Dillon Bastan free bundle</strong> (Fractal Filters, Spectral Attractors, Swarmalators, Image2Wavetable…) — experimental texture devices; <em>⚠ needs free full Max runtime, built for 10/11, mostly fine on 12 (verify per device).</em></li>
+      </ul>
+      <p class="rig-line"><strong>Minimal starter rig</strong> (all free beyond the M4L unlock): Creative Extensions + LFO 2.0 + EUCLIDIATOR + Tombola + Flechtwerk + Duck Buddy + Geometrum 02. Complete generative + modulation + FX + visuals.</p>
+    </div>
+
+    <!-- Curiosities -->
+    <div class="info-block">
+      <h3>Curiosities / refresh-myself shortlist</h3>
+      <ul class="curios">
+        <li>The full <strong>MIDI Transform/Generate</strong> panel — most underused power feature in 12; build a teaching demo set.</li>
+        <li><strong>Tuning systems</strong> — even if just to demo one microtonal scale and blow Bendi's mind.</li>
+        <li><strong>Granulator III</strong> real-time capture mode — record him talking, granulate it into a pad.</li>
+        <li><strong>Stem Separation</strong> (if Suite) — pull a groove off a reference loop live in class.</li>
+        <li><strong>Splice "Search with Sound"</strong> reverse-search — show it once, it sells itself.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===================== SHORTCUTS ===================== -->
+  <section class="panel" id="panel-shortcuts">
+    <span class="section-num">04 — Shortcuts</span>
+    <h2 class="block-title">Ableton Live 12 — <em>Cheatsheet</em> <span style="font-size:13px;color:var(--ink-mute);">(macOS)</span></h2>
+    <p class="panel-intro">
+      Verified against the official Live 12 Reference Manual. Windows differs only where noted (beyond ⌘→Ctrl / ⌥→Alt). <em>Hover (or tap) any chip for the explanation.</em>
+    </p>
+
+    <div class="sc-banner">
+      <span class="scb-label">⚠ #1 beginner gotcha</span>
+      <p>Single-letter shortcuts (B, K, S, C, O, Q, R, W, H…) only fire when the <strong>Computer MIDI Keyboard is OFF</strong> — toggle with <kbd class="sym">M</kbd>. If it's on, hold <kbd class="sym">⇧</kbd> + the letter. Some toggles also latch momentarily — hold ~500 ms, release to snap back.</p>
+    </div>
+
+    <div id="scGroups"></div>
+  </section>
+
+  <footer>
+    Generado por ARC <span class="sep">·</span> actualizado 2026-06-05 <span class="sep">·</span> fuente: projects/music-production/teaching/bendi/
+  </footer>
+
+</main>
+
+<!-- floating popup (single, repositioned via JS) -->
+<div class="sc-popup" id="scPopup" role="tooltip" aria-hidden="true"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- ciclo progress strip ---------- */
+  var ciclo = [
+    {label:"A.01", state:"done"},
+    {label:"A.02b", state:"done"},
+    {label:"A.03", state:"next"},
+    {label:"A.04", state:""},
+    {label:"B.05", state:""},
+    {label:"B.06", state:""},
+    {label:"B.07", state:""},
+    {label:"B.08", state:""}
+  ];
+  var strip = document.getElementById("cicloStrip");
+  ciclo.forEach(function(c){
+    var seg = document.createElement("div");
+    seg.className = "ciclo-seg" + (c.state ? " " + c.state : "");
+    var dot = document.createElement("div");
+    dot.className = "ciclo-dot" + (c.state ? " " + c.state : "");
+    var lab = document.createElement("div");
+    lab.className = "ciclo-label mono";
+    lab.textContent = c.label;
+    seg.appendChild(dot); seg.appendChild(lab);
+    strip.appendChild(seg);
+  });
+
+  /* ---------- tab switching ---------- */
+  var tabBtns = document.querySelectorAll(".tab-btn");
+  var panels = {
+    plan: document.getElementById("panel-plan"),
+    log: document.getElementById("panel-log"),
+    map: document.getElementById("panel-map"),
+    shortcuts: document.getElementById("panel-shortcuts")
+  };
+  tabBtns.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var t = btn.getAttribute("data-tab");
+      tabBtns.forEach(function(b){ b.classList.toggle("active", b === btn); });
+      Object.keys(panels).forEach(function(k){
+        panels[k].classList.toggle("active", k === t);
+      });
+      hidePopup();
+      window.scrollTo({top:0, behavior:"auto"});
+    });
+  });
+
+  /* ---------- shortcuts data ---------- */
+  var groups = [
+    {name:"Transport & Global", items:[
+      {combo:"Space", exp:"Play from the insert marker / stop if playing. Primary start-stop."},
+      {combo:"⇧Space", exp:"Continue from where you last stopped (don't jump back). Re-audition without losing your place."},
+      {combo:"⌥Space", exp:"Play the current selection and stop at its end. (Win: Ctrl+Space)"},
+      {combo:"F9", exp:"Toggle the global Record button."},
+      {combo:"⇧F9", exp:"Arm/disarm Arrangement Record. Punch into the timeline."},
+      {combo:"⌘⇧F9", exp:"Toggle Session Record — capture live clip launching into Session."},
+      {combo:"F10", exp:"Back to Arrangement — re-engage the linear timeline after Session clips overrode it."},
+      {combo:"O", exp:"Toggle metronome."},
+      {combo:"M", exp:"Toggle Computer MIDI Keyboard (QWERTY notes). Turn off when letter-shortcuts stop working."},
+      {combo:"F1–F8", exp:"Mute/unmute tracks 1–8 hands-free (supports momentary latching)."},
+      {combo:"⌃⌥⇧E", exp:"Audio engine on/off. Free the audio device for another app without quitting."},
+      {note:"Tap Tempo · Capture MIDI", noteExp:"Both unmapped in stock Live 12 — assign via Key Map mode (⌘K)."}
+    ]},
+    {name:"Editing", items:[
+      {combo:"⌘Z", exp:"Undo."},
+      {combo:"⌘⇧Z", exp:"Redo. (Win: Ctrl+Y)"},
+      {combo:"⌘X", exp:"Cut."},
+      {combo:"⌘C", exp:"Copy."},
+      {combo:"⌘V", exp:"Paste (paste lands at the insert marker in Arrangement)."},
+      {combo:"⌘D", exp:"Duplicate in place — the workhorse (clips, notes, scenes, devices)."},
+      {combo:"Delete", exp:"Delete selection / reset a focused parameter to default."},
+      {combo:"⌘R", exp:"Rename selected track/clip/scene/device (Tab → next item)."},
+      {combo:"⌘A", exp:"Select all (context-sensitive)."},
+      {combo:"⌘E", exp:"Split clip(s)/notes at the insert marker. Keep ⌘ held + ↑/↓ to change chop count."},
+      {combo:"⌘J", exp:"Consolidate time selection into one clip / Join MIDI notes."},
+      {combo:"⌘⇧J", exp:"Crop clip to selection, discarding outside audio/MIDI."},
+      {combo:"⌘⌥J", exp:"Fit selected notes to the time range."}
+    ]},
+    {name:"Mouse Drag / Gestures", items:[
+      {combo:"⌘ drag", exp:"Move a clip/event OFF the grid — hold ⌘ while dragging to ignore snapping. The clean way to nudge something just off the beat. (Win: Alt-drag)"},
+      {combo:"⌘ drag↕", exp:"On a MIDI note, drag up/down with ⌘ held to set its velocity right in the note editor — no velocity lane needed. (Win: Alt-drag)"},
+      {combo:"⌥ drag", exp:"Duplicate — drag a copy of the selected clip(s) or note(s) to a new spot. (Win: Ctrl-drag)"},
+      {combo:"⇧ drag", exp:"Fine resolution — high-precision dragging of any value (warp markers, breakpoints, fades, knobs)."},
+      {combo:"⌥ drag curve", exp:"On an automation segment between two breakpoints, drag to bend it into a curve."},
+      {combo:"⇧⌥ drag", exp:"Slide the audio under its warp markers inside a clip — move the waveform, keep the markers fixed. (Win: ⇧Alt-drag)"},
+      {combo:"⇧ drag bar", exp:"Drag a warped clip's title bar to time-stretch it."},
+      {combo:"⌘⌥ drag", exp:"Scroll the Arrangement/clip view left-right past the current selection. (Win: Ctrl+Alt-drag)"},
+      {combo:"drag edge", exp:"Drag a MIDI note's left/right edge (no modifier) to change its length."}
+    ]},
+    {name:"Session View", items:[
+      {combo:"Enter", exp:"Launch the selected clip/slot."},
+      {combo:"⌘⇧M", exp:"Insert an empty MIDI clip — start writing without dragging anything. Huge daily time-saver."},
+      {combo:"⌘I", exp:"Insert a scene below the selection."},
+      {combo:"⌘⇧I", exp:"Insert a captured scene (snapshot currently-playing clips)."},
+      {combo:"⌘E", exp:"Add/remove a Stop button in the slot."},
+      {combo:"⌘Enter", exp:"Stop the clip playing in that track."},
+      {combo:"0", exp:"Deactivate/reactivate the selected clip (per-clip on/off)."},
+      {combo:"Page Up/Down", exp:"Jump scene selection 8 at a time."}
+    ]},
+    {name:"Arrangement View", items:[
+      {combo:"Tab", exp:"Toggle Arrangement ↔ Session."},
+      {combo:"⌘L", exp:"Toggle the Loop Brace over the selection."},
+      {combo:"⌘⇧L", exp:"Select the material under the Loop Brace."},
+      {combo:"⌘I", exp:"Insert Silence — push everything after the selection right by its length. Open a gap for a new section."},
+      {combo:"⌘⇧X", exp:"Cut Time — remove the range, pull later material left."},
+      {combo:"⌘⇧V", exp:"Paste Time — insert cut/copied time, shift later material right."},
+      {combo:"⌘⇧D", exp:"Duplicate Time — \"repeat this whole section\" across all tracks."},
+      {combo:"⌘⇧Delete", exp:"Delete Time — delete range and close the gap."},
+      {combo:"R", exp:"Reverse the selected audio clip. Quick risers/fills."},
+      {combo:"Z", exp:"Zoom to the time selection."},
+      {combo:"X", exp:"Zoom back out."},
+      {combo:"⌘⌥F", exp:"Create a fade/crossfade on selected clips. Fast pop-removal + transitions."}
+    ]},
+    {name:"MIDI / Note Editing", items:[
+      {combo:"⌘A", exp:"Select all notes."},
+      {combo:"⌘⇧A", exp:"Invert the selection."},
+      {combo:"⌥drag", exp:"Copy notes by dragging. (Win: Ctrl-drag)"},
+      {combo:"B", exp:"Toggle Draw Mode (pencil) — paint/step-draw notes."},
+      {combo:"K", exp:"Highlight the active scale (dim off-scale rows). Stay in key."},
+      {combo:"↑/↓", exp:"Transpose a semitone."},
+      {combo:"⇧↑/↓", exp:"Transpose an octave."},
+      {combo:"⌥↑/↓", exp:"Select next/previous note by pitch."},
+      {combo:"⌥←/→", exp:"Select by time within a pitch row."},
+      {combo:"⌘U", exp:"Quantize to the current setting."},
+      {combo:"⌘⇧U", exp:"Open Quantize Settings (grid/strength/swing)."},
+      {combo:"⌘↑/↓", exp:"Adjust velocity."},
+      {combo:"⌘⇧↑/↓", exp:"Adjust velocity deviation (humanize range)."},
+      {combo:"⌘⌥↑/↓", exp:"Adjust Chance (per-note probability) — Live 12 generative feel."},
+      {combo:"0–127 + Enter", exp:"Type a number then Enter to set selected notes to an exact velocity."},
+      {combo:"⌘J", exp:"Join notes into one."},
+      {combo:"⌘⌥J", exp:"Fit notes to time range."},
+      {combo:"W", exp:"Zoom-to-fit clip content width."},
+      {combo:"H", exp:"Zoom-to-fit clip content height."},
+      {combo:"⌘⌥E", exp:"Toggle full-size Clip/MIDI editor."}
+    ]},
+    {name:"Warping & Audio", items:[
+      {combo:"⌘I", exp:"Insert a Warp Marker."},
+      {combo:"⌘⇧I", exp:"Insert a transient marker."},
+      {combo:"←/→", exp:"Move the selected Warp Marker."},
+      {combo:"⌘←/→", exp:"Select previous/next marker."},
+      {combo:"W / H", exp:"Fit sample width / height."},
+      {combo:"Z / X", exp:"Zoom to / from selection."},
+      {note:"÷2 / ×2 clip tempo", noteExp:"Buttons in the Clip box; map via ⌘K."}
+    ]},
+    {name:"Automation & Envelopes", items:[
+      {combo:"A", exp:"Toggle Automation Mode in Arrangement (show/edit lanes)."},
+      {combo:"B", exp:"Draw Mode — pencil envelope steps."},
+      {combo:"⌥drag", exp:"Curve an automation segment (hold ⌥ on a segment, drag to bend). (Win: Alt)"},
+      {combo:"⇧drag", exp:"Finer resolution on a breakpoint."}
+    ]},
+    {name:"Devices & Browser", items:[
+      {combo:"⌘G", exp:"Group devices into a Rack (Instrument/Audio/Drum). Core sound-design move."},
+      {combo:"⌘⇧G", exp:"Ungroup a Rack."},
+      {combo:"⌘⌥⇧F", exp:"Freeze/unfreeze the track (render to free CPU). (Flatten = context-menu, no key.)"},
+      {combo:"Q", exp:"Hot-Swap Mode — audition browser replacements live."},
+      {combo:"⌘⌥P", exp:"Show/hide floating plug-in window (hold ⌘ + click to open several)."},
+      {combo:"⌘⌥B", exp:"Show/hide Browser."},
+      {combo:"⌥5", exp:"Focus into the Browser."},
+      {combo:"⌘F", exp:"Search in the Browser."},
+      {combo:"⌘[", exp:"Browser history back."},
+      {combo:"⌘]", exp:"Browser history forward."},
+      {combo:"Enter", exp:"Load the selected browser item."}
+    ]},
+    {name:"Mixer", items:[
+      {combo:"⌘⌥M", exp:"Show/hide the Mixer in Session."},
+      {combo:"S", exp:"Solo selected track."},
+      {combo:"C", exp:"Arm (record-enable)."},
+      {combo:"0", exp:"Mute."},
+      {combo:"⌘⌥I", exp:"Show/hide In-Out section."},
+      {combo:"⌘⌥S", exp:"Show/hide Sends section."},
+      {combo:"⌘⌥O", exp:"Show/hide Overview section."}
+    ]},
+    {name:"View & Navigation", items:[
+      {combo:"Tab", exp:"Session ↔ Arrangement."},
+      {combo:"⇧Tab", exp:"Device ↔ Clip detail. (or F12)"},
+      {combo:"⌘F", exp:"Full Screen. (Win: F11)"},
+      {combo:"⌘⇧W", exp:"Toggle Second Window (two-monitor: Session on one, Arrangement on the other)."},
+      {combo:"⌘⌥3", exp:"Show/hide Clip View detail."},
+      {combo:"⌘⌥4", exp:"Show/hide Device View detail."},
+      {combo:"⌥1…8", exp:"Focus an area (1 Session · 2 Arrangement · 3 Clip · 4 Device · 5 Browser · 6 Groove Pool · 7 Learn · 8 Clip panel)."},
+      {combo:"+ / -", exp:"Zoom time ruler."},
+      {combo:"⌘+ / ⌘-", exp:"Zoom whole UI."},
+      {combo:"⌥⇧F", exp:"Follow playback (keep playhead on screen)."},
+      {combo:"⌘,", exp:"Settings/Preferences."},
+      {combo:"Esc", exp:"Cancel / close dialog / jump focus to track title."}
+    ]},
+    {name:"Power-User Gems", items:[
+      {combo:"⌘⇧M", exp:"Insert empty MIDI clip — start an idea instantly."},
+      {combo:"⌘B", exp:"Bounce selected clip(s) to a new audio track (in-the-box resample)."},
+      {combo:"⌘⌥V", exp:"Paste bounced audio in place."},
+      {combo:"⌘1", exp:"Narrow the grid."},
+      {combo:"⌘2", exp:"Widen the grid."},
+      {combo:"⌘3", exp:"Triplet grid."},
+      {combo:"⌘4", exp:"Snap to grid on/off."},
+      {combo:"⌘5", exp:"Fixed vs zoom-adaptive grid."},
+      {combo:"⌘6…⌘0", exp:"Launch quantization: 1/16 · 1/8 · 1/4 · 1 Bar · Off."},
+      {combo:"⌘T", exp:"Insert Audio track."},
+      {combo:"⌘⇧T", exp:"Insert MIDI track."},
+      {combo:"⌘⌥T", exp:"Insert Return track."},
+      {combo:"⌘⌃U", exp:"Show Take Lanes (audio comping)."},
+      {combo:"⌘⌃↑/↓", exp:"Swap main take with next/previous."},
+      {combo:"K", exp:"Scale highlight (with Live 12 scale-aware mode = effortless diatonic writing)."}
+    ]}
+  ];
+
+  /* tokens that should render as their own keycap symbol */
+  var SYMBOLS = {"⌘":1,"⌥":1,"⇧":1,"⌃":1};
+
+  /* split a combo string into render tokens */
+  function tokenize(combo){
+    var tokens = [];
+    var i = 0;
+    while (i < combo.length){
+      var ch = combo[i];
+      if (SYMBOLS[ch]){
+        tokens.push({t:ch, sym:true});
+        i++;
+        continue;
+      }
+      if (ch === " "){ i++; continue; }
+      if (ch === "+"){ tokens.push({t:"+", plus:true}); i++; continue; }
+      /* accumulate a word (letters, digits, slashes, dashes, arrows, dots) until a symbol or + */
+      var word = "";
+      while (i < combo.length && !SYMBOLS[combo[i]] && combo[i] !== "+"){
+        word += combo[i];
+        i++;
+      }
+      word = word.trim();
+      if (word.length) tokens.push({t:word, sym:false});
+    }
+    return tokens;
+  }
+
+  var scGroupsEl = document.getElementById("scGroups");
+  var popup = document.getElementById("scPopup");
+  var openChip = null;
+
+  groups.forEach(function(g){
+    var gEl = document.createElement("div");
+    gEl.className = "sc-group";
+    var lab = document.createElement("div");
+    lab.className = "sc-group-label";
+    lab.textContent = g.name;
+    gEl.appendChild(lab);
+
+    var row = document.createElement("div");
+    row.className = "sc-chips";
+
+    g.items.forEach(function(it){
+      if (it.note){
+        var n = document.createElement("div");
+        n.className = "sc-note-inline";
+        n.innerHTML = "<span class=\"mono\">" + esc(it.note) + "</span> — " + esc(it.noteExp);
+        row.appendChild(n);
+        return;
+      }
+      var chip = document.createElement("div");
+      chip.className = "sc-chip";
+      chip.setAttribute("tabindex","0");
+      var toks = tokenize(it.combo);
+      toks.forEach(function(tk){
+        if (tk.plus){
+          var plus = document.createElement("span");
+          plus.style.color = "var(--ink-mute)";
+          plus.style.fontSize = "11px";
+          plus.textContent = "+";
+          chip.appendChild(plus);
+          return;
+        }
+        var kbd = document.createElement("kbd");
+        if (tk.sym) kbd.className = "sym";
+        kbd.textContent = tk.t;
+        chip.appendChild(kbd);
+      });
+      chip.dataset.combo = it.combo;
+      chip.dataset.exp = it.exp;
+
+      chip.addEventListener("mouseenter", function(){ if (!("ontouchstart" in window) && !isSticky) showPopup(chip, false); });
+      chip.addEventListener("mouseleave", function(){ if (!isSticky && hoverChip === chip) hidePopup(); });
+      chip.addEventListener("focus", function(){ if (!isSticky) showPopup(chip, false); });
+      chip.addEventListener("blur", function(){ if (!isSticky && hoverChip === chip) hidePopup(); });
+      chip.addEventListener("click", function(e){
+        e.stopPropagation();
+        if (isSticky && openChip === chip){ hidePopup(); }
+        else { showPopup(chip, true); }
+      });
+
+      row.appendChild(chip);
+    });
+
+    gEl.appendChild(row);
+    scGroupsEl.appendChild(gEl);
+  });
+
+  function esc(s){
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  var isSticky = false;
+  var hoverChip = null;
+
+  function showPopup(chip, sticky){
+    /* clear previous open-state marker */
+    if (openChip && openChip !== chip) openChip.classList.remove("open");
+    if (hoverChip && hoverChip !== chip) hoverChip.classList.remove("open");
+
+    popup.innerHTML = "<span class=\"pp-combo\">" + esc(chip.dataset.combo) + "</span>" + esc(chip.dataset.exp);
+    popup.setAttribute("aria-hidden","false");
+    chip.classList.add("open");
+
+    if (sticky){
+      isSticky = true;
+      openChip = chip;
+      hoverChip = null;
+    } else {
+      /* hover/focus — transient, does not override a sticky popup */
+      hoverChip = chip;
+    }
+
+    popup.classList.add("show");
+    position(chip);
+  }
+
+  function position(chip){
+    /* must measure after content set */
+    var pr = popup.getBoundingClientRect();
+    var cr = chip.getBoundingClientRect();
+    var pad = 10;
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+
+    /* prefer below; flip above if not enough room */
+    var top = cr.bottom + 8;
+    if (top + pr.height > vh - pad){
+      top = cr.top - pr.height - 8;
+    }
+    if (top < pad) top = pad;
+
+    /* horizontal: align left edge to chip, clamp into viewport */
+    var left = cr.left;
+    if (left + pr.width > vw - pad){
+      left = vw - pad - pr.width;
+    }
+    if (left < pad) left = pad;
+
+    popup.style.top = top + "px";
+    popup.style.left = left + "px";
+  }
+
+  function hidePopup(){
+    popup.classList.remove("show");
+    popup.setAttribute("aria-hidden","true");
+    document.querySelectorAll(".sc-chip.open").forEach(function(c){ c.classList.remove("open"); });
+    openChip = null;
+    hoverChip = null;
+    isSticky = false;
+  }
+
+  /* tap elsewhere closes sticky popup */
+  document.addEventListener("click", function(){ if (isSticky) hidePopup(); });
+  /* reposition on scroll/resize while a sticky popup is open */
+  window.addEventListener("scroll", function(){ if (isSticky && openChip) position(openChip); }, {passive:true});
+  window.addEventListener("resize", function(){ if (isSticky && openChip) position(openChip); });
+  window.addEventListener("keydown", function(e){ if (e.key === "Escape") hidePopup(); });
+
+})();
+</script>
+
+</body>
+</html>

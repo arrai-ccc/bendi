@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bendi · Clase 3 · 14 Jul</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0c0b0a; --bg-card:#141319; --bg-elev:#1a1820;
+    --ink:#ece6d6; --ink-soft:#b8b0a3; --ink-mute:#6e6a60;
+    --gold:#c79a5f; --gold-glow:#e3a86b; --red:#b85c4a;
+    --green:#7ab87a; --blue:#6f8aa8;
+    --line:rgba(199,154,95,0.18);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--ink); font-family:'Inter',sans-serif; font-size:15px; line-height:1.65; -webkit-font-smoothing:antialiased; padding-bottom:80px; }
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:0.045;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+
+  .topbar { position:sticky; top:0; z-index:500; background:rgba(12,11,10,0.94); backdrop-filter:blur(14px); border-bottom:1px solid var(--line); padding:16px 28px; display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  .topbar-title { font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:500; letter-spacing:-0.02em; }
+  .topbar-title em { font-style:normal; color:var(--gold); }
+  .tag { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.16em; text-transform:uppercase; padding:4px 9px; border-radius:3px; border:1px solid rgba(184,92,74,0.4); color:var(--red); }
+  .topbar-sub { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-mute); letter-spacing:0.12em; text-transform:uppercase; margin-top:6px; }
+
+  .wrap { max-width:860px; margin:0 auto; padding:40px 28px 0; }
+
+  h2 { font-family:'Space Grotesk',sans-serif; font-size:12px; font-weight:500; text-transform:uppercase; letter-spacing:0.18em; color:var(--ink-mute); margin-bottom:16px; padding-bottom:8px; border-bottom:1px solid var(--line); }
+
+  .section { margin-bottom:40px; }
+
+  .focus-box { background:var(--bg-card); border:1px solid var(--gold); border-left:3px solid var(--gold); padding:18px 22px; border-radius:4px; margin-bottom:32px; }
+  .focus-box p { font-size:16px; line-height:1.55; }
+  .focus-box p em { font-style:normal; color:var(--gold); font-weight:500; }
+  .focus-box small { display:block; margin-top:8px; font-size:13px; color:var(--ink-soft); }
+
+  .tl { display:grid; gap:8px; }
+  .tl-row { display:grid; grid-template-columns:90px 1fr; gap:12px; background:var(--bg-card); border:1px solid var(--line); border-radius:4px; padding:14px 18px; }
+  .tl-row.highlight { border-color:rgba(199,154,95,0.35); background:var(--bg-elev); }
+  .tl-time { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--gold); padding-top:2px; }
+  .tl-body strong { font-family:'Space Grotesk',sans-serif; font-size:14.5px; font-weight:500; color:var(--ink); display:block; margin-bottom:3px; }
+  .tl-body p { font-size:13.5px; color:var(--ink-soft); }
+
+  .concept-box { background:var(--bg-card); border:1px solid var(--line); border-radius:4px; padding:20px 22px; }
+  .concept-box h3 { font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:500; margin-bottom:10px; color:var(--ink); }
+  .concept-box ul { list-style:none; display:grid; gap:8px; }
+  .concept-box ul li { font-size:13.5px; color:var(--ink-soft); padding-left:16px; position:relative; }
+  .concept-box ul li::before { content:'·'; position:absolute; left:0; color:var(--gold); }
+
+  .machine-box { background:var(--bg-elev); border:1px solid rgba(122,184,122,0.3); border-left:3px solid var(--green); border-radius:4px; padding:20px 22px; }
+  .machine-box h3 { font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:500; color:var(--green); margin-bottom:12px; }
+  .machine-box p { font-size:13.5px; color:var(--ink-soft); margin-bottom:10px; }
+  .machine-box .step { background:var(--bg-card); border:1px solid var(--line); border-radius:3px; padding:12px 16px; margin-bottom:8px; font-size:13.5px; display:grid; grid-template-columns:24px 1fr; gap:8px; }
+  .machine-box .step-num { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--green); padding-top:1px; }
+  .machine-box .step p { margin:0; }
+  .machine-box .rule { background:rgba(122,184,122,0.07); border:1px solid rgba(122,184,122,0.2); border-radius:3px; padding:10px 14px; font-size:13px; color:var(--green); font-style:italic; margin-top:12px; }
+
+  .ref-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .ref-card { background:var(--bg-card); border:1px solid var(--line); border-radius:4px; padding:14px 16px; }
+  .ref-card .ref-label { font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.14em; color:var(--ink-mute); margin-bottom:6px; }
+  .ref-card p { font-size:13px; color:var(--ink-soft); }
+  .ref-card strong { color:var(--ink); }
+
+  .hw-box { background:var(--bg-card); border:1px solid rgba(111,138,168,0.3); border-left:3px solid var(--blue); border-radius:4px; padding:16px 20px; }
+  .hw-box h3 { font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:500; color:var(--blue); margin-bottom:10px; }
+  .hw-box ul { list-style:none; display:grid; gap:8px; }
+  .hw-box ul li { font-size:13.5px; color:var(--ink-soft); padding-left:16px; position:relative; }
+  .hw-box ul li::before { content:'→'; position:absolute; left:0; color:var(--blue); font-size:11px; top:2px; }
+
+  .teacher-note { background:rgba(184,92,74,0.06); border:1px solid rgba(184,92,74,0.2); border-radius:4px; padding:14px 18px; font-size:13px; color:var(--ink-soft); font-style:italic; }
+  .teacher-note strong { color:var(--red); font-style:normal; }
+
+  @media(max-width:600px){ .ref-grid{grid-template-columns:1fr;} .tl-row{grid-template-columns:70px 1fr;} }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="topbar-title">Bendi · <em>Clase 3</em></div>
+    <div class="topbar-sub">Lunes 14 Jul 2026 · 19:00 · Estudio</div>
+  </div>
+  <span class="tag">Interno</span>
+</div>
+
+<div class="wrap">
+
+  <div class="focus-box">
+    <p><em>Tema: De loop a canción.</em> Energía como forma — cómo una pista construye y libera tensión.<br>Actividad de máquina: Launchpad como beat machine.</p>
+    <small>Gear: Launchpad Mini + piano. No es mucho — es suficiente para lo de hoy. El Launchpad va a ser la estrella de la actividad.</small>
+  </div>
+
+  <!-- AGENDA -->
+  <div class="section">
+    <h2>Estructura — 90 min</h2>
+    <div class="tl">
+      <div class="tl-row">
+        <div class="tl-time">0:00 – 0:15</div>
+        <div class="tl-body">
+          <strong>Escucha + check-in</strong>
+          <p>¿Trabajó algo desde la clase 2? Que lo ponga. Sin comentar todavía — solo escuchar. ¿Qué hizo bien? ¿Qué lo frustró? Dejarlo hablar.</p>
+        </div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-time">0:15 – 0:30</div>
+        <div class="tl-body">
+          <strong>Concepto: La energía como forma</strong>
+          <p>Enseñarle a leer la vista de Arrangement. Un track tiene una forma — sube, baja, tensiona, libera. Mostrar un track de referencia en Arrangement View. Señalar dónde está la tensión y dónde la resolución.</p>
+        </div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-time">0:30 – 1:00</div>
+        <div class="tl-body">
+          <strong>Work session: hacer que su loop vaya a algún lado</strong>
+          <p>Tomar su loop de la clase anterior (o uno nuevo). Añadir una sección más — aunque sea rough. Intro → verse → drop, o A → B → A. El objetivo: que empiece y termine diferente de donde empezó. Un solo cambio estructural concreto.</p>
+        </div>
+      </div>
+      <div class="tl-row highlight">
+        <div class="tl-time">1:00 – 1:20</div>
+        <div class="tl-body">
+          <strong>🎛 Actividad: Launchpad como beat machine</strong>
+          <p>Ver sección abajo → setup + ejercicio de 20 min. Paleta diferente, mismo cerebro.</p>
+        </div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-time">1:20 – 1:30</div>
+        <div class="tl-body">
+          <strong>Cierre + tarea</strong>
+          <p>¿Qué se lleva? Una cosa concreta para practicar antes del jueves. Qué traer a la clase 4.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONCEPTO -->
+  <div class="section">
+    <h2>El concepto central — energía como forma</h2>
+    <div class="concept-box">
+      <h3>Lo que hay que transmitir</h3>
+      <ul>
+        <li>Un loop es una frase. Una canción es una conversación. Las conversaciones tienen tensión, sorpresa, resolución.</li>
+        <li>La vista de Arrangement es el mapa de energía del track. Aprenderlo a leer es aprender a pensar como productor, no como coleccionista de samples.</li>
+        <li>No necesita más elementos — necesita más estructura con los que ya tiene. Quitar es tan poderoso como añadir.</li>
+        <li>Un breakdown (cuando todo cae) vale más que 16 barras de fullness. El contraste hace el drop.</li>
+        <li>Herramientas para crear energía sin añadir nada: automatización de filtro, silenciar pistas, delay throw, pitch riser.</li>
+      </ul>
+    </div>
+    <div class="teacher-note" style="margin-top:12px;">
+      <strong>Nota de profesor:</strong> Si Bendi trae algo que absorbe la hora de trabajo, déjalo ir. El concepto puede entrar de otra forma. Lo que no puede faltar es la actividad del Launchpad — es el momento nuevo.
+    </div>
+  </div>
+
+  <!-- REFERENCIAS -->
+  <div class="section">
+    <h2>Referencias para la sesión</h2>
+    <div class="ref-grid">
+      <div class="ref-card">
+        <div class="ref-label">Para mostrar — Arrangement View</div>
+        <p>Abre cualquier track tuyo en Arrangement View. Señala los drops, los breakdowns, dónde entra el kick, dónde cae todo. <strong>5 minutos de lectura visual ya es el concepto.</strong></p>
+      </div>
+      <div class="ref-card">
+        <div class="ref-label">Si quiere un referente externo</div>
+        <p>Cualquier track de Fred Again, Ben Böhmer, o Disclosure — todos tienen shapes claras y legibles. <strong>No elegir algo con demasiada complejidad.</strong></p>
+      </div>
+      <div class="ref-card">
+        <div class="ref-label">Para el ejercicio de arranque</div>
+        <p>El loop que hiciste/hizo en clase 2. Si no hay nada guardado, empezar de 8 barras simples (kick-snare-bass-synth). <strong>La estructura importa más que el sonido hoy.</strong></p>
+      </div>
+      <div class="ref-card">
+        <div class="ref-label">El piano</div>
+        <p>Si quiere explorar algo melódico durante el work session, el piano está ahí. Úsalo para demostrar tensión/resolución si el concepto no aterriza en el DAW. <strong>Intervalo de segunda mayor = tensión. Resuelve a la tónica.</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIVIDAD LAUNCHPAD -->
+  <div class="section">
+    <h2>Actividad de máquina — Launchpad Mini</h2>
+    <div class="machine-box">
+      <h3>🎛 Launchpad como Beat Machine — 20 min</h3>
+      <p>El objetivo no es hacer un beat perfecto. Es tocar música desde otro lugar — sin pantalla en el centro, con las manos. Palette diferente, mismo cerebro.</p>
+
+      <div class="step">
+        <div class="step-num">01</div>
+        <p><strong style="color:var(--ink);">Setup</strong> — Abrir Ableton en Session View. Crear un Drum Rack en un canal MIDI. Asignar el Launchpad como controlador. 8 pads mapeados: kick · snare · hi-hat cerrado · hi-hat abierto · clap · perc 1 · perc 2 · perc 3. Cargar samples concretos en cada pad (puedes elegirlos tú antes de la clase).</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <p><strong style="color:var(--ink);">Regla del juego</strong> — Activar el clip recording en un loop de 2 barras (8 beats a 120-130 BPM según el vibe). Bendi graba libremente todos los pads. Llena el espacio.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <p><strong style="color:var(--ink);">El constraint</strong> — Una vez grabado: empieza a quitar. Mute un pad. Escucha. Mute otro. ¿Dónde está el groove? El objetivo es llegar a 4 elementos que juntos suenan mejor que los 8.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <p><strong style="color:var(--ink);">Tu turno</strong> — Tú tocas el mismo loop con tu interpretación. Sin mostrarle el patrón antes — que escuche la diferencia. Deja que identifique qué hiciste diferente.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">05</div>
+        <p><strong style="color:var(--ink);">Conectar</strong> — Ese beat que hizo: ¿cómo entraría en su track de hoy? ¿Lo reemplaza al existente? ¿Va en la sección B? Un momento de integración antes de cerrar.</p>
+      </div>
+
+      <div class="rule">"Llena todos los pads. Luego empieza a borrar hasta que solo quede lo que tiene que estar."</div>
+    </div>
+  </div>
+
+  <!-- TAREA -->
+  <div class="section">
+    <h2>Tarea para el jueves</h2>
+    <div class="hw-box">
+      <h3>Para clase 4 (Jue 17 Jul)</h3>
+      <ul>
+        <li>Extender el track de hoy por una sección más en casa — aunque sea rough. Intro → sección A → sección B mínimo.</li>
+        <li>Escuchar 3 tracks de referencia en el género que más le gusta y anotar mentalmente dónde cambia la energía. No hace falta que lo escriba — solo prestarle atención.</li>
+        <li>Si puede, explorar el Launchpad solo — sin objetivo de hacer algo "bueno." Que juegue.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- CLASE 4 SEED -->
+  <div class="section">
+    <h2>Semilla — Clase 4 (Jueves 17 Jul)</h2>
+    <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:4px;padding:18px 20px;font-size:13.5px;color:var(--ink-soft);">
+      <p>Seguir donde terminó la clase 3. <strong style="color:var(--ink);">Si arrangement fue el click:</strong> profundizar en transiciones y tensión — filtrado automático, builds, risers. <strong style="color:var(--ink);">Si el Launchpad fue lo más vivo:</strong> sesión completa de beatmaking conectada a su track. Siempre seguir su energía, no el temario. La clase 4 la diseñamos después de ver cómo fue la 3.</p>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

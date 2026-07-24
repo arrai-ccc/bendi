@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dissect — Jimpster & Matt Masters - Dub Come Down</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Azeret+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060606;
+    --bg-2: #0d0d0d;
+    --bg-3: #161616;
+    --ink: #efe9e0;
+    --ink-dim: #8a847b;
+    --ink-faint: #4a463f;
+    --red: #8b2020;
+    --red-glow: #c43838;
+    --warm: #e8b87a;
+    --line: #211f1c;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: 'Azeret Mono', monospace; font-size: 13px; line-height: 1.5; }
+  body {
+    background-image:
+      radial-gradient(circle at 20% 0%, rgba(139,32,32,0.06) 0%, transparent 50%),
+      radial-gradient(circle at 80% 100%, rgba(232,184,122,0.03) 0%, transparent 50%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+  /* Grain */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.35'/></svg>");
+    opacity: 0.08; pointer-events: none; z-index: 1000; mix-blend-mode: overlay;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 56px 32px 96px; position: relative; z-index: 1; }
+
+  /* Header */
+  header { border-bottom: 1px solid var(--line); padding-bottom: 28px; margin-bottom: 32px; }
+  .label { font-family: 'Azeret Mono'; font-size: 10px; letter-spacing: 0.2em; color: var(--ink-faint); text-transform: uppercase; }
+  h1 { font-family: 'Bebas Neue', sans-serif; font-size: 64px; line-height: 1; margin: 8px 0 6px; letter-spacing: 0.02em; }
+  .subhead { color: var(--ink-dim); font-size: 13px; }
+  .quick-stats { display: flex; gap: 32px; margin-top: 24px; flex-wrap: wrap; }
+  .stat { display: flex; flex-direction: column; gap: 4px; }
+  .stat .v { font-family: 'Bebas Neue'; font-size: 32px; line-height: 1; color: var(--ink); }
+  .stat .v.red { color: var(--red-glow); }
+  .stat .l { font-size: 10px; letter-spacing: 0.18em; color: var(--ink-faint); text-transform: uppercase; }
+
+  /* Sections */
+  section { margin: 40px 0; }
+  h2 { font-family: 'Bebas Neue'; font-size: 24px; letter-spacing: 0.08em; margin: 0 0 16px; color: var(--ink); }
+  h2::before { content: '◢ '; color: var(--red); font-size: 16px; }
+
+  /* Cards */
+  .card { background: var(--bg-2); border: 1px solid var(--line); padding: 22px; border-radius: 2px; }
+  .card.red-edge { border-left: 2px solid var(--red); }
+  .card.warm-edge { border-left: 2px solid var(--warm); }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+  .headline { font-family: 'Bebas Neue'; font-size: 28px; line-height: 1.2; color: var(--warm); padding: 24px; background: linear-gradient(135deg, var(--bg-2), var(--bg-3)); border-left: 3px solid var(--warm); }
+  .diagnosis { color: var(--ink); font-size: 14px; line-height: 1.7; }
+
+  /* Section timeline */
+  .timeline { display: flex; height: 56px; gap: 1px; background: var(--line); margin: 12px 0 8px; border: 1px solid var(--line); }
+  .seg { display: flex; align-items: flex-end; justify-content: center; padding: 4px; font-size: 9px; color: var(--ink-dim); position: relative; cursor: default; transition: transform 0.15s; }
+  .seg:hover { transform: scaleY(1.08); z-index: 5; }
+  .seg.low { background: #1a1a1a; }
+  .seg.mid { background: #2a2118; }
+  .seg.high { background: #5a2818; }
+  .seg.peak { background: #8b2020; color: #fff; }
+  .seg .secLabel { position: absolute; bottom: 4px; opacity: 0.7; }
+  .timeline-axis { display: flex; justify-content: space-between; color: var(--ink-faint); font-size: 9px; padding: 0 2px; }
+
+  /* Energy curve */
+  .energy-svg { width: 100%; height: 100px; display: block; }
+
+  /* Chord progression */
+  .chord-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin-top: 12px; }
+  .chord-cell { background: var(--bg-3); border: 1px solid var(--line); padding: 10px 8px; text-align: center; border-radius: 2px; }
+  .chord-cell .c { font-family: 'Bebas Neue'; font-size: 18px; color: var(--ink); letter-spacing: 0.04em; }
+  .chord-cell .c.min { color: var(--warm); }
+  .chord-cell .t { font-size: 9px; color: var(--ink-faint); margin-top: 4px; }
+
+  .histogram-row { display: flex; align-items: center; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .histogram-row:last-child { border-bottom: none; }
+  .histogram-bar { flex: 1; height: 12px; background: var(--bg-3); border-radius: 1px; overflow: hidden; }
+  .histogram-bar-fill { height: 100%; background: linear-gradient(90deg, var(--red), var(--warm)); }
+  .histogram-chord { font-family: 'Bebas Neue'; font-size: 16px; width: 48px; }
+  .histogram-time { font-size: 10px; color: var(--ink-dim); width: 60px; text-align: right; }
+
+  /* Sound design table */
+  .sd-row { display: grid; grid-template-columns: 110px 1fr 1fr; gap: 18px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .sd-row:last-child { border-bottom: none; }
+  .sd-element { font-family: 'Bebas Neue'; font-size: 18px; color: var(--red-glow); letter-spacing: 0.06em; }
+  .sd-obs { color: var(--ink-dim); }
+  .sd-recreate { color: var(--ink); border-left: 1px solid var(--line); padding-left: 16px; }
+
+  /* Bullet lists */
+  ul.tight { margin: 0; padding-left: 20px; }
+  ul.tight li { margin: 6px 0; }
+  ul.tight li::marker { color: var(--red); }
+
+  /* Remake starter card */
+  .starter { display: grid; grid-template-columns: 1fr 2fr; gap: 18px; }
+  .starter .left .row { padding: 8px 0; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; }
+  .starter .left .row:last-child { border: none; }
+  .starter .left .k { font-size: 10px; letter-spacing: 0.15em; color: var(--ink-faint); text-transform: uppercase; }
+  .starter .left .v { font-family: 'Bebas Neue'; font-size: 16px; color: var(--ink); }
+  .first-move { background: var(--bg-3); padding: 16px; border-left: 2px solid var(--warm); font-size: 14px; line-height: 1.6; }
+
+  /* Reference DNA chips */
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip { background: var(--bg-3); border: 1px solid var(--line); padding: 10px 14px; font-size: 12px; color: var(--ink); border-radius: 2px; max-width: 360px; }
+
+  /* MIDI / downloads */
+  .download-row { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .download-row:last-child { border: none; }
+  .download-row a { color: var(--red-glow); text-decoration: none; font-family: 'Bebas Neue'; font-size: 16px; letter-spacing: 0.06em; }
+  .download-row a:hover { color: var(--warm); }
+  .download-meta { color: var(--ink-dim); font-size: 11px; }
+
+  /* Lyrics */
+  .lyrics-block { background: var(--bg-3); padding: 18px; border-left: 2px solid var(--ink-faint); font-style: italic; color: var(--ink-dim); white-space: pre-wrap; max-height: 320px; overflow-y: auto; }
+
+  /* Watch-outs */
+  .watchouts { background: rgba(139,32,32,0.08); border: 1px solid rgba(139,32,32,0.3); padding: 16px; border-radius: 2px; }
+  .watchouts h2 { color: var(--red-glow); }
+
+  /* Raw data */
+  details { margin-top: 48px; }
+  details summary { cursor: pointer; font-family: 'Bebas Neue'; font-size: 14px; letter-spacing: 0.15em; color: var(--ink-faint); padding: 12px 0; }
+  details pre { background: #050505; color: #6e6a62; padding: 16px; font-size: 10px; max-height: 480px; overflow: auto; border: 1px solid var(--line); }
+
+  footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--line); color: var(--ink-faint); font-size: 10px; letter-spacing: 0.1em; text-align: center; }
+
+  @media (max-width: 760px) {
+    .grid-2, .grid-3, .starter { grid-template-columns: 1fr; }
+    .chord-grid { grid-template-columns: repeat(4, 1fr); }
+    h1 { font-size: 44px; }
+    .wrap { padding: 32px 18px; }
+    .sd-row { grid-template-columns: 1fr; }
+    .sd-recreate { border-left: none; padding-left: 0; border-top: 1px solid var(--line); padding-top: 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="label">/track-dissect · v0.1</div>
+    <h1>Jimpster & Matt Masters - Dub Come Down</h1>
+    <div class="subhead">2026-07-16 19:07</div>
+
+    <div class="quick-stats">
+      <div class="stat">
+        <div class="v red">123.05</div>
+        <div class="l">BPM</div>
+      </div>
+      <div class="stat">
+        <div class="v">F# MINOR</div>
+        <div class="l">Key · 11A</div>
+      </div>
+      <div class="stat">
+        <div class="v">6:33</div>
+        <div class="l">Duration</div>
+      </div>
+      <div class="stat">
+        <div class="v">195</div>
+        <div class="l">Bars (4/4)</div>
+      </div>
+      <div class="stat">
+        <div class="v">21</div>
+        <div class="l">Unique chords</div>
+      </div>
+      <div class="stat">
+        <div class="v">9</div>
+        <div class="l">Sections</div>
+      </div>
+    </div>
+  </header>
+
+  
+  
+  <section>
+    <div class="headline">F#m 123 BPM deep-house/dub roller anchored on a F#m ↔ Bmaj (i–IV) vamp with a 6-minute slow-build arc</div>
+  </section>
+  
+
+  
+  
+  <section>
+    <h2>Production diagnosis</h2>
+    <div class="card red-edge diagnosis">This lives in F# minor with B major as the constant harmonic counterweight — that i–IV motion is roughly two-thirds of the harmonic real estate, with F#maj (Picardy/dominant color) and D#min (vi) as the recurring inner-voice moves. The chord detector chokes on the intro (that Dmaj/D#maj/Cmin salad is almost certainly pad wash + no bass reference), but once the bass enters at ~29s the harmony locks. Structurally it's a classic Jimpster long-form arc: 30s pad intro → 70s groove establishment → filtered breakdown around 134–165s → main peak 165–232s → dub breakdown 232–291s → final peak 291–366s → tail. Energy curve is deliberately flat within sections (0.24–0.27 RMS band) — the drama is textural, not dynamic.</div>
+  </section>
+  
+
+  
+  <section>
+    <h2>Section timeline</h2>
+    <div class="card">
+      <div class="timeline">
+        
+          
+          <div class="seg high" style="flex: 0 0 0.13%;" title="0.0s → 0.5s · high · RMS 0.2421">
+            <span class="secLabel">high</span>
+          </div>
+        
+          
+          <div class="seg low" style="flex: 0 0 7.87%;" title="0.5s → 31.5s · low · RMS 0.1913">
+            <span class="secLabel">low</span>
+          </div>
+        
+          
+          <div class="seg mid" style="flex: 0 0 17.50%;" title="31.5s → 100.4s · mid · RMS 0.2308">
+            <span class="secLabel">mid</span>
+          </div>
+        
+          
+          <div class="seg mid" style="flex: 0 0 8.63%;" title="100.4s → 134.3s · mid · RMS 0.2159">
+            <span class="secLabel">mid</span>
+          </div>
+        
+          
+          <div class="seg mid" style="flex: 0 0 7.88%;" title="134.3s → 165.3s · mid · RMS 0.2419">
+            <span class="secLabel">mid</span>
+          </div>
+        
+          
+          <div class="seg high" style="flex: 0 0 17.00%;" title="165.3s → 232.2s · high · RMS 0.2496">
+            <span class="secLabel">high</span>
+          </div>
+        
+          
+          <div class="seg low" style="flex: 0 0 15.13%;" title="232.2s → 291.7s · low · RMS 0.21">
+            <span class="secLabel">low</span>
+          </div>
+        
+          
+          <div class="seg peak" style="flex: 0 0 19.00%;" title="291.7s → 366.4s · peak · RMS 0.2554">
+            <span class="secLabel">peak</span>
+          </div>
+        
+          
+          <div class="seg low" style="flex: 0 0 6.87%;" title="366.4s → 393.4s · low · RMS 0.1875">
+            <span class="secLabel">low</span>
+          </div>
+        
+      </div>
+      <div class="timeline-axis">
+        <span>0:00</span>
+        <span>1:38</span>
+        <span>3:16</span>
+        <span>4:55</span>
+        <span>6:33</span>
+      </div>
+
+      
+      <div style="margin-top: 18px;">
+        <div class="label" style="margin-bottom: 8px;">Energy curve (RMS · 1s)</div>
+        <svg class="energy-svg" viewBox="0 0 131 100" preserveAspectRatio="none">
+          <polyline fill="none" stroke="#c43838" stroke-width="1"
+            points="0,27.8 1,31.1 2,30.1 3,31.5 4,31.4 5,32.7 6,31.5 7,31.5 8,31.4 9,31.4 10,79.2 11,18.7 12,20.1 13,17.4 14,22.7 15,16.7 16,24.4 17,16.1 18,21.9 19,18.7 20,15.0 21,19.2 22,18.8 23,15.3 24,21.9 25,13.4 26,17.7 27,19.8 28,20.6 29,23.9 30,14.2 31,19.3 32,15.2 33,17.5 34,34.6 35,36.1 36,30.6 37,37.2 38,50.3 39,26.9 40,13.9 41,18.6 42,18.3 43,14.4 44,11.6 45,16.4 46,15.7 47,15.6 48,17.7 49,15.3 50,15.0 51,12.0 52,14.4 53,12.9 54,15.9 55,3.6 56,16.9 57,14.6 58,19.4 59,11.9 60,9.2 61,14.6 62,17.5 63,17.9 64,16.5 65,18.9 66,14.7 67,11.3 68,15.3 69,9.3 70,8.8 71,14.1 72,9.1 73,15.7 74,0.0 75,15.7 76,7.2 77,14.6 78,4.9 79,4.4 80,5.0 81,6.5 82,9.7 83,15.6 84,6.9 85,13.6 86,2.6 87,37.5 88,50.2 89,55.1 90,57.7 91,54.3 92,39.9 93,51.4 94,55.9 95,63.3 96,61.3 97,13.4 98,17.2 99,1.1 100,8.1 101,11.0 102,12.0 103,3.7 104,13.5 105,15.5 106,10.2 107,13.6 108,3.8 109,14.5 110,1.9 111,9.0 112,12.0 113,9.6 114,6.3 115,10.2 116,10.5 117,8.6 118,9.1 119,14.0 120,8.1 121,19.5 122,13.0 123,20.6 124,17.6 125,21.6 126,20.5 127,26.9 128,30.7 129,99.7 130,99.8 " />
+          <polygon fill="rgba(139,32,32,0.15)"
+            points="0,100 0,27.8 1,31.1 2,30.1 3,31.5 4,31.4 5,32.7 6,31.5 7,31.5 8,31.4 9,31.4 10,79.2 11,18.7 12,20.1 13,17.4 14,22.7 15,16.7 16,24.4 17,16.1 18,21.9 19,18.7 20,15.0 21,19.2 22,18.8 23,15.3 24,21.9 25,13.4 26,17.7 27,19.8 28,20.6 29,23.9 30,14.2 31,19.3 32,15.2 33,17.5 34,34.6 35,36.1 36,30.6 37,37.2 38,50.3 39,26.9 40,13.9 41,18.6 42,18.3 43,14.4 44,11.6 45,16.4 46,15.7 47,15.6 48,17.7 49,15.3 50,15.0 51,12.0 52,14.4 53,12.9 54,15.9 55,3.6 56,16.9 57,14.6 58,19.4 59,11.9 60,9.2 61,14.6 62,17.5 63,17.9 64,16.5 65,18.9 66,14.7 67,11.3 68,15.3 69,9.3 70,8.8 71,14.1 72,9.1 73,15.7 74,0.0 75,15.7 76,7.2 77,14.6 78,4.9 79,4.4 80,5.0 81,6.5 82,9.7 83,15.6 84,6.9 85,13.6 86,2.6 87,37.5 88,50.2 89,55.1 90,57.7 91,54.3 92,39.9 93,51.4 94,55.9 95,63.3 96,61.3 97,13.4 98,17.2 99,1.1 100,8.1 101,11.0 102,12.0 103,3.7 104,13.5 105,15.5 106,10.2 107,13.6 108,3.8 109,14.5 110,1.9 111,9.0 112,12.0 113,9.6 114,6.3 115,10.2 116,10.5 117,8.6 118,9.1 119,14.0 120,8.1 121,19.5 122,13.0 123,20.6 124,17.6 125,21.6 126,20.5 127,26.9 128,30.7 129,99.7 130,99.8  130,100" />
+        </svg>
+      </div>
+
+      
+      <div style="margin-top: 18px;">
+        <div class="label" style="margin-bottom: 8px;">Frequency band balance (relative)</div>
+        <div class="grid-3" style="grid-template-columns: repeat(4, 1fr); gap: 10px;">
+          
+            <div class="stat">
+              <div class="v" style="font-size: 22px;">9.742</div>
+              <div class="l">SUB</div>
+            </div>
+          
+            <div class="stat">
+              <div class="v" style="font-size: 22px;">12.345</div>
+              <div class="l">BASS</div>
+            </div>
+          
+            <div class="stat">
+              <div class="v" style="font-size: 22px;">1.268</div>
+              <div class="l">MID</div>
+            </div>
+          
+            <div class="stat">
+              <div class="v" style="font-size: 22px;">0.465</div>
+              <div class="l">HIGH</div>
+            </div>
+          
+        </div>
+      </div>
+    </div>
+  </section>
+
+  
+  <section>
+    <h2>Chord progression</h2>
+    <div class="grid-2">
+      <div class="card">
+        <div class="label" style="margin-bottom: 12px;">Progression (first 80 segments ≥1s)</div>
+        <div class="chord-grid">
+          
+            <div class="chord-cell">
+              <div class="c ">D#</div>
+              <div class="t">1.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Cm</div>
+              <div class="t">2.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C</div>
+              <div class="t">2.0s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Gm</div>
+              <div class="t">2.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">A#</div>
+              <div class="t">1.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C</div>
+              <div class="t">1.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Dm</div>
+              <div class="t">1.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Gm</div>
+              <div class="t">2.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">A#</div>
+              <div class="t">1.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">C#</div>
+              <div class="t">1.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">A#m</div>
+              <div class="t">1.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">F</div>
+              <div class="t">2.0s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">2.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">F#</div>
+              <div class="t">2.1s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">4.8s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">F#</div>
+              <div class="t">1.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">D#m</div>
+              <div class="t">2.0s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">2.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">1.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">B</div>
+              <div class="t">2.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">B</div>
+              <div class="t">1.0s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">1.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">1.0s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">D#m</div>
+              <div class="t">2.0s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">3.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">D#m</div>
+              <div class="t">2.0s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">2.0s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">F#</div>
+              <div class="t">2.0s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">D#m</div>
+              <div class="t">2.6s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">3.4s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">3.0s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">1.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">C#m</div>
+              <div class="t">2.0s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">3.8s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">F#</div>
+              <div class="t">2.0s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">D#m</div>
+              <div class="t">2.0s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">1.4s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">1.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">4.4s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">F#</div>
+              <div class="t">2.1s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Bm</div>
+              <div class="t">2.4s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">D#m</div>
+              <div class="t">2.0s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">2.0s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">F#</div>
+              <div class="t">2.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">1.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">D#m</div>
+              <div class="t">2.0s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">2.0s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">D</div>
+              <div class="t">1.0s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">1.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">B</div>
+              <div class="t">2.0s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">A</div>
+              <div class="t">2.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">1.4s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">A</div>
+              <div class="t">1.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">B</div>
+              <div class="t">2.2s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Em</div>
+              <div class="t">1.4s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Em</div>
+              <div class="t">1.1s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">B</div>
+              <div class="t">1.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">1.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">B</div>
+              <div class="t">6.6s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">Em</div>
+              <div class="t">1.4s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">1.2s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">D</div>
+              <div class="t">1.1s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">B</div>
+              <div class="t">1.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">5.8s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">B</div>
+              <div class="t">1.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">2.6s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">F#</div>
+              <div class="t">2.1s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">D#m</div>
+              <div class="t">4.0s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">F#</div>
+              <div class="t">2.4s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">1.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">4.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">D</div>
+              <div class="t">2.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">4.4s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">2.0s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">B</div>
+              <div class="t">4.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">3.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">D#m</div>
+              <div class="t">1.0s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c ">F#</div>
+              <div class="t">1.9s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">F#m</div>
+              <div class="t">2.5s</div>
+            </div>
+          
+            <div class="chord-cell">
+              <div class="c min">D#m</div>
+              <div class="t">2.4s</div>
+            </div>
+          
+        </div>
+      </div>
+      <div class="card">
+        <div class="label" style="margin-bottom: 12px;">Time-weighted chord histogram</div>
+        
+          
+          
+          <div class="histogram-row">
+            <div class="histogram-chord">F#m</div>
+            <div class="histogram-bar">
+              <div class="histogram-bar-fill" style="width: 100.0%;"></div>
+            </div>
+            <div class="histogram-time">153s</div>
+          </div>
+        
+          
+          
+          <div class="histogram-row">
+            <div class="histogram-chord">B</div>
+            <div class="histogram-bar">
+              <div class="histogram-bar-fill" style="width: 53.9%;"></div>
+            </div>
+            <div class="histogram-time">82s</div>
+          </div>
+        
+          
+          
+          <div class="histogram-row">
+            <div class="histogram-chord">F#</div>
+            <div class="histogram-bar">
+              <div class="histogram-bar-fill" style="width: 22.1%;"></div>
+            </div>
+            <div class="histogram-time">34s</div>
+          </div>
+        
+          
+          
+          <div class="histogram-row">
+            <div class="histogram-chord">D#m</div>
+            <div class="histogram-bar">
+              <div class="histogram-bar-fill" style="width: 16.2%;"></div>
+            </div>
+            <div class="histogram-time">25s</div>
+          </div>
+        
+          
+          
+          <div class="histogram-row">
+            <div class="histogram-chord">Bm</div>
+            <div class="histogram-bar">
+              <div class="histogram-bar-fill" style="width: 12.9%;"></div>
+            </div>
+            <div class="histogram-time">20s</div>
+          </div>
+        
+          
+          
+          <div class="histogram-row">
+            <div class="histogram-chord">A</div>
+            <div class="histogram-bar">
+              <div class="histogram-bar-fill" style="width: 9.4%;"></div>
+            </div>
+            <div class="histogram-time">14s</div>
+          </div>
+        
+          
+          
+          <div class="histogram-row">
+            <div class="histogram-chord">Em</div>
+            <div class="histogram-bar">
+              <div class="histogram-bar-fill" style="width: 3.8%;"></div>
+            </div>
+            <div class="histogram-time">6s</div>
+          </div>
+        
+          
+          
+          <div class="histogram-row">
+            <div class="histogram-chord">D</div>
+            <div class="histogram-bar">
+              <div class="histogram-bar-fill" style="width: 3.6%;"></div>
+            </div>
+            <div class="histogram-time">6s</div>
+          </div>
+        
+          
+          
+          <div class="histogram-row">
+            <div class="histogram-chord">A#m</div>
+            <div class="histogram-bar">
+              <div class="histogram-bar-fill" style="width: 3.6%;"></div>
+            </div>
+            <div class="histogram-time">5s</div>
+          </div>
+        
+          
+          
+          <div class="histogram-row">
+            <div class="histogram-chord">E</div>
+            <div class="histogram-bar">
+              <div class="histogram-bar-fill" style="width: 3.3%;"></div>
+            </div>
+            <div class="histogram-time">5s</div>
+          </div>
+        
+          
+          
+          <div class="histogram-row">
+            <div class="histogram-chord">C</div>
+            <div class="histogram-bar">
+              <div class="histogram-bar-fill" style="width: 3.2%;"></div>
+            </div>
+            <div class="histogram-time">5s</div>
+          </div>
+        
+          
+          
+          <div class="histogram-row">
+            <div class="histogram-chord">A#</div>
+            <div class="histogram-bar">
+              <div class="histogram-bar-fill" style="width: 3.2%;"></div>
+            </div>
+            <div class="histogram-time">5s</div>
+          </div>
+        
+      </div>
+    </div>
+  </section>
+
+  
+  
+  <section>
+    <h2>Sound design — reverse-engineer</h2>
+    <div class="card">
+      
+        <div class="sd-row">
+          <div class="sd-element">Kick</div>
+          <div class="sd-obs">Sub-heavy balance (sub 9.7, bass 12.3 vs mid 1.27) points to a long-tail house kick doing double duty as sub reinforcement, tuned near F#.</div>
+          <div class="sd-recreate">Layer a punchy 909-ish transient (short click, 60Hz body) with a sine tail tuned to F#1 (~46Hz). Sidechain the sine tail only. Gentle 2:1 glue comp on the bus.</div>
+        </div>
+      
+        <div class="sd-row">
+          <div class="sd-element">Bass</div>
+          <div class="sd-obs">Bass stem is 85% voiced with 1577 notes centered around F1/F#1/E1 — this is a live-feel, syncopated 16th-note bassline, not a one-note pulse. Range C#1–B3 means occasional octave jumps or fills.</div>
+          <div class="sd-recreate">Prophet 12: single saw + sub square, LP filter ~400Hz with light env mod, slight glide (30-50ms). Play F#1 root with E1/A1 passing tones, 16th-note swing ~55%. Bus into a mild tape sat + LA-2A style comp.</div>
+        </div>
+      
+        <div class="sd-row">
+          <div class="sd-element">Pad/Harmony</div>
+          <div class="sd-obs">The i–IV (F#m–Bmaj) alternation with occasional D#m and F#maj lifts is the entire harmonic identity. Spectral centroid drops to 1926Hz in the 134s breakdown — pads get filtered hard there.</div>
+          <div class="sd-recreate">Prophet 12 detuned saws, slow attack (800ms), lush unison. Play F#m9 → Bmaj9 → D#m11 → F#maj7 as held 4-bar chords. Send to a long plate (4s) + ping-pong delay 3/16 with heavy feedback filtering.</div>
+        </div>
+      
+        <div class="sd-row">
+          <div class="sd-element">Percussion/Texture</div>
+          <div class="sd-obs">Consistent RMS across sections with high spectral centroid (2900+ in peaks) suggests busy top-end: shakers, closed hats, rides, ticks doing the energy lifting.</div>
+          <div class="sd-recreate">Closed hat on off-8ths, open hat on 'and' of 2 and 4, shaker running 16ths with velocity modulation. Add a dub-conga loop bussed to a filtered delay for the classic Freerange/Delusions signature.</div>
+        </div>
+      
+        <div class="sd-row">
+          <div class="sd-element">Vocal/Lead</div>
+          <div class="sd-obs">Vocal stem is only 32% voiced with 639 notes clustered at F#5 — this is a chopped/looped vocal hook, not a lead vocal. Lyrics transcript is garbage (Whisper hallucinating 'thank you' on reverb tails), confirming it's textural.</div>
+          <div class="sd-recreate">Sample a single soulful 'ooh' or short phrase on F#. Chop, pitch to F#5, run through spring reverb + 3/8 dotted delay with high feedback. Trigger sparsely every 4 bars, let the delays do the work.</div>
+        </div>
+      
+    </div>
+  </section>
+  
+
+  
+  
+  <section>
+    <div class="grid-2">
+      <div>
+        <h2>Mix moves</h2>
+        <div class="card">
+          <ul class="tight">
+            <li>Aggressive low-mid scoop — the band balance shows mids at 1.27 vs bass 12.3, meaning everything above 300Hz is deliberately dark/restrained. Cut 400-600Hz on pads and vocals to make room for the kick+bass sandwich.</li><li>Dub delay bus is doing structural work — throws on chord stabs and vocal chops during transitions (esp. the 134s and 232s breakdowns). Use a tape delay with filter automation on the feedback.</li><li>Sidechain is subtle but present — pump the pads/vocals ~2-3dB off the kick, not the aggressive EDM duck.</li><li>Master bus is clearly bus-compressed and tape-saturated — the RMS consistency (0.24–0.27 across most of the track) is compressor glue, not natural dynamics.</li>
+          </ul>
+        </div>
+      </div>
+      <div>
+        <h2>Arrangement</h2>
+        <div class="card">Nine-section arc: 30s pad intro → 68s groove build (bass+drums) → 34s development → 31s filtered breakdown (centroid drops to 1926Hz, tell-tale HPF sweep) → 67s main peak → 60s dub breakdown (drums thinned, dub FX foregrounded) → 74s final peak → 27s outro tail. The two breakdowns are the transition tricks — both use pad/FX-only passages to reset ear fatigue before re-entry. Very Freerange Records template.</div>
+      </div>
+    </div>
+  </section>
+
+  
+  <section>
+    <h2>Remake starter</h2>
+    <div class="card warm-edge">
+      <div class="starter">
+        <div class="left">
+          <div class="row"><span class="k">Tempo</span><span class="v">123 BPM</span></div>
+          <div class="row"><span class="k">Key</span><span class="v">F# minor (Camelot 11A)</span></div>
+        </div>
+        <div>
+          <div class="label" style="margin-bottom: 6px;">Ableton setup</div>
+          <div style="margin-bottom: 16px; color: var(--ink-dim);">Track 1: Kick (layered 909+sine sub). Track 2: Prophet 12 bass. Track 3: Prophet 12 pad → Valhalla plate + Echo. Track 4: Percussion rack (hats/shaker/conga). Track 5: Vocal chop → spring reverb + dub delay send. Return A: Tape delay (filtered feedback). Return B: Long plate. Arrange in 32-bar scenes.</div>
+          <div class="label" style="margin-bottom: 6px;">First move</div>
+          <div class="first-move">Program the F#m ↔ Bmaj 2-bar pad loop first, run it through the dub delay return, and automate the delay feedback — if that alone feels hypnotic for 2 minutes, everything else is decoration.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  
+  <section>
+    <h2>Reference DNA</h2>
+    <div class="card">
+      <div class="chips">
+        <div class="chip">Jimpster - 'Alone In The Dark' (same i–IV deep-house vamp discipline, same dub-delay chord treatment)</div><div class="chip">Âme - 'Rej' (long-form arc with textural rather than dynamic build)</div><div class="chip">Losoul - 'Open Door' (minimal harmonic vocabulary + dub processing as arrangement tool)</div>
+      </div>
+    </div>
+  </section>
+  
+
+  
+  <section>
+    <h2>Stems & MIDI</h2>
+    <div class="card">
+      
+        <div class="download-row">
+          <a href="stems/drums.wav" download>▼ DRUMS.wav</a>
+          <span class="download-meta">demucs · drums</span>
+        </div>
+      
+        <div class="download-row">
+          <a href="stems/bass.wav" download>▼ BASS.wav</a>
+          <span class="download-meta">demucs · bass</span>
+        </div>
+      
+        <div class="download-row">
+          <a href="stems/other.wav" download>▼ OTHER.wav</a>
+          <span class="download-meta">demucs · other</span>
+        </div>
+      
+        <div class="download-row">
+          <a href="stems/vocals.wav" download>▼ VOCALS.wav</a>
+          <span class="download-meta">demucs · vocals</span>
+        </div>
+      
+      
+        <div class="download-row">
+          <a href="midi/vocals.mid" download>▼ VOCALS.mid</a>
+          <span class="download-meta">639 notes · range F2–A#5 · 41 semitones</span>
+        </div>
+      
+      
+        <div class="download-row">
+          <a href="midi/bass.mid" download>▼ BASS.mid</a>
+          <span class="download-meta">1577 notes · range C#1–B3 · 34 semitones</span>
+        </div>
+      
+    </div>
+  </section>
+
+  
+  
+  <section>
+    <h2>Vocals · lyrics</h2>
+    
+      <div class="lyrics-block">Kjell, du har en kjell. Menos 10. Takk for ating med. Undertekster av Amara I sorry Thank you. so Thank you Thank you. Thank you. Thank you What Thank you. Thank you. Thank you.</div>
+      <div class="label" style="margin-top: 8px;">Language: Norwegian Nynorsk</div>
+    
+  </section>
+  
+
+  
+  
+  <section>
+    <div class="watchouts">
+      <h2>Watch-outs (ear-verify these)</h2>
+      <ul class="tight">
+        <li>The intro chord detection (Dmaj/D#maj/Cmin/Amin salad in first 30s) is almost certainly wrong — no bass reference during pad-only passage. Ear-verify: it's likely just F#m/Bmaj pad wash the whole time.</li><li>The 'Norwegian Nynorsk' lyrics with 'Thank you' repeated is 100% Whisper hallucinating on reverb tails and vocal chops — treat the vocal as a wordless textural sample, not a lyric-driven vocal.</li>
+      </ul>
+    </div>
+  </section>
+  
+
+  
+  <section>
+    <h2>Key confidence</h2>
+    <div class="card">
+      <div class="label" style="margin-bottom: 8px;">Top-5 key candidates (Krumhansl-Schmuckler correlation)</div>
+      
+        <div class="histogram-row">
+          <div class="histogram-chord" style="width: 84px;">F# MINOR</div>
+          <div class="histogram-bar">
+            
+            <div class="histogram-bar-fill" style="width: 100.0%;"></div>
+          </div>
+          <div class="histogram-time">0.276</div>
+        </div>
+      
+        <div class="histogram-row">
+          <div class="histogram-chord" style="width: 84px;">E MINOR</div>
+          <div class="histogram-bar">
+            
+            <div class="histogram-bar-fill" style="width: 99.3%;"></div>
+          </div>
+          <div class="histogram-time">0.274</div>
+        </div>
+      
+        <div class="histogram-row">
+          <div class="histogram-chord" style="width: 84px;">B MAJOR</div>
+          <div class="histogram-bar">
+            
+            <div class="histogram-bar-fill" style="width: 69.9%;"></div>
+          </div>
+          <div class="histogram-time">0.193</div>
+        </div>
+      
+        <div class="histogram-row">
+          <div class="histogram-chord" style="width: 84px;">E MAJOR</div>
+          <div class="histogram-bar">
+            
+            <div class="histogram-bar-fill" style="width: 52.9%;"></div>
+          </div>
+          <div class="histogram-time">0.146</div>
+        </div>
+      
+        <div class="histogram-row">
+          <div class="histogram-chord" style="width: 84px;">F# MAJOR</div>
+          <div class="histogram-bar">
+            
+            <div class="histogram-bar-fill" style="width: 52.2%;"></div>
+          </div>
+          <div class="histogram-time">0.144</div>
+        </div>
+      
+      <div class="label" style="margin-top: 10px;">Confidence gap to 2nd: 0.007</div>
+    </div>
+  </section>
+
+  <details>
+    <summary>▸ Raw data (JSON)</summary>
+    <pre>{"track": {"path": "/Users/emitr/Downloads/Jimpster & Matt Masters - Dub Come Down.wav", "name": "Jimpster & Matt Masters - Dub Come Down", "slug": "dub-come-down"}, "pipeline": {"version": "0.1", "started_at": "2026-07-16 19:03:44"}, "stems": {"drums": "stems/drums.wav", "bass": "stems/bass.wav", "other": "stems/other.wav", "vocals": "stems/vocals.wav"}, "features": {"duration_s": 393.44, "sample_rate": 22050, "key": {"tonic": "F#", "mode": "minor", "label": "F# minor", "camelot": "11A", "confidence_gap": 0.007, "second_best": "E minor", "top_5": [{"key": "F# minor", "score": 0.276}, {"key": "E minor", "score": 0.274}, {"key": "B major", "score": 0.193}, {"key": "E major", "score": 0.146}, {"key": "F# major", "score": 0.144}]}, "tempo": {"bpm": 123.05, "beat_count": 783, "bar_count": 195, "downbeat_times": [0.5341, 2.4845, 4.4582, 6.4087, 8.3824, 10.3561, 12.3298, 14.2803, 16.254, 18.2277, 20.2014, 22.1518, 24.1255, 26.0992, 28.0729, 30.0234]}, "sections": [{"start_s": 0.0, "end_s": 0.53, "duration_s": 0.53, "rms": 0.2421, "spectral_centroid": 2665.1, "label": "high"}, {"start_s": 0.53, "end_s": 31.51, "duration_s": 30.98, "rms": 0.1913, "spectral_centroid": 3197.3, "label": "low"}, {"start_s": 31.51, "end_s": 100.36, "duration_s": 68.85, "rms": 0.2308, "spectral_centroid": 2400.1, "label": "mid"}, {"start_s": 100.36, "end_s": 134.3, "duration_s": 33.95, "rms": 0.2159, "spectral_centroid": 3029.6, "label": "mid"}, {"start_s": 134.3, "end_s": 165.3, "duration_s": 31.0, "rms": 0.2419, "spectral_centroid": 1926.8, "label": "mid"}, {"start_s": 165.3, "end_s": 232.18, "duration_s": 66.87, "rms": 0.2496, "spectral_centroid": 2900.1, "label": "high"}, {"start_s": 232.18, "end_s": 291.69, "duration_s": 59.51, "rms": 0.21, "spectral_centroid": 2356.8, "label": "low"}, {"start_s": 291.69, "end_s": 366.43, "duration_s": 74.75, "rms": 0.2554, "spectral_centroid": 2950.7, "label": "peak"}, {"start_s": 366.43, "end_s": 393.44, "duration_s": 27.01, "rms": 0.1875, "spectral_centroid": 2702.0, "label": "low"}], "energy_curve_1s": [0.2055, 0.196, 0.1988, 0.1948, 0.1952, 0.1914, 0.1948, 0.1949, 0.1953, 0.1951, 0.0591, 0.2312, 0.2273, 0.2351, 0.22, 0.2369, 0.2152, 0.2387, 0.2223, 0.2312, 0.2419, 0.2299, 0.2311, 0.241, 0.2222, 0.2463, 0.2342, 0.2283, 0.2259, 0.2165, 0.244, 0.2297, 0.2412, 0.2346, 0.1862, 0.1818, 0.1974, 0.1786, 0.1414, 0.2079, 0.245, 0.2315, 0.2325, 0.2435, 0.2516, 0.2377, 0.2398, 0.2401, 0.2342, 0.241, 0.2417, 0.2505, 0.2434, 0.2479, 0.2393, 0.2742, 0.2365, 0.2431, 0.2294, 0.2506, 0.2583, 0.243, 0.2348, 0.2337, 0.2376, 0.2306, 0.2428, 0.2524, 0.2411, 0.2581, 0.2594, 0.2445, 0.2587, 0.2398, 0.2844, 0.2398, 0.2641, 0.243, 0.2706, 0.272, 0.2702, 0.266, 0.257, 0.2401, 0.265, 0.2457, 0.2772, 0.1777, 0.1418, 0.1276, 0.1204, 0.1299, 0.1711, 0.1382, 0.1256, 0.1043, 0.1101, 0.2463, 0.2357, 0.2813, 0.2615, 0.2533, 0.2503, 0.274, 0.2462, 0.2405, 0.2555, 0.2458, 0.2738, 0.2433, 0.279, 0.259, 0.2505, 0.2571, 0.2666, 0.2556, 0.2546, 0.2601, 0.2586, 0.2446, 0.2614, 0.2291, 0.2474, 0.226, 0.2343, 0.2231, 0.2263, 0.2081, 0.1973, 0.0009, 0.0007], "band_balance": {"sub": 9.742, "bass": 12.345, "mid": 1.268, "high": 0.465}}, "chords": {"per_beat": [{"beat": 0, "time_s": 0.65, "chord": "Dmaj"}, {"beat": 1, "time_s": 1.11, "chord": "D#maj"}, {"beat": 2, "time_s": 1.58, "chord": "D#maj"}, {"beat": 3, "time_s": 2.04, "chord": "D#maj"}, {"beat": 4, "time_s": 2.51, "chord": "D#maj"}, {"beat": 5, "time_s": 3.0, "chord": "Cmin"}, {"beat": 6, "time_s": 3.48, "chord": "Cmin"}, {"beat": 7, "time_s": 3.99, "chord": "Cmin"}, {"beat": 8, "time_s": 4.48, "chord": "Cmin"}, {"beat": 9, "time_s": 4.97, "chord": "Cmin"}, {"beat": 10, "time_s": 5.46, "chord": "Cmaj"}, {"beat": 11, "time_s": 5.94, "chord": "Cmaj"}, {"beat": 12, "time_s": 6.43, "chord": "Cmaj"}, {"beat": 13, "time_s": 6.92, "chord": "Cmaj"}, {"beat": 14, "time_s": 7.43, "chord": "Amin"}, {"beat": 15, "time_s": 7.92, "chord": "Amin"}, {"beat": 16, "time_s": 8.41, "chord": "D#min"}, {"beat": 17, "time_s": 8.89, "chord": "Amin"}, {"beat": 18, "time_s": 9.38, "chord": "A#maj"}, {"beat": 19, "time_s": 9.87, "chord": "Gmin"}, {"beat": 20, "time_s": 10.38, "chord": "Gmin"}, {"beat": 21, "time_s": 10.87, "chord": "Gmin"}, {"beat": 22, "time_s": 11.35, "chord": "Gmin"}, {"beat": 23, "time_s": 11.84, "chord": "Gmin"}, {"beat": 24, "time_s": 12.33, "chord": "Cmin"}, {"beat": 25, "time_s": 12.82, "chord": "A#maj"}, {"beat": 26, "time_s": 13.33, "chord": "A#maj"}, {"beat": 27, "time_s": 13.82, "chord": "A#maj"}, {"beat": 28, "time_s": 14.3, "chord": "Cmaj"}, {"beat": 29, "time_s": 14.79, "chord": "Cmaj"}, {"beat": 30, "time_s": 15.28, "chord": "Cmaj"}, {"beat": 31, "time_s": 15.79, "chord": "Dmin"}, {"beat": 32, "time_s": 16.28, "chord": "Dmin"}, {"beat": 33, "time_s": 16.76, "chord": "Dmin"}, {"beat": 34, "time_s": 17.25, "chord": "Cmaj"}, {"beat": 35, "time_s": 17.74, "chord": "Gmin"}, {"beat": 36, "time_s": 18.25, "chord": "Gmin"}, {"beat": 37, "time_s": 18.74, "chord": "Gmin"}, {"beat": 38, "time_s": 19.23, "chord": "Gmin"}, {"beat": 39, "time_s": 19.71, "chord": "Gmin"}, {"beat": 40, "time_s": 20.2, "chord": "A#maj"}, {"beat": 41, "time_s": 20.69, "chord": "Cmaj"}, {"beat": 42, "time_s": 21.2, "chord": "A#maj"}, {"beat": 43, "time_s": 21.69, "chord": "A#maj"}, {"beat": 44, "time_s": 22.18, "chord": "Cmaj"}, {"beat": 45, "time_s": 22.66, "chord": "A#maj"}, {"beat": 46, "time_s": 23.15, "chord": "A#maj"}, {"beat": 47, "time_s": 23.64, "chord": "A#maj"}, {"beat": 48, "time_s": 24.15, "chord": "Dmin"}, {"beat": 49, "time_s": 24.64, "chord": "Dmin"}, {"beat": 50, "time_s": 25.12, "chord": "C#maj"}, {"beat": 51, "time_s": 25.61, "chord": "C#maj"}, {"beat": 52, "time_s": 26.1, "chord": "C#maj"}, {"beat": 53, "time_s": 26.59, "chord": "A#min"}, {"beat": 54, "time_s": 27.07, "chord": "C#maj"}, {"beat": 55, "time_s": 27.59, "chord": "A#min"}, {"beat": 56, "time_s": 28.07, "chord": "A#min"}, {"beat": 57, "time_s": 28.56, "chord": "A#min"}, {"beat": 58, "time_s": 29.05, "chord": "A#min"}, {"beat": 59, "time_s": 29.54, "chord": "Fmaj"}, {"beat": 60, "time_s": 30.02, "chord": "Fmaj"}, {"beat": 61, "time_s": 30.51, "chord": "Fmaj"}, {"beat": 62, "time_s": 31.02, "chord": "Fmaj"}, {"beat": 63, "time_s": 31.53, "chord": "Emaj"}, {"beat": 64, "time_s": 32.02, "chord": "F#min"}, {"beat": 65, "time_s": 32.51, "chord": "F#min"}, {"beat": 66, "time_s": 33.0, "chord": "F#min"}, {"beat": 67, "time_s": 33.48, "chord": "F#min"}, {"beat": 68, "time_s": 33.97, "chord": "F#min"}, {"beat": 69, "time_s": 34.48, "chord": "F#min"}, {"beat": 70, "time_s": 34.97, "chord": "F#maj"}, {"beat": 71, "time_s": 35.46, "chord": "F#maj"}, {"beat": 72, "time_s": 35.97, "chord": "F#maj"}, {"beat": 73, "time_s": 36.5, "chord": "F#maj"}, {"beat": 74, "time_s": 37.04, "chord": "Amaj"}, {"beat": 75, "time_s": 37.55, "chord": "Amaj"}, {"beat": 76, "time_s": 38.03, "chord": "F#min"}, {"beat": 77, "time_s": 38.5, "chord": "F#min"}, {"beat": 78, "time_s": 38.99, "chord": "F#min"}, {"beat": 79, "time_s": 39.45, "chord": "F#min"}, {"beat": 80, "time_s": 39.94, "chord": "F#min"}, {"beat": 81, "time_s": 40.43, "chord": "F#min"}, {"beat": 82, "time_s": 40.87, "chord": "F#min"}, {"beat": 83, "time_s": 41.35, "chord": "F#min"}, {"beat": 84, "time_s": 41.84, "chord": "F#min"}, {"beat": 85, "time_s": 42.35, "chord": "F#min"}, {"beat": 86, "time_s": 42.84, "chord": "F#maj"}, {"beat": 87, "time_s": 43.33, "chord": "F#maj"}, {"beat": 88, "time_s": 43.82, "chord": "F#maj"}, {"beat": 89, "time_s": 44.3, "chord": "F#maj"}, {"beat": 90, "time_s": 44.79, "chord": "A#min"}, {"beat": 91, "time_s": 45.3, "chord": "Emaj"}, {"beat": 92, "time_s": 45.79, "chord": "F#min"}, {"beat": 93, "time_s": 46.28, "chord": "A#min"}, {"beat": 94, "time_s": 46.76, "chord": "D#min"}, {"beat": 95, "time_s": 47.25, "chord": "D#min"}, {"beat": 96, "time_s": 47.74, "chord": "D#min"}, {"beat": 97, "time_s": 48.25, "chord": "D#min"}, {"beat": 98, "time_s": 48.74, "chord": "F#min"}, {"beat": 99, "time_s": 49.23, "chord": "F#min"}, {"beat": 100, "time_s": 49.71, "chord": "F#min"}, {"beat": 101, "time_s": 50.2, "chord": "F#min"}, {"beat": 102, "time_s": 50.69, "chord": "F#min"}, {"beat": 103, "time_s": 51.2, "chord": "Emaj"}, {"beat": 104, "time_s": 51.69, "chord": "F#min"}, {"beat": 105, "time_s": 52.18, "chord": "F#min"}, {"beat": 106, "time_s": 52.66, "chord": "F#min"}, {"beat": 107, "time_s": 53.17, "chord": "Emaj"}, {"beat": 108, "time_s": 53.66, "chord": "F#min"}, {"beat": 109, "time_s": 54.15, "chord": "F#min"}, {"beat": 110, "time_s": 54.64, "chord": "Bmaj"}, {"beat": 111, "time_s": 55.12, "chord": "Bmaj"}, {"beat": 112, "time_s": 55.61, "chord": "Bmaj"}, {"beat": 113, "time_s": 56.12, "chord": "Bmaj"}, {"beat": 114, "time_s": 56.59, "chord": "Bmaj"}, {"beat": 115, "time_s": 57.1, "chord": "F#min"}, {"beat": 116, "time_s": 57.59, "chord": "F#min"}, {"beat": 117, "time_s": 58.07, "chord": "Bmaj"}, {"beat": 118, "time_s": 58.56, "chord": "Bmaj"}, {"beat": 119, "time_s": 59.07, "chord": "F#min"}, {"beat": 120, "time_s": 59.56, "chord": "F#min"}, {"beat": 121, "time_s": 60.05, "chord": "F#min"}, {"beat": 122, "time_s": 60.53, "chord": "Amaj"}, {"beat": 123, "time_s": 61.02, "chord": "Amaj"}, {"beat": 124, "time_s": 61.51, "chord": "F#min"}, {"beat": 125, "time_s": 62.02, "chord": "F#min"}, {"beat": 126, "time_s": 62.51, "chord": "D#min"}, {"beat": 127, "time_s": 63.0, "chord": "D#min"}, {"beat": 128, "time_s": 63.48, "chord": "D#min"}, {"beat": 129, "time_s": 63.99, "chord": "D#min"}, {"beat": 130, "time_s": 64.48, "chord": "F#min"}, {"beat": 131, "time_s": 64.97, "chord": "F#min"}, {"beat": 132, "time_s": 65.46, "chord": "F#min"}, {"beat": 133, "time_s": 65.94, "chord": "F#min"}, {"beat": 134, "time_s": 66.43, "chord": "F#min"}, {"beat": 135, "time_s": 66.92, "chord": "F#min"}, {"beat": 136, "time_s": 67.41, "chord": "F#min"}, {"beat": 137, "time_s": 67.92, "chord": "F#min"}, {"beat": 138, "time_s": 68.41, "chord": "Amaj"}, {"beat": 139, "time_s": 68.89, "chord": "Amaj"}, {"beat": 140, "time_s": 69.38, "chord": "F#min"}, {"beat": 141, "time_s": 69.89, "chord": "F#min"}, {"beat": 142, "time_s": 70.36, "chord": "D#min"}, {"beat": 143, "time_s": 70.87, "chord": "D#min"}, {"beat": 144, "time_s": 71.35, "chord": "D#min"}, {"beat": 145, "time_s": 71.84, "chord": "D#min"}, {"beat": 146, "time_s": 72.33, "chord": "F#min"}, {"beat": 147, "time_s": 72.84, "chord": "F#min"}, {"beat": 148, "time_s": 73.33, "chord": "F#min"}, {"beat": 149, "time_s": 73.82, "chord": "F#min"}, {"beat": 150, "time_s": 74.3, "chord": "F#maj"}, {"beat": 151, "time_s": 74.79, "chord": "F#maj"}, {"beat": 152, "time_s": 75.3, "chord": "F#maj"}, {"beat": 153, "time_s": 75.79, "chord": "F#maj"}, {"beat": 154, "time_s": 76.28, "chord": "A#min"}, {"beat": 155, "time_s": 76.77, "chord": "Emaj"}, {"beat": 156, "time_s": 77.25, "chord": "F#min"}, {"beat": 157, "time_s": 77.74, "chord": "A#min"}, {"beat": 158, "time_s": 78.25, "chord": "D#min"}, {"beat": 159, "time_s": 78.79, "chord": "D#min"}, {"beat": 160, "time_s": 79.32, "chord": "D#min"}, {"beat": 161, "time_s": 79.83, "chord": "D#min"}, {"beat": 162, "time_s": 80.32, "chord": "D#min"}, {"beat": 163, "time_s": 80.81, "chord": "Emin"}, {"beat": 164, "time_s": 81.32, "chord": "F#min"}, {"beat": 165, "time_s": 81.8, "chord": "F#min"}, {"beat": 166, "time_s": 82.31, "chord": "F#min"}, {"beat": 167, "time_s": 82.8, "chord": "F#min"}, {"beat": 168, "time_s": 83.29, "chord": "F#min"}, {"beat": 169, "time_s": 83.78, "chord": "F#min"}, {"beat": 170, "time_s": 84.27, "chord": "F#min"}, {"beat": 171, "time_s": 84.75, "chord": "Emaj"}, {"beat": 172, "time_s": 85.24, "chord": "F#min"}, {"beat": 173, "time_s": 85.75, "chord": "F#min"}, {"beat": 174, "time_s": 86.24, "chord": "F#min"}, {"beat": 175, "time_s": 86.73, "chord": "F#min"}, {"beat": 176, "time_s": 87.21, "chord": "F#min"}, {"beat": 177, "time_s": 87.72, "chord": "F#min"}, {"beat": 178, "time_s": 88.21, "chord": "D#min"}, {"beat": 179, "time_s": 88.7, "chord": "Emin"}, {"beat": 180, "time_s": 89.19, "chord": "F#min"}, {"beat": 181, "time_s": 89.68, "chord": "F#min"}, {"beat": 182, "time_s": 90.16, "chord": "F#min"}, {"beat": 183, "time_s": 90.65, "chord": "Emin"}, {"beat": 184, "time_s": 91.16, "chord": "F#min"}, {"beat": 185, "time_s": 91.65, "chord": "F#min"}, {"beat": 186, "time_s": 92.14, "chord": "C#min"}, {"beat": 187, "time_s": 92.62, "chord": "C#min"}, {"beat": 188, "time_s": 93.11, "chord": "C#min"}, {"beat": 189, "time_s": 93.62, "chord": "C#min"}, {"beat": 190, "time_s": 94.11, "chord": "F#min"}, {"beat": 191, "time_s": 94.6, "chord": "F#min"}, {"beat": 192, "time_s": 95.09, "chord": "F#min"}, {"beat": 193, "time_s": 95.5, "chord": "F#min"}, {"beat": 194, "time_s": 95.94, "chord": "F#min"}, {"beat": 195, "time_s": 96.43, "chord": "F#min"}, {"beat": 196, "time_s": 96.92, "chord": "F#min"}, {"beat": 197, "time_s": 97.43, "chord": "F#min"}, {"beat": 198, "time_s": 97.92, "chord": "F#maj"}, {"beat": 199, "time_s": 98.41, "chord": "F#maj"}, {"beat": 200, "time_s": 98.89, "chord": "F#maj"}, {"beat": 201, "time_s": 99.38, "chord": "F#maj"}, {"beat": 202, "time_s": 99.87, "chord": "A#min"}, {"beat": 203, "time_s": 100.43, "chord": "Emaj"}, {"beat": 204, "time_s": 100.94, "chord": "F#min"}, {"beat": 205, "time_s": 101.42, "chord": "A#min"}, {"beat": 206, "time_s": 101.91, "chord": "D#min"}, {"beat": 207, "time_s": 102.4, "chord": "D#min"}, {"beat": 208, "time_s": 102.91, "chord": "D#min"}, {"beat": 209, "time_s": 103.4, "chord": "D#min"}, {"beat": 210, "time_s": 103.89, "chord": "F#min"}, {"beat": 211, "time_s": 104.37, "chord": "F#min"}, {"beat": 212, "time_s": 104.86, "chord": "F#min"}, {"beat": 213, "time_s": 105.33, "chord": "Bmaj"}, {"beat": 214, "time_s": 105.79, "chord": "Bmaj"}, {"beat": 215, "time_s": 106.25, "chord": "F#min"}, {"beat": 216, "time_s": 106.72, "chord": "F#min"}, {"beat": 217, "time_s": 107.16, "chord": "F#min"}, {"beat": 218, "time_s": 107.62, "chord": "F#min"}, {"beat": 219, "time_s": 108.11, "chord": "Amaj"}, {"beat": 220, "time_s": 108.6, "chord": "F#min"}, {"beat": 221, "time_s": 109.09, "chord": "F#min"}, {"beat": 222, "time_s": 109.57, "chord": "F#min"}, {"beat": 223, "time_s": 110.09, "chord": "F#min"}, {"beat": 224, "time_s": 110.57, "chord": "F#min"}, {"beat": 225, "time_s": 111.06, "chord": "F#min"}, {"beat": 226, "time_s": 111.55, "chord": "F#min"}, {"beat": 227, "time_s": 112.04, "chord": "F#min"}, {"beat": 228, "time_s": 112.52, "chord": "F#min"}, {"beat": 229, "time_s": 113.03, "chord": "F#maj"}, {"beat": 230, "time_s": 113.55, "chord": "F#maj"}, {"beat": 231, "time_s": 114.08, "chord": "F#maj"}, {"beat": 232, "time_s": 114.61, "chord": "F#maj"}, {"beat": 233, "time_s": 115.1, "chord": "Bmin"}, {"beat": 234, "time_s": 115.59, "chord": "Bmin"}, {"beat": 235, "time_s": 116.08, "chord": "Bmin"}, {"beat": 236, "time_s": 116.56, "chord": "Bmin"}, {"beat": 237, "time_s": 117.05, "chord": "Bmin"}, {"beat": 238, "time_s": 117.54, "chord": "D#min"}, {"beat": 239, "time_s": 118.05, "chord": "D#min"}, {"beat": 240, "time_s": 118.54, "chord": "D#min"}, {"beat": 241, "time_s": 119.05, "chord": "D#min"}, {"beat": 242, "time_s": 119.54, "chord": "F#min"}, {"beat": 243, "time_s": 120.02, "chord": "F#min"}, {"beat": 244, "time_s": 120.53, "chord": "F#min"}, {"beat": 245, "time_s": 121.02, "chord": "F#min"}, {"beat": 246, "time_s": 121.51, "chord": "F#maj"}, {"beat": 247, "time_s": 122.0, "chord": "F#maj"}, {"beat": 248, "time_s": 122.49, "chord": "F#maj"}, {"beat": 249, "time_s": 123.0, "chord": "F#maj"}, {"beat": 250, "time_s": 123.48, "chord": "F#maj"}, {"beat": 251, "time_s": 123.97, "chord": "F#min"}, {"beat": 252, "time_s": 124.46, "chord": "F#min"}, {"beat": 253, "time_s": 124.97, "chord": "F#min"}, {"beat": 254, "time_s": 125.46, "chord": "D#min"}, {"beat": 255, "time_s": 125.95, "chord": "D#min"}, {"beat": 256, "time_s": 126.43, "chord": "D#min"}, {"beat": 257, "time_s": 126.92, "chord": "D#min"}, {"beat": 258, "time_s": 127.41, "chord": "F#min"}, {"beat": 259, "time_s": 127.92, "chord": "F#min"}, {"beat": 260, "time_s": 128.41, "chord": "F#min"}, {"beat": 261, "time_s": 128.89, "chord": "F#min"}, {"beat": 262, "time_s": 129.38, "chord": "Dmaj"}, {"beat": 263, "time_s": 129.87, "chord": "Dmaj"}, {"beat": 264, "time_s": 130.38, "chord": "F#min"}, {"beat": 265, "time_s": 130.89, "chord": "Dmaj"}, {"beat": 266, "time_s": 131.42, "chord": "F#min"}, {"beat": 267, "time_s": 131.96, "chord": "F#min"}, {"beat": 268, "time_s": 132.47, "chord": "F#min"}, {"beat": 269, "time_s": 132.96, "chord": "Bmaj"}, {"beat": 270, "time_s": 133.47, "chord": "Bmaj"}, {"beat": 271, "time_s": 133.96, "chord": "Bmaj"}, {"beat": 272, "time_s": 134.44, "chord": "Bmaj"}, {"beat": 273, "time_s": 134.93, "chord": "Amaj"}, {"beat": 274, "time_s": 135.42, "chord": "Amaj"}, {"beat": 275, "time_s": 135.93, "chord": "Amaj"}, {"beat": 276, "time_s": 136.42, "chord": "Amaj"}, {"beat": 277, "time_s": 136.9, "chord": "Amaj"}, {"beat": 278, "time_s": 137.39, "chord": "Amaj"}, {"beat": 279, "time_s": 137.88, "chord": "F#min"}, {"beat": 280, "time_s": 138.32, "chord": "F#min"}, {"beat": 281, "time_s": 138.76, "chord": "F#min"}, {"beat": 282, "time_s": 139.25, "chord": "Amaj"}, {"beat": 283, "time_s": 139.74, "chord": "Amaj"}, {"beat": 284, "time_s": 140.23, "chord": "Amaj"}, {"beat": 285, "time_s": 140.71, "chord": "Amaj"}, {"beat": 286, "time_s": 141.15, "chord": "Bmaj"}, {"beat": 287, "time_s": 141.57, "chord": "Bmaj"}, {"beat": 288, "time_s": 141.99, "chord": "Bmaj"}, {"beat": 289, "time_s": 142.43, "chord": "Bmaj"}, {"beat": 290, "time_s": 142.87, "chord": "Bmaj"}, {"beat": 291, "time_s": 143.31, "chord": "F#min"}, {"beat": 292, "time_s": 143.78, "chord": "Emin"}, {"beat": 293, "time_s": 144.22, "chord": "Emin"}, {"beat": 294, "time_s": 144.66, "chord": "Emin"}, {"beat": 295, "time_s": 145.15, "chord": "Bmin"}, {"beat": 296, "time_s": 145.75, "chord": "Emin"}, {"beat": 297, "time_s": 146.19, "chord": "F#min"}, {"beat": 298, "time_s": 146.63, "chord": "F#min"}, {"beat": 299, "time_s": 147.12, "chord": "Emin"}, {"beat": 300, "time_s": 147.73, "chord": "Emin"}, {"beat": 301, "time_s": 148.24, "chord": "F#min"}, {"beat": 302, "time_s": 148.72, "chord": "Bmaj"}, {"beat": 303, "time_s": 149.21, "chord": "Bmaj"}, {"beat": 304, "time_s": 149.68, "chord": "Bmaj"}, {"beat": 305, "time_s": 150.12, "chord": "Bmaj"}, {"beat": 306, "time_s": 150.58, "chord": "F#min"}, {"beat": 307, "time_s": 151.07, "chord": "F#min"}, {"beat": 308, "time_s": 151.53, "chord": "F#min"}, {"beat": 309, "time_s": 152.0, "chord": "F#min"}, {"beat": 310, "time_s": 152.46, "chord": "Bmaj"}, {"beat": 311, "time_s": 152.93, "chord": "Bmaj"}, {"beat": 312, "time_s": 153.37, "chord": "Bmaj"}, {"beat": 313, "time_s": 153.86, "chord": "Bmaj"}, {"beat": 314, "time_s": 154.37, "chord": "Bmaj"}, {"beat": 315, "time_s": 154.85, "chord": "Bmaj"}, {"beat": 316, "time_s": 155.34, "chord": "Bmaj"}, {"beat": 317, "time_s": 155.85, "chord": "Bmaj"}, {"beat": 318, "time_s": 156.34, "chord": "Bmaj"}, {"beat": 319, "time_s": 156.83, "chord": "Bmaj"}, {"beat": 320, "time_s": 157.32, "chord": "Bmaj"}, {"beat": 321, "time_s": 157.73, "chord": "Bmaj"}, {"beat": 322, "time_s": 158.17, "chord": "Bmaj"}, {"beat": 323, "time_s": 158.62, "chord": "Bmaj"}, {"beat": 324, "time_s": 159.08, "chord": "Bmin"}, {"beat": 325, "time_s": 159.52, "chord": "Emin"}, {"beat": 326, "time_s": 159.96, "chord": "Emin"}, {"beat": 327, "time_s": 160.4, "chord": "Emin"}, {"beat": 328, "time_s": 160.89, "chord": "F#min"}, {"beat": 329, "time_s": 161.49, "chord": "F#min"}, {"beat": 330, "time_s": 162.1, "chord": "Bmin"}, {"beat": 331, "time_s": 162.63, "chord": "Dmaj"}, {"beat": 332, "time_s": 163.21, "chord": "Dmaj"}, {"beat": 333, "time_s": 163.7, "chord": "Bmin"}, {"beat": 334, "time_s": 164.19, "chord": "Bmin"}, {"beat": 335, "time_s": 164.68, "chord": "Bmaj"}, {"beat": 336, "time_s": 165.16, "chord": "Bmaj"}, {"beat": 337, "time_s": 165.65, "chord": "Bmaj"}, {"beat": 338, "time_s": 166.16, "chord": "Bmaj"}, {"beat": 339, "time_s": 166.63, "chord": "F#min"}, {"beat": 340, "time_s": 167.14, "chord": "F#min"}, {"beat": 341, "time_s": 167.62, "chord": "F#min"}, {"beat": 342, "time_s": 168.11, "chord": "F#min"}, {"beat": 343, "time_s": 168.6, "chord": "F#min"}, {"beat": 344, "time_s": 169.11, "chord": "F#min"}, {"beat": 345, "time_s": 169.6, "chord": "F#min"}, {"beat": 346, "time_s": 170.09, "chord": "F#min"}, {"beat": 347, "time_s": 170.55, "chord": "F#min"}, {"beat": 348, "time_s": 170.97, "chord": "F#min"}, {"beat": 349, "time_s": 171.43, "chord": "F#min"}, {"beat": 350, "time_s": 171.94, "chord": "F#min"}, {"beat": 351, "time_s": 172.43, "chord": "Bmaj"}, {"beat": 352, "time_s": 172.92, "chord": "Bmaj"}, {"beat": 353, "time_s": 173.38, "chord": "Bmaj"}, {"beat": 354, "time_s": 173.94, "chord": "F#min"}, {"beat": 355, "time_s": 174.5, "chord": "F#min"}, {"beat": 356, "time_s": 175.01, "chord": "F#min"}, {"beat": 357, "time_s": 175.5, "chord": "F#min"}, {"beat": 358, "time_s": 175.98, "chord": "F#min"}, {"beat": 359, "time_s": 176.49, "chord": "F#maj"}, {"beat": 360, "time_s": 177.03, "chord": "F#maj"}, {"beat": 361, "time_s": 177.54, "chord": "F#maj"}, {"beat": 362, "time_s": 178.05, "chord": "F#maj"}, {"beat": 363, "time_s": 178.56, "chord": "Amaj"}, {"beat": 364, "time_s": 179.05, "chord": "Amaj"}, {"beat": 365, "time_s": 179.51, "chord": "F#min"}, {"beat": 366, "time_s": 180.0, "chord": "D#min"}, {"beat": 367, "time_s": 180.51, "chord": "D#min"}, {"beat": 368, "time_s": 181.0, "chord": "D#min"}, {"beat": 369, "time_s": 181.49, "chord": "D#min"}, {"beat": 370, "time_s": 182.0, "chord": "D#min"}, {"beat": 371, "time_s": 182.49, "chord": "D#min"}, {"beat": 372, "time_s": 182.97, "chord": "D#min"}, {"beat": 373, "time_s": 183.48, "chord": "D#min"}, {"beat": 374, "time_s": 183.97, "chord": "F#min"}, {"beat": 375, "time_s": 184.46, "chord": "F#maj"}, {"beat": 376, "time_s": 184.95, "chord": "F#maj"}, {"beat": 377, "time_s": 185.43, "chord": "F#maj"}, {"beat": 378, "time_s": 185.92, "chord": "F#maj"}, {"beat": 379, "time_s": 186.41, "chord": "F#maj"}, {"beat": 380, "time_s": 186.9, "chord": "F#min"}, {"beat": 381, "time_s": 187.39, "chord": "F#min"}, {"beat": 382, "time_s": 187.87, "chord": "F#min"}, {"beat": 383, "time_s": 188.38, "chord": "D#min"}, {"beat": 384, "time_s": 188.89, "chord": "Emaj"}, {"beat": 385, "time_s": 189.38, "chord": "F#min"}, {"beat": 386, "time_s": 189.87, "chord": "F#min"}, {"beat": 387, "time_s": 190.36, "chord": "F#min"}, {"beat": 388, "time_s": 190.84, "chord": "F#min"}, {"beat": 389, "time_s": 191.33, "chord": "F#min"}, {"beat": 390, "time_s": 191.82, "chord": "F#min"}, {"beat": 391, "time_s": 192.31, "chord": "F#min"}, {"beat": 392, "time_s": 192.77, "chord": "F#min"}, {"beat": 393, "time_s": 193.26, "chord": "F#min"}, {"beat": 394, "time_s": 193.77, "chord": "F#min"}, {"beat": 395, "time_s": 194.26, "chord": "Dmaj"}, {"beat": 396, "time_s": 194.77, "chord": "Dmaj"}, {"beat": 397, "time_s": 195.28, "chord": "Dmaj"}, {"beat": 398, "time_s": 195.77, "chord": "Dmaj"}, {"beat": 399, "time_s": 196.26, "chord": "Dmaj"}, {"beat": 400, "time_s": 196.74, "chord": "Bmin"}, {"beat": 401, "time_s": 197.23, "chord": "Bmin"}, {"beat": 402, "time_s": 197.72, "chord": "F#min"}, {"beat": 403, "time_s": 198.21, "chord": "F#min"}, {"beat": 404, "time_s": 198.67, "chord": "F#min"}, {"beat": 405, "time_s": 199.13, "chord": "F#min"}, {"beat": 406, "time_s": 199.65, "chord": "F#min"}, {"beat": 407, "time_s": 200.16, "chord": "F#min"}, {"beat": 408, "time_s": 200.64, "chord": "F#min"}, {"beat": 409, "time_s": 201.13, "chord": "F#min"}, {"beat": 410, "time_s": 201.6, "chord": "F#min"}, {"beat": 411, "time_s": 202.08, "chord": "Amaj"}, {"beat": 412, "time_s": 202.57, "chord": "Amaj"}, {"beat": 413, "time_s": 203.04, "chord": "F#min"}, {"beat": 414, "time_s": 203.52, "chord": "F#min"}, {"beat": 415, "time_s": 204.01, "chord": "F#min"}, {"beat": 416, "time_s": 204.52, "chord": "F#min"}, {"beat": 417, "time_s": 205.01, "chord": "Bmaj"}, {"beat": 418, "time_s": 205.5, "chord": "Bmaj"}, {"beat": 419, "time_s": 205.98, "chord": "Bmaj"}, {"beat": 420, "time_s": 206.47, "chord": "Bmaj"}, {"beat": 421, "time_s": 206.98, "chord": "Bmaj"}, {"beat": 422, "time_s": 207.47, "chord": "Bmaj"}, {"beat": 423, "time_s": 207.96, "chord": "Bmaj"}, {"beat": 424, "time_s": 208.45, "chord": "Bmaj"}, {"beat": 425, "time_s": 208.96, "chord": "Bmaj"}, {"beat": 426, "time_s": 209.44, "chord": "Bmaj"}, {"beat": 427, "time_s": 209.93, "chord": "F#min"}, {"beat": 428, "time_s": 210.42, "chord": "F#min"}, {"beat": 429, "time_s": 210.91, "chord": "F#min"}, {"beat": 430, "time_s": 211.39, "chord": "F#min"}, {"beat": 431, "time_s": 211.91, "chord": "F#min"}, {"beat": 432, "time_s": 212.39, "chord": "F#min"}, {"beat": 433, "time_s": 212.88, "chord": "F#min"}, {"beat": 434, "time_s": 213.37, "chord": "F#min"}, {"beat": 435, "time_s": 213.81, "chord": "Bmaj"}, {"beat": 436, "time_s": 214.23, "chord": "F#min"}, {"beat": 437, "time_s": 214.69, "chord": "D#min"}, {"beat": 438, "time_s": 215.18, "chord": "D#min"}, {"beat": 439, "time_s": 215.69, "chord": "F#maj"}, {"beat": 440, "time_s": 216.2, "chord": "F#maj"}, {"beat": 441, "time_s": 216.67, "chord": "F#maj"}, {"beat": 442, "time_s": 217.08, "chord": "F#maj"}, {"beat": 443, "time_s": 217.64, "chord": "F#min"}, {"beat": 444, "time_s": 218.15, "chord": "F#min"}, {"beat": 445, "time_s": 218.64, "chord": "F#min"}, {"beat": 446, "time_s": 219.13, "chord": "F#min"}, {"beat": 447, "time_s": 219.61, "chord": "F#min"}, {"beat": 448, "time_s": 220.13, "chord": "D#min"}, {"beat": 449, "time_s": 220.61, "chord": "D#min"}, {"beat": 450, "time_s": 221.1, "chord": "D#min"}, {"beat": 451, "time_s": 221.59, "chord": "D#min"}, {"beat": 452, "time_s": 222.08, "chord": "D#min"}, {"beat": 453, "time_s": 222.56, "chord": "Bmaj"}, {"beat": 454, "time_s": 223.05, "chord": "F#min"}, {"beat": 455, "time_s": 223.56, "chord": "Bmaj"}, {"beat": 456, "time_s": 224.05, "chord": "Bmaj"}, {"beat": 457, "time_s": 224.54, "chord": "Bmaj"}, {"beat": 458, "time_s": 224.93, "chord": "Bmaj"}, {"beat": 459, "time_s": 225.51, "chord": "Bmaj"}, {"beat": 460, "time_s": 226.02, "chord": "F#maj"}, {"beat": 461, "time_s": 226.51, "chord": "F#maj"}, {"beat": 462, "time_s": 226.95, "chord": "F#maj"}, {"beat": 463, "time_s": 227.42, "chord": "F#min"}, {"beat": 464, "time_s": 227.9, "chord": "F#min"}, {"beat": 465, "time_s": 228.37, "chord": "Bmaj"}, {"beat": 466, "time_s": 228.86, "chord": "Bmaj"}, {"beat": 467, "time_s": 229.37, "chord": "Bmaj"}, {"beat": 468, "time_s": 229.83, "chord": "Bmaj"}, {"beat": 469, "time_s": 230.34, "chord": "Bmaj"}, {"beat": 470, "time_s": 230.83, "chord": "F#min"}, {"beat": 471, "time_s": 231.34, "chord": "Bmaj"}, {"beat": 472, "time_s": 231.83, "chord": "Bmaj"}, {"beat": 473, "time_s": 232.29, "chord": "Bmaj"}, {"beat": 474, "time_s": 232.8, "chord": "F#min"}, {"beat": 475, "time_s": 233.29, "chord": "F#min"}, {"beat": 476, "time_s": 233.8, "chord": "F#min"}, {"beat": 477, "time_s": 234.29, "chord": "F#min"}, {"beat": 478, "time_s": 234.75, "chord": "F#min"}, {"beat": 479, "time_s": 235.22, "chord": "Bmaj"}, {"beat": 480, "time_s": 235.68, "chord": "Bmaj"}, {"beat": 481, "time_s": 236.12, "chord": "Bmaj"}, {"beat": 482, "time_s": 236.59, "chord": "Bmaj"}, {"beat": 483, "time_s": 237.08, "chord": "Bmaj"}, {"beat": 484, "time_s": 237.56, "chord": "Bmaj"}, {"beat": 485, "time_s": 238.07, "chord": "Bmaj"}, {"beat": 486, "time_s": 238.56, "chord": "Bmaj"}, {"beat": 487, "time_s": 239.05, "chord": "Bmaj"}, {"beat": 488, "time_s": 239.54, "chord": "Bmaj"}, {"beat": 489, "time_s": 240.02, "chord": "Bmaj"}, {"beat": 490, "time_s": 240.51, "chord": "Bmaj"}, {"beat": 491, "time_s": 240.98, "chord": "Bmaj"}, {"beat": 492, "time_s": 241.44, "chord": "Bmaj"}, {"beat": 493, "time_s": 241.91, "chord": "Bmin"}, {"beat": 494, "time_s": 242.39, "chord": "Bmin"}, {"beat": 495, "time_s": 242.9, "chord": "Bmaj"}, {"beat": 496, "time_s": 243.39, "chord": "Bmaj"}, {"beat": 497, "time_s": 243.88, "chord": "Bmaj"}, {"beat": 498, "time_s": 244.34, "chord": "Bmaj"}, {"beat": 499, "time_s": 244.85, "chord": "Bmaj"}, {"beat": 500, "time_s": 245.34, "chord": "F#min"}, {"beat": 501, "time_s": 245.83, "chord": "F#min"}, {"beat": 502, "time_s": 246.32, "chord": "F#maj"}, {"beat": 503, "time_s": 246.8, "chord": "F#min"}, {"beat": 504, "time_s": 247.18, "chord": "F#maj"}, {"beat": 505, "time_s": 247.66, "chord": "F#maj"}, {"beat": 506, "time_s": 248.15, "chord": "F#maj"}, {"beat": 507, "time_s": 248.55, "chord": "F#maj"}, {"beat": 508, "time_s": 249.13, "chord": "F#maj"}, {"beat": 509, "time_s": 249.64, "chord": "F#min"}, {"beat": 510, "time_s": 250.13, "chord": "Emaj"}, {"beat": 511, "time_s": 250.68, "chord": "F#min"}, {"beat": 512, "time_s": 251.1, "chord": "F#min"}, {"beat": 513, "time_s": 251.59, "chord": "F#min"}, {"beat": 514, "time_s": 252.1, "chord": "F#min"}, {"beat": 515, "time_s": 252.68, "chord": "F#min"}, {"beat": 516, "time_s": 253.07, "chord": "F#min"}, {"beat": 517, "time_s": 253.56, "chord": "F#min"}, {"beat": 518, "time_s": 254.07, "chord": "F#maj"}, {"beat": 519, "time_s": 254.65, "chord": "F#min"}, {"beat": 520, "time_s": 255.05, "chord": "F#maj"}, {"beat": 521, "time_s": 255.54, "chord": "F#maj"}, {"beat": 522, "time_s": 256.05, "chord": "F#maj"}, {"beat": 523, "time_s": 256.53, "chord": "F#min"}, {"beat": 524, "time_s": 257.02, "chord": "F#min"}, {"beat": 525, "time_s": 257.51, "chord": "F#min"}, {"beat": 526, "time_s": 258.0, "chord": "F#min"}, {"beat": 527, "time_s": 258.48, "chord": "F#min"}, {"beat": 528, "time_s": 258.97, "chord": "Bmaj"}, {"beat": 529, "time_s": 259.46, "chord": "Bmaj"}, {"beat": 530, "time_s": 259.95, "chord": "Bmaj"}, {"beat": 531, "time_s": 260.46, "chord": "Bmaj"}, {"beat": 532, "time_s": 260.95, "chord": "F#min"}, {"beat": 533, "time_s": 261.43, "chord": "F#min"}, {"beat": 534, "time_s": 261.92, "chord": "Bmaj"}, {"beat": 535, "time_s": 262.43, "chord": "Bmaj"}, {"beat": 536, "time_s": 262.99, "chord": "Bmaj"}, {"beat": 537, "time_s": 263.52, "chord": "Bmaj"}, {"beat": 538, "time_s": 263.96, "chord": "Bmaj"}, {"beat": 539, "time_s": 264.41, "chord": "F#min"}, {"beat": 540, "time_s": 264.87, "chord": "F#min"}, {"beat": 541, "time_s": 265.31, "chord": "Amaj"}, {"beat": 542, "time_s": 265.75, "chord": "Amaj"}, {"beat": 543, "time_s": 266.19, "chord": "Amaj"}, {"beat": 544, "time_s": 266.61, "chord": "Amaj"}, {"beat": 545, "time_s": 267.1, "chord": "F#min"}, {"beat": 546, "time_s": 267.61, "chord": "F#min"}, {"beat": 547, "time_s": 268.1, "chord": "Bmin"}, {"beat": 548, "time_s": 268.56, "chord": "Bmin"}, {"beat": 549, "time_s": 269.05, "chord": "Bmin"}, {"beat": 550, "time_s": 269.44, "chord": "Bmin"}, {"beat": 551, "time_s": 270.0, "chord": "Bmin"}, {"beat": 552, "time_s": 270.54, "chord": "Bmin"}, {"beat": 553, "time_s": 271.02, "chord": "Bmin"}, {"beat": 554, "time_s": 271.51, "chord": "Bmin"}, {"beat": 555, "time_s": 272.02, "chord": "Bmin"}, {"beat": 556, "time_s": 272.51, "chord": "Bmin"}, {"beat": 557, "time_s": 273.0, "chord": "Bmin"}, {"beat": 558, "time_s": 273.39, "chord": "Bmin"}, {"beat": 559, "time_s": 273.9, "chord": "Bmin"}, {"beat": 560, "time_s": 274.41, "chord": "Bmin"}, {"beat": 561, "time_s": 274.9, "chord": "Bmin"}, {"beat": 562, "time_s": 275.41, "chord": "Bmin"}, {"beat": 563, "time_s": 275.92, "chord": "Bmin"}, {"beat": 564, "time_s": 276.43, "chord": "F#min"}, {"beat": 565, "time_s": 276.94, "chord": "F#min"}, {"beat": 566, "time_s": 277.43, "chord": "Bmaj"}, {"beat": 567, "time_s": 277.92, "chord": "Bmaj"}, {"beat": 568, "time_s": 278.41, "chord": "Bmaj"}, {"beat": 569, "time_s": 278.92, "chord": "Bmaj"}, {"beat": 570, "time_s": 279.41, "chord": "Bmaj"}, {"beat": 571, "time_s": 279.89, "chord": "Bmaj"}, {"beat": 572, "time_s": 280.38, "chord": "Bmaj"}, {"beat": 573, "time_s": 280.87, "chord": "Bmaj"}, {"beat": 574, "time_s": 281.36, "chord": "Bmaj"}, {"beat": 575, "time_s": 281.87, "chord": "Bmaj"}, {"beat": 576, "time_s": 282.35, "chord": "Bmaj"}, {"beat": 577, "time_s": 282.84, "chord": "F#min"}, {"beat": 578, "time_s": 283.35, "chord": "F#min"}, {"beat": 579, "time_s": 283.84, "chord": "Bmin"}, {"beat": 580, "time_s": 284.33, "chord": "Bmin"}, {"beat": 581, "time_s": 284.82, "chord": "Bmin"}, {"beat": 582, "time_s": 285.3, "chord": "Bmin"}, {"beat": 583, "time_s": 285.79, "chord": "Bmin"}, {"beat": 584, "time_s": 286.28, "chord": "Bmin"}, {"beat": 585, "time_s": 286.77, "chord": "Bmin"}, {"beat": 586, "time_s": 287.25, "chord": "Gmaj"}, {"beat": 587, "time_s": 287.76, "chord": "Bmin"}, {"beat": 588, "time_s": 288.25, "chord": "Bmin"}, {"beat": 589, "time_s": 288.74, "chord": "Gmaj"}, {"beat": 590, "time_s": 289.23, "chord": "Gmaj"}, {"beat": 591, "time_s": 289.74, "chord": "Gmaj"}, {"beat": 592, "time_s": 290.23, "chord": "Gmaj"}, {"beat": 593, "time_s": 290.69, "chord": "Gmaj"}, {"beat": 594, "time_s": 291.13, "chord": "Gmaj"}, {"beat": 595, "time_s": 291.57, "chord": "Bmaj"}, {"beat": 596, "time_s": 292.04, "chord": "Bmaj"}, {"beat": 597, "time_s": 292.52, "chord": "Bmaj"}, {"beat": 598, "time_s": 293.01, "chord": "F#min"}, {"beat": 599, "time_s": 293.5, "chord": "F#min"}, {"beat": 600, "time_s": 293.96, "chord": "F#min"}, {"beat": 601, "time_s": 294.43, "chord": "F#min"}, {"beat": 602, "time_s": 294.89, "chord": "F#min"}, {"beat": 603, "time_s": 295.36, "chord": "F#min"}, {"beat": 604, "time_s": 295.82, "chord": "F#min"}, {"beat": 605, "time_s": 296.33, "chord": "Bmaj"}, {"beat": 606, "time_s": 296.84, "chord": "F#min"}, {"beat": 607, "time_s": 297.33, "chord": "Bmaj"}, {"beat": 608, "time_s": 297.82, "chord": "F#min"}, {"beat": 609, "time_s": 298.31, "chord": "Bmaj"}, {"beat": 610, "time_s": 298.79, "chord": "Bmaj"}, {"beat": 611, "time_s": 299.28, "chord": "Bmaj"}, {"beat": 612, "time_s": 299.77, "chord": "F#min"}, {"beat": 613, "time_s": 300.26, "chord": "F#min"}, {"beat": 614, "time_s": 300.77, "chord": "C#min"}, {"beat": 615, "time_s": 301.28, "chord": "C#min"}, {"beat": 616, "time_s": 301.77, "chord": "F#maj"}, {"beat": 617, "time_s": 302.25, "chord": "F#maj"}, {"beat": 618, "time_s": 302.76, "chord": "F#maj"}, {"beat": 619, "time_s": 303.25, "chord": "Bmaj"}, {"beat": 620, "time_s": 303.74, "chord": "Bmaj"}, {"beat": 621, "time_s": 304.2, "chord": "Bmaj"}, {"beat": 622, "time_s": 304.67, "chord": "C#min"}, {"beat": 623, "time_s": 305.13, "chord": "Bmaj"}, {"beat": 624, "time_s": 305.67, "chord": "C#min"}, {"beat": 625, "time_s": 306.18, "chord": "Bmaj"}, {"beat": 626, "time_s": 306.69, "chord": "Bmaj"}, {"beat": 627, "time_s": 307.15, "chord": "Bmaj"}, {"beat": 628, "time_s": 307.66, "chord": "F#min"}, {"beat": 629, "time_s": 308.13, "chord": "Bmaj"}, {"beat": 630, "time_s": 308.59, "chord": "Bmaj"}, {"beat": 631, "time_s": 309.06, "chord": "Bmaj"}, {"beat": 632, "time_s": 309.52, "chord": "Bmaj"}, {"beat": 633, "time_s": 310.01, "chord": "Bmaj"}, {"beat": 634, "time_s": 310.5, "chord": "Bmaj"}, {"beat": 635, "time_s": 310.96, "chord": "F#min"}, {"beat": 636, "time_s": 311.47, "chord": "F#min"}, {"beat": 637, "time_s": 311.98, "chord": "F#min"}, {"beat": 638, "time_s": 312.47, "chord": "F#min"}, {"beat": 639, "time_s": 313.0, "chord": "D#min"}, {"beat": 640, "time_s": 313.52, "chord": "F#min"}, {"beat": 641, "time_s": 314.05, "chord": "F#min"}, {"beat": 642, "time_s": 314.54, "chord": "F#min"}, {"beat": 643, "time_s": 314.98, "chord": "C#min"}, {"beat": 644, "time_s": 315.42, "chord": "F#min"}, {"beat": 645, "time_s": 315.95, "chord": "F#min"}, {"beat": 646, "time_s": 316.44, "chord": "F#min"}, {"beat": 647, "time_s": 316.91, "chord": "F#min"}, {"beat": 648, "time_s": 317.35, "chord": "F#min"}, {"beat": 649, "time_s": 317.83, "chord": "F#min"}, {"beat": 650, "time_s": 318.3, "chord": "F#min"}, {"beat": 651, "time_s": 318.76, "chord": "F#min"}, {"beat": 652, "time_s": 319.2, "chord": "F#min"}, {"beat": 653, "time_s": 319.69, "chord": "F#maj"}, {"beat": 654, "time_s": 320.2, "chord": "F#min"}, {"beat": 655, "time_s": 320.69, "chord": "F#min"}, {"beat": 656, "time_s": 321.18, "chord": "F#min"}, {"beat": 657, "time_s": 321.64, "chord": "F#min"}, {"beat": 658, "time_s": 322.11, "chord": "Bmaj"}, {"beat": 659, "time_s": 322.57, "chord": "Bmaj"}, {"beat": 660, "time_s": 323.04, "chord": "F#min"}, {"beat": 661, "time_s": 323.5, "chord": "F#min"}, {"beat": 662, "time_s": 323.94, "chord": "F#min"}, {"beat": 663, "time_s": 324.38, "chord": "F#min"}, {"beat": 664, "time_s": 324.87, "chord": "F#min"}, {"beat": 665, "time_s": 325.36, "chord": "F#min"}, {"beat": 666, "time_s": 325.85, "chord": "Bmaj"}, {"beat": 667, "time_s": 326.36, "chord": "Bmaj"}, {"beat": 668, "time_s": 326.82, "chord": "Bmaj"}, {"beat": 669, "time_s": 327.24, "chord": "F#min"}, {"beat": 670, "time_s": 327.82, "chord": "Bmaj"}, {"beat": 671, "time_s": 328.31, "chord": "F#min"}, {"beat": 672, "time_s": 328.79, "chord": "Bmaj"}, {"beat": 673, "time_s": 329.31, "chord": "F#min"}, {"beat": 674, "time_s": 329.79, "chord": "Bmaj"}, {"beat": 675, "time_s": 330.28, "chord": "Bmaj"}, {"beat": 676, "time_s": 330.77, "chord": "Bmaj"}, {"beat": 677, "time_s": 331.26, "chord": "F#min"}, {"beat": 678, "time_s": 331.74, "chord": "F#min"}, {"beat": 679, "time_s": 332.23, "chord": "F#min"}, {"beat": 680, "time_s": 332.72, "chord": "F#min"}, {"beat": 681, "time_s": 333.21, "chord": "F#min"}, {"beat": 682, "time_s": 333.72, "chord": "F#min"}, {"beat": 683, "time_s": 334.23, "chord": "F#min"}, {"beat": 684, "time_s": 334.72, "chord": "F#min"}, {"beat": 685, "time_s": 335.2, "chord": "F#min"}, {"beat": 686, "time_s": 335.67, "chord": "F#min"}, {"beat": 687, "time_s": 336.13, "chord": "F#min"}, {"beat": 688, "time_s": 336.6, "chord": "Bmaj"}, {"beat": 689, "time_s": 337.08, "chord": "F#min"}, {"beat": 690, "time_s": 337.64, "chord": "Bmaj"}, {"beat": 691, "time_s": 338.15, "chord": "Bmaj"}, {"beat": 692, "time_s": 338.64, "chord": "Bmaj"}, {"beat": 693, "time_s": 339.13, "chord": "F#min"}, {"beat": 694, "time_s": 339.62, "chord": "Bmaj"}, {"beat": 695, "time_s": 340.08, "chord": "Bmaj"}, {"beat": 696, "time_s": 340.52, "chord": "Bmaj"}, {"beat": 697, "time_s": 340.99, "chord": "Bmaj"}, {"beat": 698, "time_s": 341.5, "chord": "Bmaj"}, {"beat": 699, "time_s": 341.96, "chord": "F#min"}, {"beat": 700, "time_s": 342.47, "chord": "D#min"}, {"beat": 701, "time_s": 342.96, "chord": "F#min"}, {"beat": 702, "time_s": 343.45, "chord": "F#min"}, {"beat": 703, "time_s": 343.93, "chord": "F#min"}, {"beat": 704, "time_s": 344.44, "chord": "D#min"}, {"beat": 705, "time_s": 344.93, "chord": "F#min"}, {"beat": 706, "time_s": 345.44, "chord": "Bmaj"}, {"beat": 707, "time_s": 346.0, "chord": "Bmaj"}, {"beat": 708, "time_s": 346.49, "chord": "Bmaj"}, {"beat": 709, "time_s": 346.98, "chord": "F#min"}, {"beat": 710, "time_s": 347.44, "chord": "F#min"}, {"beat": 711, "time_s": 347.95, "chord": "F#min"}, {"beat": 712, "time_s": 348.39, "chord": "Bmaj"}, {"beat": 713, "time_s": 348.88, "chord": "F#min"}, {"beat": 714, "time_s": 349.39, "chord": "Bmaj"}, {"beat": 715, "time_s": 349.95, "chord": "Bmaj"}, {"beat": 716, "time_s": 350.44, "chord": "Bmaj"}, {"beat": 717, "time_s": 350.88, "chord": "F#min"}, {"beat": 718, "time_s": 351.41, "chord": "F#min"}, {"beat": 719, "time_s": 351.92, "chord": "F#min"}, {"beat": 720, "time_s": 352.41, "chord": "Bmaj"}, {"beat": 721, "time_s": 352.9, "chord": "F#min"}, {"beat": 722, "time_s": 353.38, "chord": "Bmaj"}, {"beat": 723, "time_s": 353.87, "chord": "Bmaj"}, {"beat": 724, "time_s": 354.38, "chord": "Bmaj"}, {"beat": 725, "time_s": 354.87, "chord": "F#min"}, {"beat": 726, "time_s": 355.36, "chord": "F#min"}, {"beat": 727, "time_s": 355.87, "chord": "F#min"}, {"beat": 728, "time_s": 356.36, "chord": "F#min"}, {"beat": 729, "time_s": 356.84, "chord": "F#min"}, {"beat": 730, "time_s": 357.33, "chord": "F#min"}, {"beat": 731, "time_s": 357.82, "chord": "F#min"}, {"beat": 732, "time_s": 358.31, "chord": "F#min"}, {"beat": 733, "time_s": 358.73, "chord": "F#min"}, {"beat": 734, "time_s": 359.31, "chord": "F#min"}, {"beat": 735, "time_s": 359.79, "chord": "F#min"}, {"beat": 736, "time_s": 360.28, "chord": "F#min"}, {"beat": 737, "time_s": 360.7, "chord": "F#min"}, {"beat": 738, "time_s": 361.26, "chord": "Bmaj"}, {"beat": 739, "time_s": 361.77, "chord": "Bmaj"}, {"beat": 740, "time_s": 362.28, "chord": "Bmaj"}, {"beat": 741, "time_s": 362.77, "chord": "F#min"}, {"beat": 742, "time_s": 363.25, "chord": "Amaj"}, {"beat": 743, "time_s": 363.74, "chord": "Amaj"}, {"beat": 744, "time_s": 364.23, "chord": "F#min"}, {"beat": 745, "time_s": 364.65, "chord": "F#min"}, {"beat": 746, "time_s": 365.16, "chord": "Bmaj"}, {"beat": 747, "time_s": 365.69, "chord": "Bmaj"}, {"beat": 748, "time_s": 366.2, "chord": "Bmaj"}, {"beat": 749, "time_s": 366.69, "chord": "Bmaj"}, {"beat": 750, "time_s": 367.18, "chord": "Bmaj"}, {"beat": 751, "time_s": 367.69, "chord": "Amaj"}, {"beat": 752, "time_s": 368.18, "chord": "Bmaj"}, {"beat": 753, "time_s": 368.66, "chord": "F#min"}, {"beat": 754, "time_s": 369.15, "chord": "Bmaj"}, {"beat": 755, "time_s": 369.64, "chord": "Bmaj"}, {"beat": 756, "time_s": 370.13, "chord": "Bmaj"}, {"beat": 757, "time_s": 370.59, "chord": "F#min"}, {"beat": 758, "time_s": 371.05, "chord": "F#min"}, {"beat": 759, "time_s": 371.54, "chord": "F#min"}, {"beat": 760, "time_s": 371.96, "chord": "F#min"}, {"beat": 761, "time_s": 372.4, "chord": "F#min"}, {"beat": 762, "time_s": 372.84, "chord": "F#min"}, {"beat": 763, "time_s": 373.33, "chord": "F#maj"}, {"beat": 764, "time_s": 373.82, "chord": "F#maj"}, {"beat": 765, "time_s": 374.31, "chord": "F#maj"}, {"beat": 766, "time_s": 374.82, "chord": "F#maj"}, {"beat": 767, "time_s": 375.3, "chord": "Amaj"}, {"beat": 768, "time_s": 375.79, "chord": "Amaj"}, {"beat": 769, "time_s": 376.28, "chord": "F#min"}, {"beat": 770, "time_s": 376.77, "chord": "F#min"}, {"beat": 771, "time_s": 377.25, "chord": "F#min"}, {"beat": 772, "time_s": 377.74, "chord": "Emaj"}, {"beat": 773, "time_s": 378.25, "chord": "F#min"}, {"beat": 774, "time_s": 378.74, "chord": "F#min"}, {"beat": 775, "time_s": 379.23, "chord": "F#min"}, {"beat": 776, "time_s": 379.72, "chord": "F#min"}, {"beat": 777, "time_s": 380.2, "chord": "F#min"}, {"beat": 778, "time_s": 380.71, "chord": "F#min"}, {"beat": 779, "time_s": 381.18, "chord": "F#maj"}, {"beat": 780, "time_s": 381.69, "chord": "F#maj"}, {"beat": 781, "time_s": 382.18, "chord": "F#maj"}, {"beat": 782, "time_s": 382.66, "chord": "F#maj"}, {"beat": 783, "time_s": 383.15, "chord": "F#maj"}, {"beat": 784, "time_s": 383.66, "chord": "F#maj"}, {"beat": 785, "time_s": 384.15, "chord": "F#maj"}, {"beat": 786, "time_s": 384.64, "chord": "F#maj"}, {"beat": 787, "time_s": 385.13, "chord": "F#maj"}], "progression": [{"chord": "Dmaj", "start_s": 0.65, "end_s": 1.11}, {"chord": "D#maj", "start_s": 1.11, "end_s": 3.0}, {"chord": "Cmin", "start_s": 3.0, "end_s": 5.46}, {"chord": "Cmaj", "start_s": 5.46, "end_s": 7.43}, {"chord": "Amin", "start_s": 7.43, "end_s": 8.41}, {"chord": "D#min", "start_s": 8.41, "end_s": 8.89}, {"chord": "Amin", "start_s": 8.89, "end_s": 9.38}, {"chord": "A#maj", "start_s": 9.38, "end_s": 9.87}, {"chord": "Gmin", "start_s": 9.87, "end_s": 12.33}, {"chord": "Cmin", "start_s": 12.33, "end_s": 12.82}, {"chord": "A#maj", "start_s": 12.82, "end_s": 14.3}, {"chord": "Cmaj", "start_s": 14.3, "end_s": 15.79}, {"chord": "Dmin", "start_s": 15.79, "end_s": 17.25}, {"chord": "Cmaj", "start_s": 17.25, "end_s": 17.74}, {"chord": "Gmin", "start_s": 17.74, "end_s": 20.2}, {"chord": "A#maj", "start_s": 20.2, "end_s": 20.69}, {"chord": "Cmaj", "start_s": 20.69, "end_s": 21.2}, {"chord": "A#maj", "start_s": 21.2, "end_s": 22.18}, {"chord": "Cmaj", "start_s": 22.18, "end_s": 22.66}, {"chord": "A#maj", "start_s": 22.66, "end_s": 24.15}, {"chord": "Dmin", "start_s": 24.15, "end_s": 25.12}, {"chord": "C#maj", "start_s": 25.12, "end_s": 26.59}, {"chord": "A#min", "start_s": 26.59, "end_s": 27.07}, {"chord": "C#maj", "start_s": 27.07, "end_s": 27.59}, {"chord": "A#min", "start_s": 27.59, "end_s": 29.54}, {"chord": "Fmaj", "start_s": 29.54, "end_s": 31.53}, {"chord": "Emaj", "start_s": 31.53, "end_s": 32.02}, {"chord": "F#min", "start_s": 32.02, "end_s": 34.97}, {"chord": "F#maj", "start_s": 34.97, "end_s": 37.04}, {"chord": "Amaj", "start_s": 37.04, "end_s": 38.03}, {"chord": "F#min", "start_s": 38.03, "end_s": 42.84}, {"chord": "F#maj", "start_s": 42.84, "end_s": 44.79}, {"chord": "A#min", "start_s": 44.79, "end_s": 45.3}, {"chord": "Emaj", "start_s": 45.3, "end_s": 45.79}, {"chord": "F#min", "start_s": 45.79, "end_s": 46.28}, {"chord": "A#min", "start_s": 46.28, "end_s": 46.76}, {"chord": "D#min", "start_s": 46.76, "end_s": 48.74}, {"chord": "F#min", "start_s": 48.74, "end_s": 51.2}, {"chord": "Emaj", "start_s": 51.2, "end_s": 51.69}, {"chord": "F#min", "start_s": 51.69, "end_s": 53.17}, {"chord": "Emaj", "start_s": 53.17, "end_s": 53.66}, {"chord": "F#min", "start_s": 53.66, "end_s": 54.64}, {"chord": "Bmaj", "start_s": 54.64, "end_s": 57.1}, {"chord": "F#min", "start_s": 57.1, "end_s": 58.07}, {"chord": "Bmaj", "start_s": 58.07, "end_s": 59.07}, {"chord": "F#min", "start_s": 59.07, "end_s": 60.53}, {"chord": "Amaj", "start_s": 60.53, "end_s": 61.51}, {"chord": "F#min", "start_s": 61.51, "end_s": 62.51}, {"chord": "D#min", "start_s": 62.51, "end_s": 64.48}, {"chord": "F#min", "start_s": 64.48, "end_s": 68.41}, {"chord": "Amaj", "start_s": 68.41, "end_s": 69.38}, {"chord": "F#min", "start_s": 69.38, "end_s": 70.36}, {"chord": "D#min", "start_s": 70.36, "end_s": 72.33}, {"chord": "F#min", "start_s": 72.33, "end_s": 74.3}, {"chord": "F#maj", "start_s": 74.3, "end_s": 76.28}, {"chord": "A#min", "start_s": 76.28, "end_s": 76.77}, {"chord": "Emaj", "start_s": 76.77, "end_s": 77.25}, {"chord": "F#min", "start_s": 77.25, "end_s": 77.74}, {"chord": "A#min", "start_s": 77.74, "end_s": 78.25}, {"chord": "D#min", "start_s": 78.25, "end_s": 80.81}, {"chord": "Emin", "start_s": 80.81, "end_s": 81.32}, {"chord": "F#min", "start_s": 81.32, "end_s": 84.75}, {"chord": "Emaj", "start_s": 84.75, "end_s": 85.24}, {"chord": "F#min", "start_s": 85.24, "end_s": 88.21}, {"chord": "D#min", "start_s": 88.21, "end_s": 88.7}, {"chord": "Emin", "start_s": 88.7, "end_s": 89.19}, {"chord": "F#min", "start_s": 89.19, "end_s": 90.65}, {"chord": "Emin", "start_s": 90.65, "end_s": 91.16}, {"chord": "F#min", "start_s": 91.16, "end_s": 92.14}, {"chord": "C#min", "start_s": 92.14, "end_s": 94.11}, {"chord": "F#min", "start_s": 94.11, "end_s": 97.92}, {"chord": "F#maj", "start_s": 97.92, "end_s": 99.87}, {"chord": "A#min", "start_s": 99.87, "end_s": 100.43}, {"chord": "Emaj", "start_s": 100.43, "end_s": 100.94}, {"chord": "F#min", "start_s": 100.94, "end_s": 101.42}, {"chord": "A#min", "start_s": 101.42, "end_s": 101.91}, {"chord": "D#min", "start_s": 101.91, "end_s": 103.89}, {"chord": "F#min", "start_s": 103.89, "end_s": 105.33}, {"chord": "Bmaj", "start_s": 105.33, "end_s": 106.25}, {"chord": "F#min", "start_s": 106.25, "end_s": 108.11}, {"chord": "Amaj", "start_s": 108.11, "end_s": 108.6}, {"chord": "F#min", "start_s": 108.6, "end_s": 113.03}, {"chord": "F#maj", "start_s": 113.03, "end_s": 115.1}, {"chord": "Bmin", "start_s": 115.1, "end_s": 117.54}, {"chord": "D#min", "start_s": 117.54, "end_s": 119.54}, {"chord": "F#min", "start_s": 119.54, "end_s": 121.51}, {"chord": "F#maj", "start_s": 121.51, "end_s": 123.97}, {"chord": "F#min", "start_s": 123.97, "end_s": 125.46}, {"chord": "D#min", "start_s": 125.46, "end_s": 127.41}, {"chord": "F#min", "start_s": 127.41, "end_s": 129.38}, {"chord": "Dmaj", "start_s": 129.38, "end_s": 130.38}, {"chord": "F#min", "start_s": 130.38, "end_s": 130.89}, {"chord": "Dmaj", "start_s": 130.89, "end_s": 131.42}, {"chord": "F#min", "start_s": 131.42, "end_s": 132.96}, {"chord": "Bmaj", "start_s": 132.96, "end_s": 134.93}, {"chord": "Amaj", "start_s": 134.93, "end_s": 137.88}, {"chord": "F#min", "start_s": 137.88, "end_s": 139.25}, {"chord": "Amaj", "start_s": 139.25, "end_s": 141.15}, {"chord": "Bmaj", "start_s": 141.15, "end_s": 143.31}, {"chord": "F#min", "start_s": 143.31, "end_s": 143.78}, {"chord": "Emin", "start_s": 143.78, "end_s": 145.15}, {"chord": "Bmin", "start_s": 145.15, "end_s": 145.75}, {"chord": "Emin", "start_s": 145.75, "end_s": 146.19}, {"chord": "F#min", "start_s": 146.19, "end_s": 147.12}, {"chord": "Emin", "start_s": 147.12, "end_s": 148.24}, {"chord": "F#min", "start_s": 148.24, "end_s": 148.72}, {"chord": "Bmaj", "start_s": 148.72, "end_s": 150.58}, {"chord": "F#min", "start_s": 150.58, "end_s": 152.46}, {"chord": "Bmaj", "start_s": 152.46, "end_s": 159.08}, {"chord": "Bmin", "start_s": 159.08, "end_s": 159.52}, {"chord": "Emin", "start_s": 159.52, "end_s": 160.89}, {"chord": "F#min", "start_s": 160.89, "end_s": 162.1}, {"chord": "Bmin", "start_s": 162.1, "end_s": 162.63}, {"chord": "Dmaj", "start_s": 162.63, "end_s": 163.7}, {"chord": "Bmin", "start_s": 163.7, "end_s": 164.68}, {"chord": "Bmaj", "start_s": 164.68, "end_s": 166.63}, {"chord": "F#min", "start_s": 166.63, "end_s": 172.43}, {"chord": "Bmaj", "start_s": 172.43, "end_s": 173.94}, {"chord": "F#min", "start_s": 173.94, "end_s": 176.49}, {"chord": "F#maj", "start_s": 176.49, "end_s": 178.56}, {"chord": "Amaj", "start_s": 178.56, "end_s": 179.51}, {"chord": "F#min", "start_s": 179.51, "end_s": 180.0}, {"chord": "D#min", "start_s": 180.0, "end_s": 183.97}, {"chord": "F#min", "start_s": 183.97, "end_s": 184.46}, {"chord": "F#maj", "start_s": 184.46, "end_s": 186.9}, {"chord": "F#min", "start_s": 186.9, "end_s": 188.38}, {"chord": "D#min", "start_s": 188.38, "end_s": 188.89}, {"chord": "Emaj", "start_s": 188.89, "end_s": 189.38}, {"chord": "F#min", "start_s": 189.38, "end_s": 194.26}, {"chord": "Dmaj", "start_s": 194.26, "end_s": 196.74}, {"chord": "Bmin", "start_s": 196.74, "end_s": 197.72}, {"chord": "F#min", "start_s": 197.72, "end_s": 202.08}, {"chord": "Amaj", "start_s": 202.08, "end_s": 203.04}, {"chord": "F#min", "start_s": 203.04, "end_s": 205.01}, {"chord": "Bmaj", "start_s": 205.01, "end_s": 209.93}, {"chord": "F#min", "start_s": 209.93, "end_s": 213.81}, {"chord": "Bmaj", "start_s": 213.81, "end_s": 214.23}, {"chord": "F#min", "start_s": 214.23, "end_s": 214.69}, {"chord": "D#min", "start_s": 214.69, "end_s": 215.69}, {"chord": "F#maj", "start_s": 215.69, "end_s": 217.64}, {"chord": "F#min", "start_s": 217.64, "end_s": 220.13}, {"chord": "D#min", "start_s": 220.13, "end_s": 222.56}, {"chord": "Bmaj", "start_s": 222.56, "end_s": 223.05}, {"chord": "F#min", "start_s": 223.05, "end_s": 223.56}, {"chord": "Bmaj", "start_s": 223.56, "end_s": 226.02}, {"chord": "F#maj", "start_s": 226.02, "end_s": 227.42}, {"chord": "F#min", "start_s": 227.42, "end_s": 228.37}, {"chord": "Bmaj", "start_s": 228.37, "end_s": 230.83}, {"chord": "F#min", "start_s": 230.83, "end_s": 231.34}, {"chord": "Bmaj", "start_s": 231.34, "end_s": 232.8}, {"chord": "F#min", "start_s": 232.8, "end_s": 235.22}, {"chord": "Bmaj", "start_s": 235.22, "end_s": 241.91}, {"chord": "Bmin", "start_s": 241.91, "end_s": 242.9}, {"chord": "Bmaj", "start_s": 242.9, "end_s": 245.34}, {"chord": "F#min", "start_s": 245.34, "end_s": 246.32}, {"chord": "F#maj", "start_s": 246.32, "end_s": 246.8}, {"chord": "F#min", "start_s": 246.8, "end_s": 247.18}, {"chord": "F#maj", "start_s": 247.18, "end_s": 249.64}, {"chord": "F#min", "start_s": 249.64, "end_s": 250.13}, {"chord": "Emaj", "start_s": 250.13, "end_s": 250.68}, {"chord": "F#min", "start_s": 250.68, "end_s": 254.07}, {"chord": "F#maj", "start_s": 254.07, "end_s": 254.65}, {"chord": "F#min", "start_s": 254.65, "end_s": 255.05}, {"chord": "F#maj", "start_s": 255.05, "end_s": 256.53}, {"chord": "F#min", "start_s": 256.53, "end_s": 258.97}, {"chord": "Bmaj", "start_s": 258.97, "end_s": 260.95}, {"chord": "F#min", "start_s": 260.95, "end_s": 261.92}, {"chord": "Bmaj", "start_s": 261.92, "end_s": 264.41}, {"chord": "F#min", "start_s": 264.41, "end_s": 265.31}, {"chord": "Amaj", "start_s": 265.31, "end_s": 267.1}, {"chord": "F#min", "start_s": 267.1, "end_s": 268.1}, {"chord": "Bmin", "start_s": 268.1, "end_s": 276.43}, {"chord": "F#min", "start_s": 276.43, "end_s": 277.43}, {"chord": "Bmaj", "start_s": 277.43, "end_s": 282.84}, {"chord": "F#min", "start_s": 282.84, "end_s": 283.84}, {"chord": "Bmin", "start_s": 283.84, "end_s": 287.25}, {"chord": "Gmaj", "start_s": 287.25, "end_s": 287.76}, {"chord": "Bmin", "start_s": 287.76, "end_s": 288.74}, {"chord": "Gmaj", "start_s": 288.74, "end_s": 291.57}, {"chord": "Bmaj", "start_s": 291.57, "end_s": 293.01}, {"chord": "F#min", "start_s": 293.01, "end_s": 296.33}, {"chord": "Bmaj", "start_s": 296.33, "end_s": 296.84}, {"chord": "F#min", "start_s": 296.84, "end_s": 297.33}, {"chord": "Bmaj", "start_s": 297.33, "end_s": 297.82}, {"chord": "F#min", "start_s": 297.82, "end_s": 298.31}, {"chord": "Bmaj", "start_s": 298.31, "end_s": 299.77}, {"chord": "F#min", "start_s": 299.77, "end_s": 300.77}, {"chord": "C#min", "start_s": 300.77, "end_s": 301.77}, {"chord": "F#maj", "start_s": 301.77, "end_s": 303.25}, {"chord": "Bmaj", "start_s": 303.25, "end_s": 304.67}, {"chord": "C#min", "start_s": 304.67, "end_s": 305.13}, {"chord": "Bmaj", "start_s": 305.13, "end_s": 305.67}, {"chord": "C#min", "start_s": 305.67, "end_s": 306.18}, {"chord": "Bmaj", "start_s": 306.18, "end_s": 307.66}, {"chord": "F#min", "start_s": 307.66, "end_s": 308.13}, {"chord": "Bmaj", "start_s": 308.13, "end_s": 310.96}, {"chord": "F#min", "start_s": 310.96, "end_s": 313.0}, {"chord": "D#min", "start_s": 313.0, "end_s": 313.52}, {"chord": "F#min", "start_s": 313.52, "end_s": 314.98}, {"chord": "C#min", "start_s": 314.98, "end_s": 315.42}, {"chord": "F#min", "start_s": 315.42, "end_s": 319.69}, {"chord": "F#maj", "start_s": 319.69, "end_s": 320.2}, {"chord": "F#min", "start_s": 320.2, "end_s": 322.11}, {"chord": "Bmaj", "start_s": 322.11, "end_s": 323.04}, {"chord": "F#min", "start_s": 323.04, "end_s": 325.85}, {"chord": "Bmaj", "start_s": 325.85, "end_s": 327.24}, {"chord": "F#min", "start_s": 327.24, "end_s": 327.82}, {"chord": "Bmaj", "start_s": 327.82, "end_s": 328.31}, {"chord": "F#min", "start_s": 328.31, "end_s": 328.79}, {"chord": "Bmaj", "start_s": 328.79, "end_s": 329.31}, {"chord": "F#min", "start_s": 329.31, "end_s": 329.79}, {"chord": "Bmaj", "start_s": 329.79, "end_s": 331.26}, {"chord": "F#min", "start_s": 331.26, "end_s": 336.6}, {"chord": "Bmaj", "start_s": 336.6, "end_s": 337.08}, {"chord": "F#min", "start_s": 337.08, "end_s": 337.64}, {"chord": "Bmaj", "start_s": 337.64, "end_s": 339.13}, {"chord": "F#min", "start_s": 339.13, "end_s": 339.62}, {"chord": "Bmaj", "start_s": 339.62, "end_s": 341.96}, {"chord": "F#min", "start_s": 341.96, "end_s": 342.47}, {"chord": "D#min", "start_s": 342.47, "end_s": 342.96}, {"chord": "F#min", "start_s": 342.96, "end_s": 344.44}, {"chord": "D#min", "start_s": 344.44, "end_s": 344.93}, {"chord": "F#min", "start_s": 344.93, "end_s": 345.44}, {"chord": "Bmaj", "start_s": 345.44, "end_s": 346.98}, {"chord": "F#min", "start_s": 346.98, "end_s": 348.39}, {"chord": "Bmaj", "start_s": 348.39, "end_s": 348.88}, {"chord": "F#min", "start_s": 348.88, "end_s": 349.39}, {"chord": "Bmaj", "start_s": 349.39, "end_s": 350.88}, {"chord": "F#min", "start_s": 350.88, "end_s": 352.41}, {"chord": "Bmaj", "start_s": 352.41, "end_s": 352.9}, {"chord": "F#min", "start_s": 352.9, "end_s": 353.38}, {"chord": "Bmaj", "start_s": 353.38, "end_s": 354.87}, {"chord": "F#min", "start_s": 354.87, "end_s": 361.26}, {"chord": "Bmaj", "start_s": 361.26, "end_s": 362.77}, {"chord": "F#min", "start_s": 362.77, "end_s": 363.25}, {"chord": "Amaj", "start_s": 363.25, "end_s": 364.23}, {"chord": "F#min", "start_s": 364.23, "end_s": 365.16}, {"chord": "Bmaj", "start_s": 365.16, "end_s": 367.69}, {"chord": "Amaj", "start_s": 367.69, "end_s": 368.18}, {"chord": "Bmaj", "start_s": 368.18, "end_s": 368.66}, {"chord": "F#min", "start_s": 368.66, "end_s": 369.15}, {"chord": "Bmaj", "start_s": 369.15, "end_s": 370.59}, {"chord": "F#min", "start_s": 370.59, "end_s": 373.33}, {"chord": "F#maj", "start_s": 373.33, "end_s": 375.3}, {"chord": "Amaj", "start_s": 375.3, "end_s": 376.28}, {"chord": "F#min", "start_s": 376.28, "end_s": 377.74}, {"chord": "Emaj", "start_s": 377.74, "end_s": 378.25}, {"chord": "F#min", "start_s": 378.25, "end_s": 381.18}, {"chord": "F#maj", "start_s": 381.18, "end_s": 385.63}], "summary": {"unique_chords": 21, "unique_list": ["A#maj", "A#min", "Amaj", "Amin", "Bmaj", "Bmin", "C#maj", "C#min", "Cmaj", "Cmin", "D#maj", "D#min", "Dmaj", "Dmin", "Emaj", "Emin", "F#maj", "F#min", "Fmaj", "Gmaj", "Gmin"], "histogram": [{"chord": "F#min", "total_s": 152.88}, {"chord": "Bmaj", "total_s": 82.41}, {"chord": "F#maj", "total_s": 33.75}, {"chord": "D#min", "total_s": 24.79}, {"chord": "Bmin", "total_s": 19.68}, {"chord": "Amaj", "total_s": 14.43}, {"chord": "Emin", "total_s": 5.81}, {"chord": "Dmaj", "total_s": 5.54}, {"chord": "A#min", "total_s": 5.47}, {"chord": "Emaj", "total_s": 4.99}, {"chord": "Cmaj", "total_s": 4.94}, {"chord": "A#maj", "total_s": 4.93}, {"chord": "Gmin", "total_s": 4.92}, {"chord": "C#min", "total_s": 4.38}, {"chord": "Gmaj", "total_s": 3.34}, {"chord": "Cmin", "total_s": 2.95}, {"chord": "Dmin", "total_s": 2.43}, {"chord": "C#maj", "total_s": 1.99}, {"chord": "Fmaj", "total_s": 1.99}, {"chord": "D#maj", "total_s": 1.89}, {"chord": "Amin", "total_s": 1.47}], "n_segments": 249}}, "melody": {"vocals": {"stem": "vocals", "voiced_ratio": 0.318, "note_count": 639, "midi_path": "midi/vocals.mid", "pitch_range": {"min": 41, "min_name": "F2", "max": 82, "max_name": "A#5", "mean": 68, "range_semitones": 41}, "notes_preview": [{"pitch": 78, "name": "F#5", "start_s": 17.786, "end_s": 18.251, "duration_s": 0.464}, {"pitch": 78, "name": "F#5", "start_s": 19.83, "end_s": 20.271, "duration_s": 0.441}, {"pitch": 77, "name": "F5", "start_s": 20.271, "end_s": 20.341, "duration_s": 0.07}, {"pitch": 78, "name": "F#5", "start_s": 20.387, "end_s": 20.666, "duration_s": 0.279}, {"pitch": 78, "name": "F#5", "start_s": 21.571, "end_s": 21.827, "duration_s": 0.255}, {"pitch": 78, "name": "F#5", "start_s": 21.85, "end_s": 22.082, "duration_s": 0.232}, {"pitch": 79, "name": "G5", "start_s": 23.475, "end_s": 23.568, "duration_s": 0.093}, {"pitch": 78, "name": "F#5", "start_s": 23.568, "end_s": 23.824, "duration_s": 0.255}, {"pitch": 78, "name": "F#5", "start_s": 24.033, "end_s": 24.172, "duration_s": 0.139}, {"pitch": 79, "name": "G5", "start_s": 24.265, "end_s": 24.335, "duration_s": 0.07}]}, "bass": {"stem": "bass", "voiced_ratio": 0.849, "note_count": 1577, "midi_path": "midi/bass.mid", "pitch_range": {"min": 25, "min_name": "C#1", "max": 59, "max_name": "B3", "mean": 31, "range_semitones": 34}, "notes_preview": [{"pitch": 29, "name": "F1", "start_s": 29.164, "end_s": 29.954, "duration_s": 0.789}, {"pitch": 28, "name": "E1", "start_s": 31.231, "end_s": 31.37, "duration_s": 0.139}, {"pitch": 30, "name": "F#1", "start_s": 31.393, "end_s": 31.556, "duration_s": 0.163}, {"pitch": 28, "name": "E1", "start_s": 31.556, "end_s": 31.718, "duration_s": 0.163}, {"pitch": 30, "name": "F#1", "start_s": 31.742, "end_s": 31.927, "duration_s": 0.186}, {"pitch": 33, "name": "A1", "start_s": 31.997, "end_s": 32.183, "duration_s": 0.186}, {"pitch": 28, "name": "E1", "start_s": 32.183, "end_s": 32.461, "duration_s": 0.279}, {"pitch": 30, "name": "F#1", "start_s": 32.461, "end_s": 32.717, "duration_s": 0.255}, {"pitch": 28, "name": "E1", "start_s": 32.74, "end_s": 32.879, "duration_s": 0.139}, {"pitch": 30, "name": "F#1", "start_s": 32.949, "end_s": 33.205, "duration_s": 0.255}]}}, "lyrics": {"text": "Kjell, du har en kjell. Menos 10. Takk for ating med. Undertekster av Amara I sorry Thank you. so Thank you Thank you. Thank you. Thank you What Thank you. Thank you. Thank you.", "language": "Norwegian Nynorsk", "segments": [{"start_s": 0.0, "end_s": 29.98, "text": "Kjell, du har en kjell."}, {"start_s": 30.0, "end_s": 30.72, "text": "Menos 10."}, {"start_s": 60.0, "end_s": 89.98, "text": "Takk for ating med."}, {"start_s": 90.0, "end_s": 117.1, "text": "Undertekster av Amara I sorry"}, {"start_s": 123.36, "end_s": 153.34, "text": "Thank you."}, {"start_s": 153.36, "end_s": 165.36, "text": "so"}, {"start_s": 183.36, "end_s": 221.7, "text": "Thank you"}, {"start_s": 221.72, "end_s": 251.7, "text": "Thank you."}, {"start_s": 251.72, "end_s": 281.7, "text": "Thank you."}, {"start_s": 281.72, "end_s": 291.08, "text": "Thank you What"}, {"start_s": 320.08, "end_s": 345.08, "text": "Thank you."}, {"start_s": 350.08, "end_s": 380.06, "text": "Thank you."}, {"start_s": 380.08, "end_s": 393.22, "text": "Thank you."}], "rms": 0.03407}, "synthesis": {"brief": {"headline": "F#m 123 BPM deep-house/dub roller anchored on a F#m ↔ Bmaj (i–IV) vamp with a 6-minute slow-build arc", "production_diagnosis": "This lives in F# minor with B major as the constant harmonic counterweight — that i–IV motion is roughly two-thirds of the harmonic real estate, with F#maj (Picardy/dominant color) and D#min (vi) as the recurring inner-voice moves. The chord detector chokes on the intro (that Dmaj/D#maj/Cmin salad is almost certainly pad wash + no bass reference), but once the bass enters at ~29s the harmony locks. Structurally it's a classic Jimpster long-form arc: 30s pad intro → 70s groove establishment → filtered breakdown around 134–165s → main peak 165–232s → dub breakdown 232–291s → final peak 291–366s → tail. Energy curve is deliberately flat within sections (0.24–0.27 RMS band) — the drama is textural, not dynamic.", "sound_design": [{"element": "Kick", "observation": "Sub-heavy balance (sub 9.7, bass 12.3 vs mid 1.27) points to a long-tail house kick doing double duty as sub reinforcement, tuned near F#.", "recreate": "Layer a punchy 909-ish transient (short click, 60Hz body) with a sine tail tuned to F#1 (~46Hz). Sidechain the sine tail only. Gentle 2:1 glue comp on the bus."}, {"element": "Bass", "observation": "Bass stem is 85% voiced with 1577 notes centered around F1/F#1/E1 — this is a live-feel, syncopated 16th-note bassline, not a one-note pulse. Range C#1–B3 means occasional octave jumps or fills.", "recreate": "Prophet 12: single saw + sub square, LP filter ~400Hz with light env mod, slight glide (30-50ms). Play F#1 root with E1/A1 passing tones, 16th-note swing ~55%. Bus into a mild tape sat + LA-2A style comp."}, {"element": "Pad/Harmony", "observation": "The i–IV (F#m–Bmaj) alternation with occasional D#m and F#maj lifts is the entire harmonic identity. Spectral centroid drops to 1926Hz in the 134s breakdown — pads get filtered hard there.", "recreate": "Prophet 12 detuned saws, slow attack (800ms), lush unison. Play F#m9 → Bmaj9 → D#m11 → F#maj7 as held 4-bar chords. Send to a long plate (4s) + ping-pong delay 3/16 with heavy feedback filtering."}, {"element": "Percussion/Texture", "observation": "Consistent RMS across sections with high spectral centroid (2900+ in peaks) suggests busy top-end: shakers, closed hats, rides, ticks doing the energy lifting.", "recreate": "Closed hat on off-8ths, open hat on 'and' of 2 and 4, shaker running 16ths with velocity modulation. Add a dub-conga loop bussed to a filtered delay for the classic Freerange/Delusions signature."}, {"element": "Vocal/Lead", "observation": "Vocal stem is only 32% voiced with 639 notes clustered at F#5 — this is a chopped/looped vocal hook, not a lead vocal. Lyrics transcript is garbage (Whisper hallucinating 'thank you' on reverb tails), confirming it's textural.", "recreate": "Sample a single soulful 'ooh' or short phrase on F#. Chop, pitch to F#5, run through spring reverb + 3/8 dotted delay with high feedback. Trigger sparsely every 4 bars, let the delays do the work."}], "mix_moves": ["Aggressive low-mid scoop — the band balance shows mids at 1.27 vs bass 12.3, meaning everything above 300Hz is deliberately dark/restrained. Cut 400-600Hz on pads and vocals to make room for the kick+bass sandwich.", "Dub delay bus is doing structural work — throws on chord stabs and vocal chops during transitions (esp. the 134s and 232s breakdowns). Use a tape delay with filter automation on the feedback.", "Sidechain is subtle but present — pump the pads/vocals ~2-3dB off the kick, not the aggressive EDM duck.", "Master bus is clearly bus-compressed and tape-saturated — the RMS consistency (0.24–0.27 across most of the track) is compressor glue, not natural dynamics."], "arrangement_notes": "Nine-section arc: 30s pad intro → 68s groove build (bass+drums) → 34s development → 31s filtered breakdown (centroid drops to 1926Hz, tell-tale HPF sweep) → 67s main peak → 60s dub breakdown (drums thinned, dub FX foregrounded) → 74s final peak → 27s outro tail. The two breakdowns are the transition tricks — both use pad/FX-only passages to reset ear fatigue before re-entry. Very Freerange Records template.", "remake_starter": {"tempo": "123 BPM", "key": "F# minor (Camelot 11A)", "ableton_setup": "Track 1: Kick (layered 909+sine sub). Track 2: Prophet 12 bass. Track 3: Prophet 12 pad → Valhalla plate + Echo. Track 4: Percussion rack (hats/shaker/conga). Track 5: Vocal chop → spring reverb + dub delay send. Return A: Tape delay (filtered feedback). Return B: Long plate. Arrange in 32-bar scenes.", "first_move": "Program the F#m ↔ Bmaj 2-bar pad loop first, run it through the dub delay return, and automate the delay feedback — if that alone feels hypnotic for 2 minutes, everything else is decoration."}, "reference_dna": ["Jimpster - 'Alone In The Dark' (same i–IV deep-house vamp discipline, same dub-delay chord treatment)", "Âme - 'Rej' (long-form arc with textural rather than dynamic build)", "Losoul - 'Open Door' (minimal harmonic vocabulary + dub processing as arrangement tool)"], "watch_outs": ["The intro chord detection (Dmaj/D#maj/Cmin/Amin salad in first 30s) is almost certainly wrong — no bass reference during pad-only passage. Ear-verify: it's likely just F#m/Bmaj pad wash the whole time.", "The 'Norwegian Nynorsk' lyrics with 'Thank you' repeated is 100% Whisper hallucinating on reverb tails and vocal chops — treat the vocal as a wordless textural sample, not a lyric-driven vocal."]}, "model": "claude-opus-4-7"}}</pre>
+  </details>
+
+  <footer>
+    /track-dissect · pipeline 0.1 · stems htdemucs · key krumhansl-schmuckler · chords chroma+24-templates · midi pyin · lyrics groq-whisper-large-v3 · synthesis claude-opus-4-7
+  </footer>
+
+</div>
+</body>
+</html>
